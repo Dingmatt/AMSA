@@ -19,7 +19,7 @@ TMDB_CONFIG_URL              = 'https://api.tmdb.org/3/configuration?api_key=7f4
 TMDB_IMAGES_URL              = 'https://api.tmdb.org/3/movie/%s/images?api_key=7f4a0bd0bd3315bb832e17feda70b5cd'                  #
 OMDB_HTTP_API_URL            = "http://www.omdbapi.com/?i="                                                                       #
 THEME_URL                    = 'http://tvthemes.plexapp.com/%s.mp3'                                                               # Plex TV Theme url
-AMSA_CORRECTIONS_URL         = 'https://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml'               # Custom remote correction for ScudLee mapping file url
+AMSA_CORRECTIONS_URL         = 'https://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml'               # Custom remote correction for ScudLee mapping file url
 RESTRICTED_CONTENT_RATING    = "NC-17"
 RESTRICTED_GENRE_NAMES       = [ '18 Restricted', 'Pornography' ]
 FILTER_CHARS                 = "\\/:*?<>|~-; "
@@ -78,6 +78,7 @@ def Start():
     AniDB_title_tree        = Helpers().xmlElementFromFile(ANIDB_TITLES, os.path.splitext(os.path.basename(ANIDB_TITLES))[0]  , True,  CACHE_1HOUR * 24 * 2)
     AniDB_TVDB_mapping_tree = Helpers().xmlElementFromFile(ANIDB_TVDB_MAPPING,            os.path.basename(ANIDB_TVDB_MAPPING), False, CACHE_1HOUR * 24 * 2)
     AniDB_collection_tree   = Helpers().xmlElementFromFile(ANIDB_COLLECTION,              os.path.basename(ANIDB_COLLECTION  ), False, CACHE_1HOUR * 24 * 2)
+    Helpers().xmlElementFromFile(AMSA_CORRECTIONS_URL,            os.path.basename(AMSA_CORRECTIONS_URL), False, CACHE_1HOUR * 24 * 2)
     HTTP.CacheTime          = CACHE_1HOUR * 24
    
 class Providers():
