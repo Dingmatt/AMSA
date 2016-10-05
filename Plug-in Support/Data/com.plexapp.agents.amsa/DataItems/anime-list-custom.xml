@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<anime-list>
+  <anime anidbid="0" tvdbid="" defaulttvdbseason="1" tmdbid="" imdbid="">
+    <name>Serie Main Title</name>
+    <mapping-list>
+      <mapping anidbseason="0" tvdbseason="2">;1-1;2-2;</mapping>
+      <mapping anidbseason="1" tvdbseason="0">;1-1;</mapping>
+      <mapping anidbseason="1" tvdbseason="2">;2-3;3-4;4-6;6-7;7-8;8-9;9-10;10-11;11-12;</mapping>
+    </mapping-list>
+    <supplemental-info>
+      <studio>Studio that made anime</studio>
+    </supplemental-info>
+  </anime>
+</anime-list>
