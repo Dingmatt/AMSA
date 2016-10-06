@@ -37,25 +37,17 @@ Asma in conjunction with the Absolute Series Scanner will work in the same way a
 To use this feature simply place any additional content in the series "Specials" folder with a high episode number (see example below), opening and endings are handled separately as long as you label them with either the "OP", "ED" or the no credit (NC) equivalents.
 
 Example:
-  /Anime Shows
 
-     /Akame ga Kill!
-
-        /Season 1
-
-           Akame ga Kill! - S01E01 - Kill the Darkness.mkv 
-
-        /Specials
-
-           Akame ga Kill! - OP.mkv   
-
-           Akame ga Kill! - OP2.mkv 
-
-           Akame ga Kill! - ED1.mkv 
-
-           Akame ga Kill! - NCED2.mkv  
-
-           Akame ga Kill! - S00E50 - Parody.mkv 
+      /Anime Shows
+         /Akame ga Kill!
+            /Season 1
+               Akame ga Kill! - S01E01 - Kill the Darkness.mkv 
+            /Specials
+               Akame ga Kill! - OP.mkv   
+               Akame ga Kill! - OP2.mkv 
+               Akame ga Kill! - ED1.mkv 
+               Akame ga Kill! - NCED2.mkv  
+               Akame ga Kill! - S00E50 - Parody.mkv 
 
 
 
