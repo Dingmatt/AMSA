@@ -59,7 +59,7 @@ import os, re, time, datetime, string, thread, threading, urllib # Functions use
 AniDB_title_tree, AniDB_collection_tree, AniDB_TVDB_mapping_tree = None, None, None  #ValueError if in Start()
 SERIE_LANGUAGE_PRIORITY   = [ Prefs['SerieLanguage1'  ].encode('utf-8'), Prefs['SerieLanguage2'  ].encode('utf-8'), Prefs['SerieLanguage3'].encode('utf-8') ]  #override default language
 EPISODE_LANGUAGE_PRIORITY = [ Prefs['EpisodeLanguage1'].encode('utf-8'), Prefs['EpisodeLanguage2'].encode('utf-8') ]                                           #override default language
-
+SERIE_METADATE_PRIORITY   = [ Prefs['AgentPref1'  ].encode('utf-8'), Prefs['AgentPref2'  ].encode('utf-8'), Prefs['AgentPref3'].encode('utf-8') ]              #override default metadata 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
 def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
@@ -160,14 +160,16 @@ class Provider:
 class Plex(Provider): 
     def populate(self, series, ID):
         ##series.ID = self.metadata.id [len("tvdb-"):]
-        series.ID.append(WeightedEntry(ID, Providers.Plex))
+        series.ID.append(WeightedEntry(ID, SERIE_METADATE_PRIORITY.index('Plex')))
+        Log.Debug("Update() - Plex Priority: %s" % (SERIE_METADATE_PRIORITY.index('Plex')))
         if THEME_URL % series.ID in self.metadata.themes:  Log.Debug("Update() - Theme song - already added")
         else: Helpers().metadata_download (self.metadata.themes, THEME_URL % ID, 1, "Plex/"+ID+".mp3")  #if local, load it ?
     
 class TVDB(Provider):
     def populate(self, series, ID):
         ##series.ID = self.metadata.id [len("tvdb-"):]
-        series.ID.append(WeightedEntry(ID, Providers.TVDB))
+        series.ID.append(WeightedEntry(ID, SERIE_METADATE_PRIORITY.index('TVDB')))
+        Log.Debug("Update() - TVDB Priority: %s" % (SERIE_METADATE_PRIORITY.index('TVDB')))
         
         Log.Debug("Update() - TVDB mode - TVDB Series XML: %s" % (TVDB_HTTP_API_URL % ID))
         data = None
@@ -257,7 +259,8 @@ class TVDB(Provider):
                                                        
 class AniDB(Provider): 
     def populate(self, series, ID):
-        series.ID.append(WeightedEntry(ID, Providers.AniDB))
+        series.ID.append(WeightedEntry(ID, SERIE_METADATE_PRIORITY.index('AniDB')))
+        Log.Debug("Update() - AniDB Priority: %s" % (SERIE_METADATE_PRIORITY.index('AniDB')))
         tvdbid, tmdbid, imdbid, defaulttvdbseason, mapping_studio, poster_id, mappingList, anidbid_table = "", "", "", "", "", "", {}, []
         #tvdbid, tmdbid, imdbid, defaulttvdbseason, mappingList, mapping_studio, anidbid_table, poster_id = Helpers().anidbTvdbMapping(self.metadata, ID, self.error_log)
         Log.Debug("Update() - AniDB mode - AniDB Series XML: " + ANIDB_HTTP_API_URL + ID + ", " + "AniDB/"+ID+".xml" )    
