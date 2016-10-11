@@ -48,6 +48,27 @@
     "default" : "400"
   },
   {
+    "id"      : "AgentPref1",
+    "label"   : "First agent preference for series metadata",
+    "type"    : "enum",
+    "values"  : ["None","AniDB","TVDB","Plex"],
+    "default" : "AniDB"
+  },
+    {
+    "id"      : "AgentPref2",
+    "label"   : "Second agent preference for series metadata",
+    "type"    : "enum",
+    "values"  : ["None","AniDB","TVDB","Plex"],
+    "default" : "TVDB"
+  },
+    {
+    "id"      : "AgentPref3",
+    "label"   : "Third agent preference for series metadata",
+    "type"    : "enum",
+    "values"  : ["None","AniDB","TVDB","Plex"],
+    "default" : "Plex"
+  },
+  {
     "id"      : "SerieLanguage1",
     "label"   : "First Language preference for the Series title",
     "type"    : "enum",
