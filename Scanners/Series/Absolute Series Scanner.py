@@ -379,7 +379,11 @@ def Scan(path, files, mediaList, subdirs, language=None, root=None, **kwargs): #
           if not ep.isdigit() and len(ep)>1 and ep[:-1].isdigit():                                                                    ### OP/ED with letter version Example: op2a
             AniDB_op [ offset + int(ep[:-1]) ] = ord( ep[-1:].lower() ) - ord('a')                                                    # {101: 0 for op1a / 152: for ed2b} and the distance between a and the version we have hereep, offset                         = str( int( ep[:-1] ) ), offset + sum( AniDB_op.values() )                             # "if xxx isdigit() else 1" implied since OP1a for example... # get the offset (100, 150, 200, 300, 400) + the sum of all the mini offset caused by letter version (1b, 2b, 3c = 4 mini offset)
             ep, offset                         = str( int( ep[:-1] ) ), offset + sum( AniDB_op.values() )                             # "if xxx isdigit() else 1" implied since OP1a for example... # get the offset (100, 150, 200, 300, 400) + the sum of all the mini offset caused by letter version (1b, 2b, 3c = 4 mini offset)
+          if offset == 100 and not(match.groupdict().has_key('title' ) and match.group('title' )): title = "Opening " + str(int(ep))
+          if offset == 150 and not(match.groupdict().has_key('title' ) and match.group('title' )): title = "Ending " + str(int(ep))
           ep = str( offset + int(ep))                                                                                                 # Add episode number to the offset, 01 by default from the match group above
+         
+          
         add_episode_into_plex(mediaList, file, root, path , show, season, int(ep), title, year, int(ep2) if ep2 and ep2.isdigit() else None, rx, tvdb_mapping); 
         break
     if match: continue  # next file iteration
