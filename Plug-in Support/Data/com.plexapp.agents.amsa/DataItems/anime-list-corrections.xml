@@ -12,9 +12,6 @@
             <mapping anidbseason="0" tvdbseason="0">;1-5;2-6;3-7;</mapping>
         </mapping-list>
     </anime>
-    <anime anidbid="11148" tvdbid="299326" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
-        <name>Valkyrie Drive: Mermaid</name>
-    </anime>
     <anime anidbid="10027" tvdbid="272849" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
         <name>Space Dandy</name>
         <mapping-list>
@@ -79,26 +76,22 @@
             <mapping anidbseason="0" tvdbseason="0">;1-13;2-14;3-15;4-16;</mapping>
         </mapping-list>
     </anime>
-    <anime anidbid="11074" tvdbid="299508" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
-        <name>Relife</name>
-    </anime>
-    <anime anidbid="11851" tvdbid="307111" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
-        <name>Berserk</name>
-    </anime>
-    <anime anidbid="11736" tvdbid="309532" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
-        <name>New Game!</name>
-    </anime>
-    <anime anidbid="12273" tvdbid="315100" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
-        <name>Soushin Shoujo Matoi</name>
-    </anime>
     <anime anidbid="11747" tvdbid="289884" defaulttvdbseason="0" episodeoffset="" tmdbid="374056" imdbid="">
         <name>Gekijouban Hibike! Euphonium: Kitauji Koukou Suisougaku Bu e Youkoso</name>
         <mapping-list>
             <mapping anidbseason="1" tvdbseason="0">;1-9;</mapping>
         </mapping-list>
     </anime>
-    <anime anidbid="11746" tvdbid="289884" defaulttvdbseason="2" episodeoffset="" tmdbid="" imdbid="">
-        <name>Hibike! Euphonium 2</name>
+    <anime anidbid="11123" tvdbid="293088" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
+        <name>One Punch Man</name>
+        <mapping-list>
+            <mapping anidbseason="0" tvdbseason="0">;1-2;2-3;3-4;4-5;5-6;6-7;</mapping>
+        </mapping-list>
+    </anime>
+    <anime anidbid="11637" tvdbid="293088" defaulttvdbseason="0" episodeoffset="" tmdbid="" imdbid="">
+        <name>One Punch Man: Road to Hero</name>
+        <mapping-list>
+            <mapping anidbseason="1" tvdbseason="0">;1-1;</mapping>
+        </mapping-list>
     </anime>
 </anime-list>
-
