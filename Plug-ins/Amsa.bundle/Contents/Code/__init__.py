@@ -96,7 +96,6 @@ class Series:
         self.contentRating = []
         self.firstAired = []
         self.genres = []
-        self.rating = []
         self.episodes = []
         self.collections = []
         self.seasons = []
@@ -420,6 +419,9 @@ class AniDB(Provider):
                             Log.Debug("Type 5")
                         #summary = "TVDB summary missing" if tvdb_ep=="" or tvdb_ep not in tvdb_table else tvdb_table [tvdb_ep] ['Overview'].replace("`", "'")
                         #mapped_eps.append(  )
+                        
+                        if epNumType=="2":
+                            matchedSeason = 0
                         
                         if epNumType=="3":
                             if ep_title.startswith("Ending"):
