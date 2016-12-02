@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
         <key>CFBundleIdentifier</key>
-        <string>com.plexapp.agents.amsa</string>
+        <string>com.plexapp.agents.amsa_test</string>
         <key>PlexAgentAttributionText</key>
         <string>Anime Multi Source Agent (AMSA) created by Dingmatt and uses the different databases and software below:&lt;br/&gt;
         
@@ -30,6 +30,10 @@
         <string>2</string>
         <key>PlexPluginClass</key>
         <string>Agent</string>
+        <key>PlexPluginCodePolicy</key>
+        <string>Elevated</string>
+        <key>PlexPluginMode</key>
+        <string>AlwaysOn</string>
 </dict>
 </plist>
 
