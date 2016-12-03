@@ -51,7 +51,6 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         score = 0
         maxi = 0
         test = 0
-
         for anime in AniDB_title_tree.xpath("""./anime/title
             [type='main' or @type='official' or @type='syn' or @type='short']
             [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
@@ -59,15 +58,19 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             element = anime.getparent()
             id = element.get('aid')
             title = anime.text
+            langTitle, mainTitle = self.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
             if title == orig_title.lower():
                 score = 100
-            else:
-                score = 100 * len(orig_title) / len(title)
-            langTitle, mainTitle = self.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
-            Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, title, score))
+            elif langTitle == orig_title.lower():
+                score = 100
+            else:   
+                score = 100 * len(orig_title) / len(langTitle)
+            
             isValid = True
+                isValid = False
+            else: 
             startdate = None
-            if(media.year and score >= 90):
+            if(media.year and score >= 90 and isValid):
                 try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
                 except: Log.Error("Update() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
                 if data: 
@@ -76,7 +79,9 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                     if str(startdate) != str(media.year):
                         isValid = False 
                     Log.Debug("search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
-            if isValid: results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
+            if isValid: 
+                Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, langTitle, score))
+                results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
 
         results.Sort('score', descending=True)
         
