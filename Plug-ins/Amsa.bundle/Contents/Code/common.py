@@ -17,7 +17,7 @@ HTTP.CacheTime = CACHE_1HOUR * 24
 def CommonStart():
     CheckData()
     CleanCache()
-    XMLFromURL(ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(ANIDB_TVDB_MAPPING_CORRECTIONS), CACHE_1HOUR * 24 * 2)
+    XMLFromURL(ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2)
 
     
 def CheckData():
@@ -29,18 +29,27 @@ def CheckData():
         os.makedirs(os.path.join(CachePath, "TvDB"))
     
 def CleanCache():
-    for directory in os.walk(CachePath):
-        directory = os.path.join(CachePath, directory[0])
-        for file in os.listdir(directory):
-            file = os.path.join( directory, file)
-            if os.path.isfile(file) and os.stat(file).st_mtime < time.time() - 3 * 86400:
-                Log.Debug("CleanCache() - file: '%s'" % (file))
-                os.remove(file)   
-               
-def XMLFromURL (url, filename="", cache=DefaultCache, timeout=DefaultTimeout, sleep=DefaultSleep):
+    for root, dirs, _  in os.walk(CachePath, topdown=False):
+        for directory in dirs:
+            directory = os.path.join(root, directory)
+            for file in os.listdir(directory):
+                file = os.path.join(directory, file)
+                if os.path.isfile(file) and os.stat(file).st_mtime < time.time() - 3 * 86400:
+                    Log.Debug("CleanCache() - file: '%s'" % (file))
+                    os.remove(file)   
+            try: 
+                if root.strip("\\\\?\\") != CachePath: 
+                    Log.Debug("CleanCache() - directory: '%s'" % (directory)) 
+                    os.rmdir(directory)    
+            except: pass       
+def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=DefaultTimeout, sleep=DefaultSleep):
     Log.Debug("XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
-    
-    filename = os.path.join(CacheDirectory, filename)
+    absoDirectory = os.path.join(CachePath, directory)
+    directory = os.path.join(CacheDirectory, directory)
+    filename = os.path.join(directory, filename)  
+    if not os.path.exists(absoDirectory):
+        Log.Debug("XMLFromURL() - dir: '%s'" % (absoDirectory))
+        os.makedirs(absoDirectory)
     result = None
     if filename and Data.Exists(filename):       
         file = os.path.abspath(os.path.join(CachePath, "..", filename))

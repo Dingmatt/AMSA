@@ -12,9 +12,9 @@ def Start():
     Log.Debug("search() - Start:")
     CommonStart()
     global AniDB_title_tree, AniDB_TVDB_mapping_tree, AniDB_collection_tree, getElementText
-    AniDB_title_tree        = XMLFromURL(anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(anidb.ANIDB_TITLES))[0], CACHE_1HOUR * 24 * 2, 60)
-    AniDB_TVDB_mapping_tree = XMLFromURL(common.ANIDB_TVDB_MAPPING, os.path.basename(common.ANIDB_TVDB_MAPPING), CACHE_1HOUR * 24 * 2)
-    AniDB_collection_tree   = XMLFromURL(common.ANIDB_COLLECTION, os.path.basename(common.ANIDB_COLLECTION), CACHE_1HOUR * 24 * 2)
+    AniDB_title_tree        = XMLFromURL(anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(anidb.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
+    AniDB_TVDB_mapping_tree = XMLFromURL(common.ANIDB_TVDB_MAPPING, os.path.basename(common.ANIDB_TVDB_MAPPING), "", CACHE_1HOUR * 24 * 2)
+    AniDB_collection_tree   = XMLFromURL(common.ANIDB_COLLECTION, os.path.basename(common.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2)
     getElementText = lambda el, xp: el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ""  # helper for getting text from XML element
 
        
@@ -68,7 +68,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             isValid = True
             startdate = None
             if(media.year and score >= 90):
-                try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, "AniDB/"+id+".xml", CACHE_1HOUR * 24).xpath('/anime')[0]
+                try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
                 except: Log.Error("Update() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
                 if data: 
                     try: startdate = dateParse(getElementText(data, 'startdate')).year
