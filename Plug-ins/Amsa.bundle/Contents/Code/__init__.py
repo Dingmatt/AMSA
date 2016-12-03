@@ -1,18 +1,21 @@
 from common import CommonStart, XMLFromURL
+from dateutil.parser import parse as dateParse
 import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb
           
 AniDB_title_tree = None
 AniDB_TVDB_mapping_tree = None
 AniDB_collection_tree = None
 
+
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
     Log.Debug("search() - Start:")
     CommonStart()
-    global AniDB_title_tree, AniDB_TVDB_mapping_tree, AniDB_collection_tree
+    global AniDB_title_tree, AniDB_TVDB_mapping_tree, AniDB_collection_tree, getElementText
     AniDB_title_tree        = XMLFromURL(anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(anidb.ANIDB_TITLES))[0], CACHE_1HOUR * 24 * 2, 60)
     AniDB_TVDB_mapping_tree = XMLFromURL(common.ANIDB_TVDB_MAPPING, os.path.basename(common.ANIDB_TVDB_MAPPING), CACHE_1HOUR * 24 * 2)
     AniDB_collection_tree   = XMLFromURL(common.ANIDB_COLLECTION, os.path.basename(common.ANIDB_COLLECTION), CACHE_1HOUR * 24 * 2)
+    getElementText = lambda el, xp: el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ""  # helper for getting text from XML element
 
        
 ### Agent declaration ###############################################################################################################################################
@@ -27,19 +30,19 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     def search(self, results, media, lang, manual=False):
         Log.Debug("=== Search - Begin - ================================================================================================")
         orig_title = unicodedata.normalize('NFC', unicode(media.show)).strip().replace("`", "'")
-        #if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
+        if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
         
         Log.Info("search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, media.filename, str(manual)))
         
-        match = re.search("(?P<show>.*?) ?\[(?P<source>(anidb|tvdb|tmdb|imdb))-(tt)?(?P<guid>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
+        match = re.search("(?P<show>.*?) ?\[(?P<source>(anidb|tvdb|tmdb|imdb))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:  ###metadata id provided
             source = match.group('source').lower() 
-            guid = match.group('guid')
+            id = match.group('guid')
             show = match.group('show')
             if source=="anidb":  
-                show, mainTitle = Helpers().getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % guid), SERIE_LANGUAGE_PRIORITY)
-            Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, guid, show, orig_title) )
-            results.Append(MetadataSearchResult(id="%s-%s" % (source, guid), name=show, year=media.year, lang=Locale.Language.English, score=100))
+                show, mainTitle = Helpers().getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id), SERIE_LANGUAGE_PRIORITY)
+            Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
+            results.Append(MetadataSearchResult(id="%s-%s" % (source, v), name=show, year=media.year, lang=Locale.Language.English, score=100))
             return
         
         #if media.year is not None: orig_title = orig_title + " (" + str(media.year) + ")"
@@ -54,22 +57,28 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
             or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'"),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
             element = anime.getparent()
-            aid = element.get('aid')
+            id = element.get('aid')
             title = anime.text
             if title == orig_title.lower():
                 score = 100
             else:
                 score = 100 * len(orig_title) / len(title)
             langTitle, mainTitle = self.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
-            Log.Debug("search() - find - aid: '%s', title: '%s', score: '%s'" % (aid, title, score))
-            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", aid), name="%s [%s-%s]" % (langTitle, "anidb", aid), year=media.year, lang=Locale.Language.English, score=score))
+            Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, title, score))
+            isValid = True
+            startdate = None
+            if(media.year and score >= 90):
+                try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, "AniDB/"+id+".xml", CACHE_1HOUR * 24).xpath('/anime')[0]
+                except: Log.Error("Update() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
+                if data: 
+                    try: startdate = dateParse(getElementText(data, 'startdate')).year
+                    except: pass
+                    if str(startdate) != str(media.year):
+                        isValid = False 
+                    Log.Debug("search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
+            if isValid: results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
 
-            
         results.Sort('score', descending=True)
-        if len(results)>=1:  
-            return  
-
-        
         
         return
         
