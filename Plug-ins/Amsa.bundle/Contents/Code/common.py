@@ -18,6 +18,7 @@ def CommonStart():
     CheckData()
     CleanCache()
     XMLFromURL(ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(ANIDB_TVDB_MAPPING_CORRECTIONS), CACHE_1HOUR * 24 * 2)
+
     
 def CheckData():
     if not os.path.exists(CachePath):
@@ -72,7 +73,7 @@ def XMLFromURL (url, filename="", cache=DefaultCache, timeout=DefaultTimeout, sl
         result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
 
     if result:
-        #element = XML.ElementFromString(result)
+        result = XML.ElementFromString(result)
         if str(result).startswith("<Element error at "):  
             Log.Debug("xmlElementFromFile() - Not an XML file, AniDB banned possibly, result: '%s'" % result)
         else:       
