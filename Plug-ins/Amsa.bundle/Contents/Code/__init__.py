@@ -17,7 +17,17 @@ def Start():
     AniDB_collection_tree   = XMLFromURL(common.ANIDB_COLLECTION, os.path.basename(common.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2)
     getElementText = lambda el, xp: el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ""  # helper for getting text from XML element
 
-       
+
+### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
+def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
+    DefaultPrefs = ("GetTvdbFanart", "GetTvdbPosters", "GetTvdbBanners", "GetAnidbPoster", "localart", "adult", 
+                  "GetPlexThemes", "MinimumWeight", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", 
+                  "AgentPref1", "AgentPref2", "AgentPref3", "EpisodeLanguage1", "EpisodeLanguage2")
+    try:  [Prefs[key] for key in DefaultPrefs]
+    except:  Log.Error("DefaultPrefs.json invalid" );  return MessageContainer ('Error', "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
+    else:    Log.Info ("DefaultPrefs.json is valid");  return MessageContainer ('Success', 'AMSA - Provided preference values are ok')
+  
+  
 ### Agent declaration ###############################################################################################################################################
 class AmsaTVAgentTest(Agent.TV_Shows):
     name = 'Anime Multi Source Agent (Test)'
@@ -31,26 +41,23 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         Log.Debug("=== Search - Begin - ================================================================================================")
         orig_title = unicodedata.normalize('NFC', unicode(media.show)).strip().replace("`", "'")
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        
         Log.Info("search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, media.filename, str(manual)))
         
-        match = re.search("(?P<show>.*?) ?\[(?P<source>(anidb|tvdb|tmdb|imdb))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
-        if match:  ###metadata id provided
-            source = match.group('source').lower() 
-            id = match.group('guid')
+        match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
+        if match:
             show = match.group('show')
-            if source=="anidb":  
-                show, mainTitle = Helpers().getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id), SERIE_LANGUAGE_PRIORITY)
-            Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
-            results.Append(MetadataSearchResult(id="%s-%s" % (source, v), name=show, year=media.year, lang=Locale.Language.English, score=100))
-            return
+            source = match.group('source').lower() 
+            if source in ["anidb", "tvdb"]:
+                id = match.group('id')
+                startdate = None
+                if source=="anidb":  
+                    show, mainTitle = anidb.getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id), anidb.SERIE_LANGUAGE_PRIORITY)
+                Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
+                results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=show, year=startdate, lang=Locale.Language.English, score=100))
+                return
+            else: orig_title = show
         
-        #if media.year is not None: orig_title = orig_title + " (" + str(media.year) + ")"
-        parent_element = None
-        show = ""
-        score = 0
-        maxi = 0
-        test = 0
+        maxi = {}
         for anime in AniDB_title_tree.xpath("""./anime/title
             [type='main' or @type='official' or @type='syn' or @type='short']
             [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
@@ -58,7 +65,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             element = anime.getparent()
             id = element.get('aid')
             title = anime.text
-            langTitle, mainTitle = self.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
+            langTitle, mainTitle = anidb.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
             if title == orig_title.lower():
                 score = 100
             elif langTitle == orig_title.lower():
@@ -67,8 +74,10 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 score = 100 * len(orig_title) / len(langTitle)
             
             isValid = True
+            if id in maxi and maxi[id] <= score:
                 isValid = False
             else: 
+                maxi[id] = score 
             startdate = None
             if(media.year and score >= 90 and isValid):
                 try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
@@ -84,29 +93,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
 
         results.Sort('score', descending=True)
-        
         return
         
-    def getAniDBTitle(self, titles, languages):
-        if not 'main' in languages:  languages.append('main')                                                                                      # Add main to the selection if not present
-        langTitles = ["" for index in range(len(languages)+1)]                                                                                     # languages: title order including main title, then choosen title
-        for title in titles:                                                                                                                       # Loop through all languages listed in the anime XML
-            type, lang = title.get('type'), title.get('{http://www.w3.org/XML/1998/namespace}lang')                                                  # If Serie: Main, official, Synonym, short. If episode: None # Get the language, 'xml:lang' attribute need hack to read properly
-            if type == 'main' or type == None and langTitles[ languages.index('main') ] == "":  langTitles [ languages.index('main') ] = title.text  # type==none is for mapping episode language
-            if lang in languages and type in ['main', 'official', None]:      langTitles [ languages.index( lang ) ] = title.text  # 'Applede' Korean synonym fix 
-            if lang in languages and langTitles[languages.index( lang )] == "": 
-                #Log.Debug("AniDB Title : %s " % (lang))  
-                langTitles.pop(languages.index( lang )) 
-                if lang in languages and type in ['syn', 'synonym', None]:    
-                    langTitles.insert(languages.index( lang ) + 1, title.text)
-                else:
-                    langTitles.append('')
-                           
-            #if type == 'main' or type == None and langTitles[ languages.index('main') ] == "":  langTitles [ languages.index('main') ] = title.text  # type==none is for mapping episode language
-            #if lang in languages and type in ['main', 'official', 'syn', 'synonym', None]:      langTitles [ languages.index( lang ) ] = title.text  # 'Applede' Korean synonym fix
-        for index in range( len(languages) ):                                                                                                      # Loop through title result array
-            if langTitles[index]:  langTitles[len(languages)] = langTitles[index];  break                                               # If title present we're done
-        else: langTitles[len(languages)] = langTitles[languages.index('main')]                                     # Fallback on main title
-        #Log.Debug("AniDB Title : %s | %s | %s" % (langTitles, languages, langTitles[len(languages)]))    
-        return langTitles[len(languages)].replace("`", "'").encode("utf-8"), langTitles[languages.index('main')].replace("`", "'").encode("utf-8") #    
+   
     
