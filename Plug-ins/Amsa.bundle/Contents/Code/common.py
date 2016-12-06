@@ -19,8 +19,7 @@ def CommonStart():
     CheckData()
     CleanCache()
     XMLFromURL(ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2)
-
-    
+ 
 def CheckData():
     if not os.path.exists(CachePath):
         os.makedirs(CachePath)

@@ -23,9 +23,9 @@ def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
     DefaultPrefs = ("GetTvdbFanart", "GetTvdbPosters", "GetTvdbBanners", "GetAnidbPoster", "localart", "adult", 
                   "GetPlexThemes", "MinimumWeight", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", 
                   "AgentPref1", "AgentPref2", "AgentPref3", "EpisodeLanguage1", "EpisodeLanguage2")
-    try:  [Prefs[key] for key in DefaultPrefs]
-    except:  Log.Error("DefaultPrefs.json invalid" );  return MessageContainer ('Error', "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
-    else:    Log.Info ("DefaultPrefs.json is valid");  return MessageContainer ('Success', 'AMSA - Provided preference values are ok')
+    try: [Prefs[key] for key in DefaultPrefs]
+    except: Log.Error("DefaultPrefs.json invalid" );  return MessageContainer ('Error', "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
+    else: Log.Info ("DefaultPrefs.json is valid");  return MessageContainer ('Success', 'AMSA - Provided preference values are ok')
   
   
 ### Agent declaration ###############################################################################################################################################
@@ -58,6 +58,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             else: orig_title = show
         
         maxi = {}
+        elite = []
         @parallelize
         def searchTitles():
             for anime in AniDB_title_tree.xpath("""./anime/title
@@ -82,7 +83,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                         if id in maxi and maxi[id] <= score:
                             isValid = False
                         else: 
-                            maxi[id] = score 
+                            maxi[id] = score
                         startdate = None
                         if(media.year and score >= 90 and isValid):
                             try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
@@ -93,10 +94,15 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                                 if str(startdate) != str(media.year):
                                     isValid = False 
                                 Log.Debug("search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
+                            elite.append(isValid)
+                        elif score >= 90 and isValid:
+                            elite.append(isValid)
                         if isValid: 
                             Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, langTitle, score))
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
-
+            
+        if len(elite) > 0 and not True in elite: del results[:]
+        
         results.Sort('score', descending=True)
         return
         
