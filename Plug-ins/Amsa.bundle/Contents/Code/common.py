@@ -9,11 +9,11 @@ ANIDB_TVDB_MAPPING_CORRECTIONS  = "http://raw.githubusercontent.com/Dingmatt/AMS
 AniDB_title_tree = None
 AniDB_TVDB_mapping_tree = None
 AniDB_collection_tree = None
-DefaultSleep = 0
 DefaultTimeout = 30
 DefaultCache = CACHE_1HOUR * 24
 HTTP.CacheTime = CACHE_1HOUR * 24
 netLock = Thread.Lock()
+
                              
 def CommonStart():
     CheckData()
@@ -44,7 +44,7 @@ def CleanCache():
                     os.rmdir(directory)    
             except: pass  
             
-def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=DefaultTimeout, sleep=DefaultSleep):
+def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=DefaultTimeout):
     Log.Debug("XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     try:
         netLock.acquire()
@@ -63,7 +63,7 @@ def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=Defa
                 result = Data.Load(filename)   
         
         if not result:
-            try: result = str(HTTP.Request(url, headers={'Accept-Encoding':'gzip', 'content-type':'charset=utf8'}, cacheTime=cache, sleep=sleep, timeout=timeout))
+            try: result = str(HTTP.Request(url, headers={'Accept-Encoding':'gzip', 'content-type':'charset=utf8'}, cacheTime=cache, timeout=timeout))
             except Exception as e: 
                 result = None 
                 Log.Debug("XMLFromURL() - XML issue loading url: '%s', Exception: '%s'" % (url, e))                                                    

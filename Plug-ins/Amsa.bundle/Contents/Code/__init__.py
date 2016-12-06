@@ -51,7 +51,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 id = match.group('id')
                 startdate = None
                 if source=="anidb":  
-                    show, mainTitle = anidb.getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id), anidb.SERIE_LANGUAGE_PRIORITY)
+                    show = anidb.getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id))
                 Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
                 results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=show, year=startdate, lang=Locale.Language.English, score=100))
                 return
@@ -68,33 +68,34 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 def scoreTitle(anime=anime, maxi=maxi):
                     element = anime.getparent()
                     id = element.get('aid')
-                    title = anime.text
-                    langTitle, mainTitle = anidb.getAniDBTitle(element, anidb.SERIE_LANGUAGE_PRIORITY)
-                    if title == orig_title.lower():
-                        score = 100
-                    elif langTitle == orig_title.lower():
-                        score = 100
-                    else:   
-                        score = 100 * len(orig_title) / len(langTitle)
-                    
-                    isValid = True
-                    if id in maxi and maxi[id] <= score:
-                        isValid = False
-                    else: 
-                        maxi[id] = score 
-                    startdate = None
-                    if(media.year and score >= 90 and isValid):
-                        try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24, 10, 2).xpath('/anime')[0]
-                        except: Log.Error("Update() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
-                        if data: 
-                            try: startdate = dateParse(getElementText(data, 'startdate')).year
-                            except: pass
-                            if str(startdate) != str(media.year):
-                                isValid = False 
-                            Log.Debug("search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
-                    if isValid: 
-                        Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, langTitle, score))
-                        results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
+                    if not id in maxi: 
+                        title = anime.text
+                        langTitle = anidb.getAniDBTitle(element)
+                        if title == orig_title.lower():
+                            score = 100
+                        elif langTitle == orig_title.lower():
+                            score = 100
+                        else:   
+                            score = 100 * len(orig_title) / len(langTitle)
+                        
+                        isValid = True
+                        if id in maxi and maxi[id] <= score:
+                            isValid = False
+                        else: 
+                            maxi[id] = score 
+                        startdate = None
+                        if(media.year and score >= 90 and isValid):
+                            try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
+                            except: Log.Error("Update() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
+                            if data: 
+                                try: startdate = dateParse(getElementText(data, 'startdate')).year
+                                except: pass
+                                if str(startdate) != str(media.year):
+                                    isValid = False 
+                                Log.Debug("search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
+                        if isValid: 
+                            Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, langTitle, score))
+                            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
 
         results.Sort('score', descending=True)
         return
