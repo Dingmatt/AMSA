@@ -1,4 +1,7 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml
+from lxml import etree
+from lxml.builder import E
+from lxml.etree import Element, SubElement, Comment
 
 CacheDirectory = "Cache"
 CachePath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems", CacheDirectory))                                                
@@ -16,17 +19,8 @@ netLock = Thread.Lock()
 
                              
 def CommonStart():
-    CheckData()
     CleanCache()
     XMLFromURL(ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2)
- 
-def CheckData():
-    if not os.path.exists(CachePath):
-        os.makedirs(CachePath)
-    if not os.path.exists(os.path.join(CachePath, "AniDB")):
-        os.makedirs(os.path.join(CachePath, "AniDB"))
-    if not os.path.exists(os.path.join(CachePath, "TvDB")):
-        os.makedirs(os.path.join(CachePath, "TvDB"))
     
 def CleanCache():
     for root, dirs, _  in os.walk(CachePath, topdown=False):
@@ -35,12 +29,12 @@ def CleanCache():
             for file in os.listdir(directory):
                 file = os.path.join(directory, file)
                 if os.path.isfile(file) and os.stat(file).st_mtime < time.time() - 3 * 86400:
-                    Log.Debug("CleanCache() - file: '%s'" % (file))
                     os.remove(file)   
+                    Log.Debug("CleanCache() - file: '%s'" % (file))
             try: 
                 if root.strip("\\\\?\\") != CachePath: 
+                    os.rmdir(directory)   
                     Log.Debug("CleanCache() - directory: '%s'" % (directory)) 
-                    os.rmdir(directory)    
             except: pass  
             
 def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=DefaultTimeout):
@@ -94,3 +88,21 @@ def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=Defa
         netLock.release()
         
     return None
+
+def AddToPersistant(directory, title, id):
+    if Data.Exists("PersistentPaths.xml"):
+        persistent = Data.Load("PersistentPaths.xml")
+    else:
+        persistent = etree.tostring(E.Paths(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
+    #Log("XML: %s" % (persistant))
+    persistent = XML.ElementFromString(persistent)
+    path = persistent.xpath("""./path/title[@directory='%s' ][@title='%s' ]""" % (directory.lower(), title.lower()))
+    if path:
+        path.text = str(id)
+    else:
+        child = SubElement(persistent, 'Path', directory=directory, title=title)
+        child.text = str(id)
+    Data.Save("PersistentPaths.xml", etree.tostring(persistent, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
+    return
+    
+    

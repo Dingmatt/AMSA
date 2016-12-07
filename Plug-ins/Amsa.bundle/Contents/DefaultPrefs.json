@@ -42,6 +42,12 @@
     "default" : "false"
   },
   {
+    "id"      : "UsePersistent",
+    "label"   : "Use the persistent path helper",
+    "type"    : "bool",
+    "default" : "true"
+  },
+  {
     "id"      : "MinimumWeight",
     "label"   : "Map categories at or above the minimum weight selected",
     "type"    : "text",

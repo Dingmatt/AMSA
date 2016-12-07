@@ -1,6 +1,6 @@
-from common import CommonStart, XMLFromURL
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb, urllib
+from common import CommonStart, XMLFromURL, AddToPersistant
 from dateutil.parser import parse as dateParse
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb
           
 AniDB_title_tree = None
 AniDB_TVDB_mapping_tree = None
@@ -41,7 +41,10 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         Log.Debug("=== Search - Begin - ================================================================================================")
         orig_title = unicodedata.normalize('NFC', unicode(media.show)).strip().replace("`", "'")
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        Log.Info("search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, media.filename, str(manual)))
+        Log.Info("search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else '', str(manual)))
+        
+        #if manual:
+        #    AddToPersistant(os.path.dirname(os.path.abspath(urllib.unquote(media.filename))), media.name, 1000)
         
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
@@ -52,8 +55,8 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 startdate = None
                 if source=="anidb":  
                     show = anidb.getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id))
-                Log.Debug( "search - source: '%s', id: '%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
-                results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=show, year=startdate, lang=Locale.Language.English, score=100))
+                Log.Debug( "search - force - id: '%s-%s%s', show from id: '%s' provided in foldername: '%s'" % (source, id, '-m' if manual else '', show, orig_title) )
+                results.Append(MetadataSearchResult(id="%s-%s%s" % (source, id, '-m' if manual else ''), name=show, year=startdate, lang=Locale.Language.English, score=100))
                 return
             else: orig_title = show
         
@@ -62,7 +65,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         @parallelize
         def searchTitles():
             for anime in AniDB_title_tree.xpath("""./anime/title
-                [type='main' or @type='official' or @type='syn' or @type='short']
+                [@type='main' or @type='official' or @type='syn' or @type='short']
                 [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
                 or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'"),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
                 @task
@@ -98,11 +101,10 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                         elif score >= 90 and isValid:
                             elite.append(isValid)
                         if isValid: 
-                            Log.Debug("search() - find - id: '%s', title: '%s', score: '%s'" % (id, langTitle, score))
-                            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
+                            Log.Debug("search() - find - id: '%s-%s%s', title: '%s', score: '%s'" % ("anidb", id, '-m' if manual else '', langTitle, score))
+                            results.Append(MetadataSearchResult(id="%s-%s%s" % ("anidb", id, '-m' if manual else '' ), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
             
         if len(elite) > 0 and not True in elite: del results[:]
-        
         results.Sort('score', descending=True)
         return
         
