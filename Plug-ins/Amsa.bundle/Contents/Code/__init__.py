@@ -44,7 +44,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         Log.Info("search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else '', str(manual)))
         
         #if manual:
-        #    AddToPersistant(os.path.dirname(os.path.abspath(urllib.unquote(media.filename))), media.name, 1000)
+        #    AddToPersistant(os.path.dirname(os.path.abspath(urllib.unquote(media.filename))).lower() if media.filename else '', orig_title.lower(), 7529)
         
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
@@ -60,14 +60,26 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 return
             else: orig_title = show
         
+        resultList = None
+        if Data.Exists("PersistentPaths.xml") and not manual and media.filename:
+            persistent = XML.ElementFromString(Data.Load("PersistentPaths.xml"))
+            path = persistent.xpath("""./Path[@directory="%s"][@title="%s"]""" % (os.path.dirname(os.path.abspath(urllib.unquote(media.filename))).lower(), orig_title.lower()))
+            if path:
+                Log.Error("Update() - PersistentPaths") 
+                resultList = AniDB_title_tree.xpath("""./anime[@aid='%s']""" % (path[0].text))[0].getchildren()
+        
+        if not resultList:
+            resultList = AniDB_title_tree.xpath("""./anime/title
+                [@type='main' or @type='official' or @type='syn' or @type='short']
+                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
+                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'"),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'")))
+            Log.Error("Update() - SearchTree") 
+        
         maxi = {}
         elite = []
         @parallelize
         def searchTitles():
-            for anime in AniDB_title_tree.xpath("""./anime/title
-                [@type='main' or @type='official' or @type='syn' or @type='short']
-                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
-                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'"),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
+            for anime in resultList:
                 @task
                 def scoreTitle(anime=anime, maxi=maxi):
                     element = anime.getparent()

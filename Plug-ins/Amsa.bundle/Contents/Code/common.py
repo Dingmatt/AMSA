@@ -96,11 +96,11 @@ def AddToPersistant(directory, title, id):
         persistent = etree.tostring(E.Paths(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
     #Log("XML: %s" % (persistant))
     persistent = XML.ElementFromString(persistent)
-    path = persistent.xpath("""./path/title[@directory='%s' ][@title='%s' ]""" % (directory.lower(), title.lower()))
+    path = persistent.xpath("""./Path[@directory='%s' ][@title='%s' ]""" % (directory.lower(), title.lower()))
     if path:
-        path.text = str(id)
+        path[0].text = str(id)
     else:
-        child = SubElement(persistent, 'Path', directory=directory, title=title)
+        child = SubElement(persistent, 'Path', directory=directory.lower(), title=title.lower())
         child.text = str(id)
     Data.Save("PersistentPaths.xml", etree.tostring(persistent, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
     return
