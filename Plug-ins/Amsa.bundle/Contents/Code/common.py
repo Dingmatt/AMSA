@@ -36,7 +36,7 @@ def CleanCache():
                     os.rmdir(directory)   
                     Log.Debug("CleanCache() - directory: '%s'" % (directory)) 
             except: pass  
-            
+    
 def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=DefaultTimeout):
     Log.Debug("XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     try:
@@ -89,20 +89,4 @@ def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=Defa
         
     return None
 
-def AddToPersistant(directory, title, id):
-    if Data.Exists("PersistentPaths.xml"):
-        persistent = Data.Load("PersistentPaths.xml")
-    else:
-        persistent = etree.tostring(E.Paths(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
-    #Log("XML: %s" % (persistant))
-    persistent = XML.ElementFromString(persistent)
-    path = persistent.xpath("""./Path[@directory='%s' ][@title='%s' ]""" % (directory.lower(), title.lower()))
-    if path:
-        path[0].text = str(id)
-    else:
-        child = SubElement(persistent, 'Path', directory=directory.lower(), title=title.lower())
-        child.text = str(id)
-    Data.Save("PersistentPaths.xml", etree.tostring(persistent, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
-    return
-    
     
