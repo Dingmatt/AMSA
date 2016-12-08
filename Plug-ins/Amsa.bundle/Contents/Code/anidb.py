@@ -23,3 +23,6 @@ def getAniDBTitle(titles):
         title = [x.text for x in titles if x.get('type') == 'main'][0]
     
     return title
+    
+def populateMetadata(id, mappingData):
+    return None

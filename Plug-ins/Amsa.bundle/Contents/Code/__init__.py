@@ -108,11 +108,23 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):
         Log.Debug('--- Update Begin -------------------------------------------------------------------------------------------')
-        source, id = metadata.id.split('-')
-
-        Log.Debug("Update() - source: '%s', id: '%s'" % (source, id))
+        source, id = metadata.id.split('-')     
         
-        if source == "anidb": anidbid = id                                     
-        data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24)
-        langTitle = anidb.getAniDBTitle(data.xpath('/anime/titles')[0])
+        mappingData = None
+        if source == "anidb": 
+            anidbid = id
+            mappingData = AniDB_TVDB_mapping_tree.xpath("""./anime[@anidbid="%s"]""" % (anidbid))[0]
+            if mappingData:
+                tvdbid = mappingData.get('tvdbid')
+        if source == "tvdbid": 
+            tvdbid = id
+            mappingData = AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))[0]
+            if mappingData:
+                anidbid = mappingData.get('anidbid')
+        
+        Log.Debug("Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, anidbid, tvdbid))
+        
+        anidb. populateMetadata(anidbid, mappingData)
+        #data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24)
+        #langTitle = anidb.getAniDBTitle(data.xpath('/anime/titles')[0])
     
