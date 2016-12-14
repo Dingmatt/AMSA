@@ -55,7 +55,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 startdate = None
                 if source=="anidb":  
                     show = anidb.getAniDBTitle(AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id))
-                Log.Debug("Init - Search() - force - id: '%s-%s%s', show from id: '%s' provided in foldername: '%s'" % (source, id, '-m' if manual else '', show, orig_title) )
+                Log.Debug("Init - Search() - force - id: '%s-%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
                 results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=show, year=startdate, lang=Locale.Language.English, score=100))
                 return
             else: orig_title = show

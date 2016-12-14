@@ -42,6 +42,7 @@ def XMLFromURL (url, filename="", directory="", cache=DefaultCache, timeout=Defa
     Log.Debug("Common - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     try:
         netLock.acquire()
+        filename = os.path.join(CacheDirectory, directory, filename) 
         result = None
         if filename and Data.Exists(filename):       
             file = os.path.abspath(os.path.join(CachePath, "..", filename))
@@ -96,22 +97,35 @@ def SaveFile(file, filename="", directory=""):
 def MapSeries(media):
     root = etree.tostring(E.Series(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
     root = XML.ElementFromString(root)
-    for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False): 
-        season = SubElement(root, "Season", num=media_season)
-        for media_episode in sorted(media.seasons[media_season].episodes, key=lambda x: int(x),  reverse=False):
-            episode = SubElement(season, "Episode", num=media_episode)
-            SubElement(episode, "Number").text = "S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2))
-            streams = SubElement(episode, "Streams")
-            for media_item in media.seasons[media_season].episodes[media_episode].items:
-                for item_part in media_item.parts:
-                    SubElement(episode, "Filename").text = "%s" % (os.path.splitext(os.path.basename(item_part.file.lower()))[0]) 
-                    for stream in item_part.streams:
-                        SubElement(streams, "Stream", type=str(Stream_Types.get(stream.type, "None")), lang=str(getattr(stream, "language", getattr(stream, "language", None))))
-            collection = []            
-            if not streams.xpath("""./Stream[@type="%s"][@lang="%s"]""" % ("audio", "eng")) == None: collection.append("English Dubbed")
-            if not (streams.xpath("""./Stream[@type="%s"][@lang="%s"]""" % ("audio", "jpn")) and streams.xpath("""./Stream[@type="%s"][@lang="%s"]""" % ("subtitle", "eng"))) == None: collection.append("English Subbed")
-            SubElement(episode, "Collection").text = ";".join(collection)
-    
+    @parallelize
+    def mapSeasons():
+        for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
+            @task
+            def mapSeason(media_season=media_season):
+                season = SubElement(root, "Season", num=media_season)
+                @parallelize
+                def mapEpisodes():
+                    for media_episode in sorted(media.seasons[media_season].episodes, key=lambda x: int(x),  reverse=False):
+                        @task
+                        def mapEpisode(media_season=media_season, media_episode=media_episode):
+                            episode = SubElement(season, "Episode", num=media_episode)
+                            SubElement(episode, "Number").text = "S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2))           
+                            streams = SubElement(episode, "Streams")
+                            for media_item in media.seasons[media_season].episodes[media_episode].items:
+                                for item_part in media_item.parts:
+                                    filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
+                                    type = "episode"
+                                    if int(media_season) == 0 and int(media_episode) >= 150 and re.match(r'.*\b(?:nced|ed)+\d*\b.*', filename): type = "ending"
+                                    elif int(media_season) == 0 and int(media_episode) >= 100 and re.match(r'.*\b(?:ncop|op)+\d*\b.*', filename): type = "opening"
+                                    SubElement(episode, "Type").text = "%s" % (type)
+                                    SubElement(episode, "Filename").text = "%s" % (filename) 
+                                    for stream in item_part.streams:
+                                        SubElement(streams, "Stream", type=str(Stream_Types.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
+                            collection = []            
+                            if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0: collection.append("English Dubbed")
+                            if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0: collection.append("English Subbed")
+                            SubElement(episode, "Collection").text = ";".join(collection)
+        
     return root
     
     
