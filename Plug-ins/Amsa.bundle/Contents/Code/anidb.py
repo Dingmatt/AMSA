@@ -1,3 +1,4 @@
+from common import XMLFromURL
 
 ANIDB_TITLES                 = 'http://anidb.net/api/anime-titles.xml.gz'   
 ANIDB_HTTP_API_URL           = 'http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid='          #
@@ -25,4 +26,9 @@ def getAniDBTitle(titles):
     return title
     
 def populateMetadata(id, mappingData):
+    try: data = XMLFromURL(ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
+    except: Log.Error("Anidb - PopulateMetadata() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
+    if data:
+        langTitle = getAniDBTitle(data.xpath('/anime/titles')[0])
+    
     return None
