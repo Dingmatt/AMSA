@@ -1,4 +1,4 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
@@ -93,10 +93,40 @@ def SaveFile(file, filename="", directory=""):
         Log.Debug("Common - SaveFile() - dir: '%s'" % (absoDirectory))
         os.makedirs(absoDirectory)
     Data.Save(filename, file)
+
+def GetElementText(el, xp):
+    return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
     
-def MapSeries(media):
+def MapSeries(media, mappingXml):
     root = etree.tostring(E.Series(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
     root = XML.ElementFromString(root)
+    
+    mapping = SubElement(root, "Mapping")
+    for series in mappingXml if mappingXml else []:
+        anidbid = series.get("anidbid")
+        episodeoffset = series.get("episodeoffset")  
+        try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
+        except: Log.Error("Init - Search() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
+        if data: 
+            episodecount = GetElementText(data, "episodecount") 
+            Log.Debug("Common - MapSeries() - episodecount: '%s'" % episodecount)
+              
+        seriesMap = SubElement(mapping, "Series", anidbid=anidbid, tvdbid=series.get("tvdbid"))
+        
+        for season in series.xpath("""./mapping-list/mapping""") if mappingXml else []:
+            if season.get("offset"): 
+                i = int(season.get("start"))
+                for i in range(int(season.get("start")), int(season.get("end"))+1):
+                    Log.Debug("Common - MapSeries() - range: '%s'" % i)
+                    SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), str(i).zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),str(i + int(season.get("offset"))).zfill(2)))
+            if season.text != None:
+                for string in filter(None, season.text.split(';')): 
+                    SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),string.split('-')[1].zfill(2)))
+        for i in range(1, int(episodecount)+1):
+            if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
+                SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (series.get("defaulttvdbseason").zfill(2),str(i + int(episodeoffset if episodeoffset else 0)).zfill(2)))               
+        seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])) )
+        
     @parallelize
     def mapSeasons():
         for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
@@ -109,8 +139,15 @@ def MapSeries(media):
                         @task
                         def mapEpisode(media_season=media_season, media_episode=media_episode):
                             episode = SubElement(season, "Episode", num=media_episode)
-                            SubElement(episode, "Number").text = "S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2))           
+                            SubElement(episode, "Series")
+                            SubElement(episode, "Number") #.text = "S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2))           
                             streams = SubElement(episode, "Streams")
+                            
+                            #for map in mapping.xpath("""./Series[@anidbid="%s"]""" %()):
+                            #    for map.xpath("""./Episode[@anidb="%s"]"""):
+                            
+                           
+                            
                             for media_item in media.seasons[media_season].episodes[media_episode].items:
                                 for item_part in media_item.parts:
                                     filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
@@ -125,7 +162,8 @@ def MapSeries(media):
                             if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0: collection.append("English Dubbed")
                             if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0: collection.append("English Subbed")
                             SubElement(episode, "Collection").text = ";".join(collection)
-        
+       
+                            
     return root
     
     

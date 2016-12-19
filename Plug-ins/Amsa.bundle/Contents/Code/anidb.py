@@ -1,4 +1,4 @@
-from common import XMLFromURL
+#from common import XMLFromURL
 
 ANIDB_TITLES                 = 'http://anidb.net/api/anime-titles.xml.gz'   
 ANIDB_HTTP_API_URL           = 'http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid='          #

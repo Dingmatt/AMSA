@@ -1,5 +1,5 @@
 import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb, urllib
-from common import CommonStart, XMLFromURL, SaveFile, MapSeries
+from common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
 from dateutil.parser import parse as dateParse
 from lxml import etree
 from lxml.builder import E
@@ -14,11 +14,11 @@ AniDB_collection_tree = None
 def Start():
     Log.Debug('--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------')
     CommonStart()
-    global AniDB_title_tree, AniDB_TVDB_mapping_tree, AniDB_collection_tree, getElementText
+    global AniDB_title_tree, AniDB_TVDB_mapping_tree, AniDB_collection_tree
     AniDB_title_tree        = XMLFromURL(anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(anidb.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
     AniDB_TVDB_mapping_tree = XMLFromURL(common.ANIDB_TVDB_MAPPING, os.path.basename(common.ANIDB_TVDB_MAPPING), "", CACHE_1HOUR * 24 * 2)
     AniDB_collection_tree   = XMLFromURL(common.ANIDB_COLLECTION, os.path.basename(common.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2)
-    getElementText = lambda el, xp: el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ""  # helper for getting text from XML element
+   
 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
@@ -92,7 +92,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                             try: data = XMLFromURL(anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
                             except: Log.Error("Init - Search() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
                             if data: 
-                                try: startdate = dateParse(getElementText(data, 'startdate')).year
+                                try: startdate = dateParse(GetElementText(data, 'startdate')).year
                                 except: pass
                                 if str(startdate) != str(media.year):
                                     isValid = False 
@@ -126,7 +126,17 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 anidbid = mappingData.get('anidbid')  
         Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, anidbid, tvdbid))
         
-        map = MapSeries(media)
+        mappingXml = AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))
+        map = MapSeries(media, mappingXml)
+        
+        for mappedSeries in AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid)):
+            anidbid_season = mappedSeries.get('anidbid')
+            Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, tvdbid))
+            series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get('defaulttvdbseason')))[0]
+            if series:
+                series.set("anidbid", anidbid)
+                series.set("tvdbid", tvdbid)
+        
         SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), id + "_map.xml", "AniDB\\" + id)
         
         #anidb. populateMetadata(anidbid, mappingData)
