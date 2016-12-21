@@ -132,12 +132,12 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         for mappedSeries in AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid)):
             anidbid_season = mappedSeries.get('anidbid')
             Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, tvdbid))
-            series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get('defaulttvdbseason')))[0]
-            if series:
-                series.set("anidbid", anidbid)
-                series.set("tvdbid", tvdbid)
+            #series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get('defaulttvdbseason')))[0]
+            #if series:
+            #    series.set("anidbid", anidbid)
+            #    series.set("tvdbid", tvdbid)
         
-        SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), id + "_map.xml", "AniDB\\" + id)
+        SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), id + ".bundle.xml", "Bundles\\")
         
         #anidb. populateMetadata(anidbid, mappingData)
 

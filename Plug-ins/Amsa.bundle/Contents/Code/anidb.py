@@ -24,7 +24,7 @@ def getAniDBTitle(titles):
         title = [x.text for x in titles if x.get('type') == 'main'][0]
     
     return title
-    
+   
 def populateMetadata(id, mappingData):
     try: data = XMLFromURL(ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
     except: Log.Error("Anidb - PopulateMetadata() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
