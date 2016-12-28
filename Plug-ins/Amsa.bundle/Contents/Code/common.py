@@ -6,7 +6,7 @@ from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 
 class Common():
-    global AniDB_WaitUntil
+    global AniDB_WaitUntil, CleanCache_WaitUntil
     CacheDirectory = "Cache"
     CachePath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems", CacheDirectory))                                                
     ANIDB_TVDB_MAPPING              = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml"                                                                                
@@ -17,23 +17,29 @@ class Common():
     AniDB_TVDB_mapping_tree = None
     AniDB_collection_tree = None
     AniDB_WaitUntil = datetime.datetime.now()
+    CleanCache_WaitUntil = datetime.datetime.now()
     DefaultTimeout = 30
     DefaultCache = CACHE_1HOUR * 24
     HTTP.CacheTime = CACHE_1HOUR * 24
     netLock = Thread.Lock()
+    anidb = anidb.AniDB()
+    tvdb = tvdb.TvDB()
     
     Stream_Types = {1: "video", 2: "audio", 3: "subtitle"}
 
-    def __init__(self):
-        self.CleanCache()
+    #def __init__(self):
+                                
+    def RefreshData(self):
+        global CleanCache_WaitUntil
+        if CleanCache_WaitUntil + timedelta(days=3) < datetime.datetime.now(): self.CleanCache()
         self.XMLFromURL(self.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(self.ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2) 
-        self.AniDB_title_tree        = self.XMLFromURL(anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(anidb.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
+        self.AniDB_title_tree        = self.XMLFromURL(self.anidb.ANIDB_TITLES, os.path.splitext(os.path.basename(self.anidb.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
         self.AniDB_TVDB_mapping_tree = self.XMLFromURL(self.ANIDB_TVDB_MAPPING, os.path.basename(self.ANIDB_TVDB_MAPPING), "", CACHE_1HOUR * 24 * 2)
-        self.AniDB_collection_tree   = self.XMLFromURL(self.ANIDB_COLLECTION, os.path.basename(self.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2)                        
-    #def CommonStart(self):
+        self.AniDB_collection_tree   = self.XMLFromURL(self.ANIDB_COLLECTION, os.path.basename(self.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2)
              
-
     def CleanCache(self):
+        global CleanCache_WaitUntil
+        CleanCache_WaitUntil = datetime.datetime.now()
         for root, dirs, _  in os.walk(self.CachePath, topdown=False):
             for directory in dirs:
                 directory = os.path.join(root, directory)
@@ -64,7 +70,7 @@ class Common():
             
             if not result:
                 try: 
-                    if url.startswith(anidb.ANIDB_HTTP_API_URL):
+                    if url.startswith(self.anidb.ANIDB_HTTP_API_URL):
                         while AniDB_WaitUntil > datetime.datetime.now(): 
                             sleep(1)
                         Log("Common - XMLFromURL() - AniDB AntiBan Delay")    
@@ -114,24 +120,27 @@ class Common():
     def GetElementText(self, el, xp):
         return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
         
-    def MapSeries(self, media, mappingXml):
-        root = etree.tostring(E.Series(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
-        root = XML.ElementFromString(root)
+    def MapSeries(self, mappingXml, root=None):
+        if not root: 
+            root = etree.tostring(E.Series(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
+            root = XML.ElementFromString(root)
         
         mapping = SubElement(root, "Mapping")
         for series in mappingXml if mappingXml else []:
             anidbid = series.get("anidbid")
             tvdbid = series.get("tvdbid")
             episodeoffset = int(series.get("episodeoffset")) if series.get("episodeoffset") else 0
+            defaulttvdbseason = int(series.get("defaulttvdbseason")) if series.get("defaulttvdbseason") <> "a" else 1
             absolute = True if series.get("defaulttvdbseason") == "a" else False 
             data = None
             
-            try: data = self.XMLFromURL(anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
-            except Exception as e: Log.Error("Init - Search() - AniDB Series XML: Exception raised: %s" % (e)) 
+            
+            try: data = self.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
+            except Exception as e: Log.Error("Common - MapSeries()  - AniDB Series XML: Exception raised: %s" % (e)) 
             if data: 
-                episodecount = self.GetElementText(data, "episodecount") 
-                Log.Debug("Common - MapSeries() - episodecount: '%s'" % episodecount)
-                  
+                episodecount = int(self.GetElementText(data, "episodecount")) 
+                Log.Debug("Common - MapSeries() - AniDB episodecount: '%s'" % episodecount)      
+                    
             seriesMap = SubElement(mapping, "Series", anidbid=anidbid, tvdbid=tvdbid, episodeoffset=str(episodeoffset), absolute=str(absolute))
             
             for season in series.xpath("""./mapping-list/mapping""") if mappingXml else []:
@@ -143,50 +152,79 @@ class Common():
                 if season.text != None:
                     for string in filter(None, season.text.split(';')): 
                         SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),string.split('-')[1].split("+")[0].zfill(2)))
-            
+                        
             if not absolute:
-                for i in range(1, int(episodecount)+1):
+                for i in range(1, episodecount+1):
                     if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (series.get("defaulttvdbseason").zfill(2),str(i + episodeoffset).zfill(2)))               
+                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(defaulttvdbseason).zfill(2),str(i + episodeoffset).zfill(2)))   
+            else:  
+                data = None
+                data = sorted(self.XMLFromURL(self.tvdb.TVDB_HTTP_API_URL % tvdbid, tvdbid+".xml", "TvDB\\" + tvdbid, CACHE_1HOUR * 24).xpath('/Data/Episode'), key=lambda x: int(self.GetElementText(x, "absolute_number") if self.GetElementText(x, "absolute_number") else 0))  
+                Log("Common - MapSeries() - Ab: %s, Len: %s, Eo: %s, Ec: %s" % (self.GetElementText(data[-1], "absolute_number"), len(data), episodeoffset, episodecount))
+                for episode in data if data else []:
+                    if self.GetElementText(episode, "absolute_number"): 
+                        absoluteNumber = int(self.GetElementText(episode, "absolute_number"))
+                        if absoluteNumber > episodeoffset and absoluteNumber <= episodecount + episodeoffset:
+                            Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(absoluteNumber - episodeoffset).zfill(2)), tvdb="S%sE%s" % (str(self.GetElementText(episode, "SeasonNumber")).zfill(2),str(self.GetElementText(episode, "EpisodeNumber")).zfill(2)))        
+            
             seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))
             
-        @parallelize
-        def mapSeasons():
-            for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
-                @task
-                def mapSeason(media_season=media_season):
-                    season = SubElement(root, "Season", num=media_season)
-                    @parallelize
-                    def mapEpisodes():
-                        for media_episode in sorted(media.seasons[media_season].episodes, key=lambda x: int(x),  reverse=False):
-                            @task
-                            def mapEpisode(media_season=media_season, media_episode=media_episode):
-                                episode = SubElement(season, "Episode", num=media_episode)
-                                SubElement(episode, "Series")
-                                SubElement(episode, "Number") #.text = "S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2))           
-                                streams = SubElement(episode, "Streams")
+        return root
+    
+    def MapLocal(self, anidbid, media, root):    
+        mapping = etree.Element("Mapping")
+        #@parallelize
+        #def mapSeasons():
+        for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
+            #@task
+            #def mapSeason(media_season=media_season, mapping=mapping):
+                season = SubElement(root, "Season", num=media_season)
+                #@parallelize
+                #def mapEpisodes():
+                for media_episode in sorted(media.seasons[media_season].episodes, key=lambda x: int(x),  reverse=False):
+                    #@task
+                    #def mapEpisode(media_season=media_season, media_episode=media_episode, mapping=mapping):
+                        episode = SubElement(season, "Episode", num=media_episode)
+                        mapped = SubElement(episode, "Mapped")
+                        streams = SubElement(episode, "Streams")
+                        
+                        
+                        for media_item in media.seasons[media_season].episodes[media_episode].items:
+                            for item_part in media_item.parts:
+                                filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
+                                type = "episode"
+                                if int(media_season) == 0 and int(media_episode) >= 150 and re.match(r'.*\b(?:nced|ed)+\d*\b.*', filename): type = "ending"
+                                elif int(media_season) == 0 and int(media_episode) >= 100 and re.match(r'.*\b(?:ncop|op)+\d*\b.*', filename): type = "opening"
+                                SubElement(episode, "Type").text = "%s" % (type)
+                                SubElement(episode, "Filename").text = "%s" % (filename) 
+                                for stream in item_part.streams:
+                                    SubElement(streams, "Stream", type=str(self.Stream_Types.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
+                                    
+                                match = re.search(r'.*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*', filename, re.IGNORECASE)
                                 
-                                #for map in mapping.xpath("""./Series[@anidbid="%s"]""" %()):
-                                #    for map.xpath("""./Episode[@anidb="%s"]"""):
-                                
-                               
-                                
-                                for media_item in media.seasons[media_season].episodes[media_episode].items:
-                                    for item_part in media_item.parts:
-                                        filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
-                                        type = "episode"
-                                        if int(media_season) == 0 and int(media_episode) >= 150 and re.match(r'.*\b(?:nced|ed)+\d*\b.*', filename): type = "ending"
-                                        elif int(media_season) == 0 and int(media_episode) >= 100 and re.match(r'.*\b(?:ncop|op)+\d*\b.*', filename): type = "opening"
-                                        SubElement(episode, "Type").text = "%s" % (type)
-                                        SubElement(episode, "Filename").text = "%s" % (filename) 
-                                        for stream in item_part.streams:
-                                            SubElement(streams, "Stream", type=str(self.Stream_Types.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
-                                collection = []            
-                                if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0: collection.append("English Dubbed")
-                                if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0: collection.append("English Subbed")
-                                SubElement(episode, "Collection").text = ";".join(collection)
-           
-                                
+                                anidbSeriesNumber = ""
+                                anidbEpisodeNumber = ""
+                                tvdbSeriesNumber = ""
+                                tvdbEpisodeNumber = ""
+                                if match:
+                                    Log ("Common - MapLocal() - TVDB Matched: S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
+                                    mappedEpisode = root.xpath("""./Mapping/Series/Episode[@tvdb="S%sE%s"]""" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
+                                    if mappedEpisode:
+                                        #if mappedEpisode[0].getparent().get("absolute") == "False": 
+                                        anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
+                                        anidbEpisodeNumber = mappedEpisode[0].get("anidb")
+                                        tvdbSeriesNumber = mappedEpisode[0].getparent().get("tvdbid")
+                                        tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")
+                                     
+                                SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber)
+                                SubElement(mapped, "Tvdb", episode=tvdbEpisodeNumber, series=tvdbSeriesNumber)
+                                    
+                        collection = []            
+                        if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0: collection.append("English Dubbed")
+                        if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0: collection.append("English Subbed")
+                        SubElement(episode, "Collection").text = ";".join(collection)
+                             
         return root
         
         
