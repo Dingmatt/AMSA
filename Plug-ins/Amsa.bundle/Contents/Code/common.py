@@ -134,7 +134,6 @@ class Common():
             absolute = True if series.get("defaulttvdbseason") == "a" else False 
             data = None
             
-            
             try: data = self.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
             except Exception as e: Log.Error("Common - MapSeries()  - AniDB Series XML: Exception raised: %s" % (e)) 
             if data: 
@@ -150,9 +149,10 @@ class Common():
                         SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), str(i).zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),str(i + int(season.get("offset"))).zfill(2)))
                 
                 if season.text != None:
-                    for string in filter(None, season.text.split(';')): 
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),string.split('-')[1].split("+")[0].zfill(2)))
-                        
+                    for string in filter(None, season.text.split(';')):
+                        for i in range(0, len(string.split('-')[1].split("+"))):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2), string.split('-')[1].split("+")[i].zfill(2)))
+                            
             if not absolute:
                 for i in range(1, episodecount+1):
                     if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
@@ -165,11 +165,10 @@ class Common():
                     if self.GetElementText(episode, "absolute_number"): 
                         absoluteNumber = int(self.GetElementText(episode, "absolute_number"))
                         if absoluteNumber > episodeoffset and absoluteNumber <= episodecount + episodeoffset:
-                            Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
+                            #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
                             SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(absoluteNumber - episodeoffset).zfill(2)), tvdb="S%sE%s" % (str(self.GetElementText(episode, "SeasonNumber")).zfill(2),str(self.GetElementText(episode, "EpisodeNumber")).zfill(2)))        
             
-            seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))
-            
+            seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))  
         return root
     
     def MapLocal(self, anidbid, media, root):    
