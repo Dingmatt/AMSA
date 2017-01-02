@@ -1,10 +1,11 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb, urllib
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb, urllib, string
 #from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
 from dateutil.parser import parse as dateParse
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
-          
+from string import maketrans 
+         
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
     Log.Debug('--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------')
@@ -32,11 +33,13 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     accepts_from = ['com.plexapp.agents.localmedia'] 
     common = common.Common()
     anidb = anidb.AniDB()
+    deleteChar = ":;"
+    replaceChar = maketrans("`", "'")
     
     def search(self, results, media, lang, manual=False):
         Log.Debug('--- Search Begin -------------------------------------------------------------------------------------------')
         self.common.RefreshData()
-        orig_title = unicodedata.normalize('NFC', unicode(media.show)).strip().replace("`", "'")
+        orig_title = str(unicodedata.normalize('NFC', unicode(media.show)).strip()).translate(self.replaceChar, self.deleteChar)
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
         Log.Info("Init - Search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else '', str(manual)))
                
@@ -60,8 +63,8 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         def searchTitles():
             for anime in self.common.AniDB_title_tree.xpath("""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
-                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'")="%s"
-                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789.`", "abcdefghjiklmnopqrstuvwxyz 0123456789.'"),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
+                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' ")="%s"
+                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' "),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
                 @task
                 def scoreTitle(anime=anime, maxi=maxi, anidb=anidb):
                     element = anime.getparent()
@@ -69,12 +72,12 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                     if not id in maxi: 
                         title = anime.text
                         langTitle = self.anidb.getAniDBTitle(element)
-                        if title == orig_title.lower():
+                        if str(title).translate(self.replaceChar, self.deleteChar).lower() == orig_title.lower():
                             score = 100
-                        elif langTitle == orig_title.lower():
+                        elif str(langTitle).translate(self.replaceChar, self.deleteChar).lower() == orig_title.lower():
                             score = 100
                         else:   
-                            score = 100 * len(orig_title) / len(langTitle)
+                            score = 100 * len(orig_title) / len(str(langTitle).translate(self.replaceChar, self.deleteChar))
                         
                         isValid = True
                         if id in maxi and maxi[id] <= score:
