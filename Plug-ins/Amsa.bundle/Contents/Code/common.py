@@ -11,7 +11,7 @@ class Common():
     CachePath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems", CacheDirectory))                                                
     ANIDB_TVDB_MAPPING              = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml"                                                                                
     ANIDB_COLLECTION                = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-movieset-list.xml"
-    ANIDB_TVDB_MAPPING_CUSTOM       = CacheDirectory + "\anime-list-custom.xml"   
+    ANIDB_TVDB_MAPPING_CUSTOM       = os.path.join(CacheDirectory, "anime-list-custom.xml")
     ANIDB_TVDB_MAPPING_CORRECTIONS  = "http://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml"      
     AniDB_title_tree = None
     AniDB_TVDB_mapping_tree = None
@@ -80,6 +80,7 @@ class Common():
                     try: result = Data.Load(filename)
                     except: Log.Debug("Common - XMLFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
             
+            Log.Debug("Common - XMLFromURL() - Custom mapping - url: '%s', file: '%s', exists: '%s'" % (self.ANIDB_TVDB_MAPPING, self.ANIDB_TVDB_MAPPING_CUSTOM, Data.Exists(self.ANIDB_TVDB_MAPPING_CUSTOM)))
             if url==self.ANIDB_TVDB_MAPPING and Data.Exists(self.ANIDB_TVDB_MAPPING_CUSTOM):
                 if Data.Exists(self.ANIDB_TVDB_MAPPING_CORRECTIONS):
                     Log.Debug("Common - XMLFromURL() - Loading remote custom mapping - url: '%s'" % self.ANIDB_TVDB_MAPPING_CORRECTIONS)
@@ -148,8 +149,10 @@ class Common():
                 try: data = self.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
                 except Exception as e: Log.Error("Common - MapSeries()  - AniDB Series XML: Exception raised: %s" % (e)) 
                 if data: 
-                    episodecount = int(self.GetElementText(data, "episodecount")) 
-                    Log.Debug("Common - MapSeries() - AniDB episodecount: '%s'" % episodecount)      
+                    episodeCount = int(self.GetElementText(data, "episodecount")) 
+                    specialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
+                    opedCount = len(data.xpath("""./episodes/episode/epno[@type="3"]"""))
+                    Log.Debug("Common - MapSeries() - AniDB episodecount: '%s', specialCount: '%s', opedCount: '%s'" % (episodeCount, specialCount, opedCount ))      
                         
                 seriesMap = SubElement(mapping, "Series", anidbid=anidbid, tvdbid=tvdbid, episodeoffset=str(episodeoffset), absolute=str(absolute))
                 
@@ -165,18 +168,22 @@ class Common():
                                 SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2), string.split('-')[1].split("+")[i].zfill(2)))
                                 
                 if not absolute:
-                    for i in range(1, episodecount+1):
+                    for i in range(1, episodeCount+1):
                         if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
-                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(defaulttvdbseason).zfill(2),str(i + episodeoffset).zfill(2)))   
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(defaulttvdbseason).zfill(2), str(i + episodeoffset).zfill(2)))   
+                    
+                    for i in range(1, specialCount+1):
+                        if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("00", str(i).zfill(2))):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("00", str(i).zfill(2)), tvdb="S%sE%s" % ("00", str(i + episodeoffset).zfill(2)))   
                 else:  
                     data = None
                     data = sorted(self.XMLFromURL(self.tvdb.TVDB_HTTP_API_URL % tvdbid, tvdbid+".xml", "TvDB\\" + tvdbid, CACHE_1HOUR * 24).xpath('/Data/Episode'), key=lambda x: int(self.GetElementText(x, "absolute_number") if self.GetElementText(x, "absolute_number") else 0))  
-                    Log("Common - MapSeries() - Ab: %s, Len: %s, Eo: %s, Ec: %s" % (self.GetElementText(data[-1], "absolute_number"), len(data), episodeoffset, episodecount))
+                    Log("Common - MapSeries() - Ab: %s, Len: %s, Eo: %s, Ec: %s" % (self.GetElementText(data[-1], "absolute_number"), len(data), episodeoffset, episodeCount))
                     for episode in data if data else []:
                         if self.GetElementText(episode, "absolute_number"): 
                             absoluteNumber = int(self.GetElementText(episode, "absolute_number"))
-                            if absoluteNumber > episodeoffset and absoluteNumber <= episodecount + episodeoffset:
-                                #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
+                            if absoluteNumber > episodeoffset and absoluteNumber <= episodeCount + episodeoffset:
+                                #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodeCount))
                                 SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(absoluteNumber - episodeoffset).zfill(2)), tvdb="S%sE%s" % (str(self.GetElementText(episode, "SeasonNumber")).zfill(2),str(self.GetElementText(episode, "EpisodeNumber")).zfill(2)))        
                 
                 seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))  
