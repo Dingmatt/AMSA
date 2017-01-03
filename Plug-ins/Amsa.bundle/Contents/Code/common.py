@@ -59,15 +59,7 @@ class Common():
         global AniDB_WaitUntil
         try:
             self.netLock.acquire()
-            filename = os.path.join(self.CacheDirectory, directory, filename) 
-            result = None
-            if filename and Data.Exists(filename):       
-                file = os.path.abspath(os.path.join(self.CachePath, "..", filename))
-                Log.Debug("Common - XMLFromURL() - Filename: '%s', CacheTime: '%s', Limit: '%s'" % (file, time.ctime(os.stat(file).st_mtime), time.ctime(time.time() - cache)))
-                if os.path.isfile(file) and os.stat(file).st_mtime > (time.time() - cache):
-                    Log.Debug("Common - XMLFromURL() - Load from cache")  
-                    result = Data.Load(filename)   
-            
+            result = self.LoadFile(filename, directory, cache) 
             if not result:
                 try: 
                     if url.startswith(self.anidb.ANIDB_HTTP_API_URL):
@@ -107,7 +99,18 @@ class Common():
             self.netLock.release()
             
         return None
-
+    
+    def LoadFile(self, filename="", directory="", cache=DefaultCache):  
+        filename = os.path.join(self.CacheDirectory, directory, filename) 
+        result = None
+        if filename and Data.Exists(filename):       
+            file = os.path.abspath(os.path.join(self.CachePath, "..", filename))
+            Log.Debug("Common - LoadFile() - Filename: '%s', CacheTime: '%s', Limit: '%s'" % (file, time.ctime(os.stat(file).st_mtime), time.ctime(time.time() - cache)))
+            if os.path.isfile(file) and os.stat(file).st_mtime > (time.time() - cache):
+                Log.Debug("Common - LoadFile() - Load from cache")  
+                result = Data.Load(filename) 
+        return result                
+    
     def SaveFile(self, file, filename="", directory=""):   
         absoDirectory = os.path.join(self.CachePath, directory)
         directory = os.path.join(self.CacheDirectory, directory)
@@ -120,55 +123,63 @@ class Common():
     def GetElementText(self, el, xp):
         return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
         
-    def MapSeries(self, mappingXml, root=None):
+    def MapSeries(self, seriesFirst, mappingXml, root=None):
+        existing = None
         if not root: 
+            existing = self.LoadFile(seriesFirst + ".bundle.xml", "Bundles\\")
+            if existing:
+                root = XML.ElementFromString(existing) 
+            
+        if not root:
             root = etree.tostring(E.Series(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
             root = XML.ElementFromString(root)
-        
-        mapping = SubElement(root, "Mapping")
-        for series in mappingXml if mappingXml else []:
-            anidbid = series.get("anidbid")
-            tvdbid = series.get("tvdbid")
-            episodeoffset = int(series.get("episodeoffset")) if series.get("episodeoffset") else 0
-            defaulttvdbseason = int(series.get("defaulttvdbseason")) if series.get("defaulttvdbseason") <> "a" else 1
-            absolute = True if series.get("defaulttvdbseason") == "a" else False 
-            data = None
             
-            try: data = self.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
-            except Exception as e: Log.Error("Common - MapSeries()  - AniDB Series XML: Exception raised: %s" % (e)) 
-            if data: 
-                episodecount = int(self.GetElementText(data, "episodecount")) 
-                Log.Debug("Common - MapSeries() - AniDB episodecount: '%s'" % episodecount)      
-                    
-            seriesMap = SubElement(mapping, "Series", anidbid=anidbid, tvdbid=tvdbid, episodeoffset=str(episodeoffset), absolute=str(absolute))
-            
-            for season in series.xpath("""./mapping-list/mapping""") if mappingXml else []:
-                if season.get("offset"): 
-                    i = int(season.get("start"))
-                    for i in range(int(season.get("start")), int(season.get("end"))+1):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), str(i).zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),str(i + int(season.get("offset"))).zfill(2)))
-                
-                if season.text != None:
-                    for string in filter(None, season.text.split(';')):
-                        for i in range(0, len(string.split('-')[1].split("+"))):
-                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2), string.split('-')[1].split("+")[i].zfill(2)))
-                            
-            if not absolute:
-                for i in range(1, episodecount+1):
-                    if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(defaulttvdbseason).zfill(2),str(i + episodeoffset).zfill(2)))   
-            else:  
+        if not existing:
+            Log.Debug("Common - MapSeries() - Generate Bundle")      
+            mapping = SubElement(root, "Mapping")
+            for series in mappingXml if mappingXml else []:
+                anidbid = series.get("anidbid")
+                tvdbid = series.get("tvdbid")
+                episodeoffset = int(series.get("episodeoffset")) if series.get("episodeoffset") else 0
+                defaulttvdbseason = int(series.get("defaulttvdbseason")) if series.get("defaulttvdbseason") <> "a" else 1
+                absolute = True if series.get("defaulttvdbseason") == "a" else False 
                 data = None
-                data = sorted(self.XMLFromURL(self.tvdb.TVDB_HTTP_API_URL % tvdbid, tvdbid+".xml", "TvDB\\" + tvdbid, CACHE_1HOUR * 24).xpath('/Data/Episode'), key=lambda x: int(self.GetElementText(x, "absolute_number") if self.GetElementText(x, "absolute_number") else 0))  
-                Log("Common - MapSeries() - Ab: %s, Len: %s, Eo: %s, Ec: %s" % (self.GetElementText(data[-1], "absolute_number"), len(data), episodeoffset, episodecount))
-                for episode in data if data else []:
-                    if self.GetElementText(episode, "absolute_number"): 
-                        absoluteNumber = int(self.GetElementText(episode, "absolute_number"))
-                        if absoluteNumber > episodeoffset and absoluteNumber <= episodecount + episodeoffset:
-                            #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
-                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(absoluteNumber - episodeoffset).zfill(2)), tvdb="S%sE%s" % (str(self.GetElementText(episode, "SeasonNumber")).zfill(2),str(self.GetElementText(episode, "EpisodeNumber")).zfill(2)))        
-            
-            seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))  
+                
+                try: data = self.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + anidbid, anidbid+".xml", "AniDB\\" + anidbid, CACHE_1HOUR * 24).xpath('/anime')[0]
+                except Exception as e: Log.Error("Common - MapSeries()  - AniDB Series XML: Exception raised: %s" % (e)) 
+                if data: 
+                    episodecount = int(self.GetElementText(data, "episodecount")) 
+                    Log.Debug("Common - MapSeries() - AniDB episodecount: '%s'" % episodecount)      
+                        
+                seriesMap = SubElement(mapping, "Series", anidbid=anidbid, tvdbid=tvdbid, episodeoffset=str(episodeoffset), absolute=str(absolute))
+                
+                for season in series.xpath("""./mapping-list/mapping""") if mappingXml else []:
+                    if season.get("offset"): 
+                        i = int(season.get("start"))
+                        for i in range(int(season.get("start")), int(season.get("end"))+1):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), str(i).zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2),str(i + int(season.get("offset"))).zfill(2)))
+                    
+                    if season.text != None:
+                        for string in filter(None, season.text.split(';')):
+                            for i in range(0, len(string.split('-')[1].split("+"))):
+                                SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.get("anidbseason").zfill(2), string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.get("tvdbseason").zfill(2), string.split('-')[1].split("+")[i].zfill(2)))
+                                
+                if not absolute:
+                    for i in range(1, episodecount+1):
+                        if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(defaulttvdbseason).zfill(2),str(i + episodeoffset).zfill(2)))   
+                else:  
+                    data = None
+                    data = sorted(self.XMLFromURL(self.tvdb.TVDB_HTTP_API_URL % tvdbid, tvdbid+".xml", "TvDB\\" + tvdbid, CACHE_1HOUR * 24).xpath('/Data/Episode'), key=lambda x: int(self.GetElementText(x, "absolute_number") if self.GetElementText(x, "absolute_number") else 0))  
+                    Log("Common - MapSeries() - Ab: %s, Len: %s, Eo: %s, Ec: %s" % (self.GetElementText(data[-1], "absolute_number"), len(data), episodeoffset, episodecount))
+                    for episode in data if data else []:
+                        if self.GetElementText(episode, "absolute_number"): 
+                            absoluteNumber = int(self.GetElementText(episode, "absolute_number"))
+                            if absoluteNumber > episodeoffset and absoluteNumber <= episodecount + episodeoffset:
+                                #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodecount))
+                                SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(absoluteNumber - episodeoffset).zfill(2)), tvdb="S%sE%s" % (str(self.GetElementText(episode, "SeasonNumber")).zfill(2),str(self.GetElementText(episode, "EpisodeNumber")).zfill(2)))        
+                
+                seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))  
         return root
     
     def MapLocal(self, anidbid, media, root):    

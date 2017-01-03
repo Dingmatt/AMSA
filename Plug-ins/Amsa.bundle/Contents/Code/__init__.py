@@ -124,8 +124,13 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 anidbid = mappingData.get('anidbid')  
         Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, anidbid, tvdbid))
         
+        seriesFirst = None
         mappingXml = self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))
-        map = self.common.MapSeries(mappingXml)
+        for series in mappingXml:
+            if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
+                seriesFirst = series.get("anidbid")
+            
+        map = self.common.MapSeries(seriesFirst, mappingXml)
         map = self.common.MapLocal(anidbid, media, map)
         
         for mappedSeries in self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid)):
@@ -136,7 +141,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             #    series.set("anidbid", anidbid)
             #    series.set("tvdbid", tvdbid)
         
-        self.common.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), id + ".bundle.xml", "Bundles\\")
+        self.common.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), seriesFirst + ".bundle.xml", "Bundles\\")
         
         #anidb. populateMetadata(anidbid, mappingData)
 
