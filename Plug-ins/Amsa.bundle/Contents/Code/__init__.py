@@ -1,16 +1,24 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, common, tvdb, anidb, urllib, string
+import re, time, unicodedata, hashlib, types, os, inspect, datetime
+import common
+import tvdb
+import anidb
+import urllib
+import string
+import functions
+import scudlee
+
+from functions import XMLFromURL
 #from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
 from dateutil.parser import parse as dateParse
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 from string import maketrans 
+from common import Titles 
          
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
     Log.Debug('--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------')
-    #common = Common()
-    #common.CommonStart()
 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
@@ -31,75 +39,57 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     contributes_to = None
     languages = [Locale.Language.English]
     accepts_from = ['com.plexapp.agents.localmedia'] 
-    common = common.Common()
-    anidb = anidb.AniDB()
-    deleteChar = ":;"
-    replaceChar = maketrans("`", "'")
     
     def search(self, results, media, lang, manual=False):
         Log.Debug('--- Search Begin -------------------------------------------------------------------------------------------')
-        self.common.RefreshData()
-        orig_title = str(unicodedata.normalize('NFC', unicode(media.show)).strip()).translate(self.replaceChar, self.deleteChar)
+        common.RefreshData()
+        orig_title = functions.CleanTitle(media.show)
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
         Log.Info("Init - Search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else '', str(manual)))
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
-            show = match.group('show')
+            title = match.group('show')
             source = match.group('source').lower() 
             if source in ["anidb", "tvdb"]:
                 id = match.group('id')
                 startdate = None
                 if source=="anidb":  
-                    show = self.anidb.getAniDBTitle(self.common.AniDB_title_tree.xpath("/animetitles/anime[@aid='%s']/*" % id))
-                Log.Debug("Init - Search() - force - id: '%s-%s', show from id: '%s' provided in foldername: '%s'" % (source, id, show, orig_title) )
-                results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=show, year=startdate, lang=Locale.Language.English, score=100))
+                    title = functions.GetPreferedTitle(common.GetAnimeTitleByID(id))
+                Log.Debug("Init - Search() - force - id: '%s-%s', title from id: '%s' provided in foldername: '%s'" % (source, id, title, orig_title) )
+                results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=title, year=startdate, lang=Locale.Language.English, score=100))
                 return
-            else: orig_title = show
+            else: orig_title = functions.CleanTitle(title)
        
         maxi = {}
         elite = []
         @parallelize
         def searchTitles():
-            for anime in self.common.AniDB_title_tree.xpath("""./anime/title
-                [@type='main' or @type='official' or @type='syn' or @type='short']
-                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' ")="%s"
-                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' "),"%s")]""" % (orig_title.lower().replace("'", "\'"), orig_title.lower().replace("'", "\'"))):
+            for anime in common.GetAnimeTitleByName(orig_title):
                 @task
-                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb):
-                    element = anime.getparent()
-                    id = element.get('aid')
-                    if not id in maxi: 
-                        title = anime.text
-                        langTitle = self.anidb.getAniDBTitle(element)
-                        if str(title).translate(self.replaceChar, self.deleteChar).lower() == orig_title.lower():
-                            score = 100
-                        elif str(langTitle).translate(self.replaceChar, self.deleteChar).lower() == orig_title.lower():
-                            score = 100
-                        else:   
-                            score = 100 * len(orig_title) / len(str(langTitle).translate(self.replaceChar, self.deleteChar))
-                        
+                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb):                
+                    anime = Titles(anime, orig_title)
+                    if not anime.Id in maxi:                        
                         isValid = True
-                        if id in maxi and maxi[id] <= score:
+                        if anime.Id in maxi and maxi[anime.Id] <= anime.Score:
                             isValid = False
                         else: 
-                            maxi[id] = score
+                            maxi[anime.Id] = anime.Score
                         startdate = None
-                        if(media.year and score >= 90 and isValid):
-                            try: data = self.common.XMLFromURL(self.anidb.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
-                            except: Log.Error("Init - Search() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
-                            if data: 
-                                try: startdate = dateParse(self.common.GetElementText(data, 'startdate')).year
+                        if(media.year and anime.Score >= 90 and isValid):
+                            show = anidb.AniDB(anime.Id) 
+                            if show: 
+                                try: startdate = dateParse(show.Startdate).year
                                 except: pass
                                 if str(startdate) != str(media.year):
                                     isValid = False 
                                 Log.Debug("Init - Search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
                             elite.append(isValid)
-                        elif score >= 90 and isValid:
+                        elif anime.Score >= 90 and isValid:
                             elite.append(isValid)
                         if isValid: 
-                            Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", id, langTitle, score))
-                            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", id), name="%s [%s-%s]" % (langTitle, "anidb", id), year=startdate, lang=Locale.Language.English, score=score))
+                            Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
+                            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
             
         if len(elite) > 0 and not True in elite: del results[:]
         results.Sort('score', descending=True)
@@ -108,40 +98,29 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):
         Log.Debug('--- Update Begin -------------------------------------------------------------------------------------------')
-        self.common.RefreshData()
+        common.RefreshData()
         source, id = metadata.id.split('-')     
         
         mappingData = None
         if source == "anidb": 
-            anidbid = id
-            mappingData = self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@anidbid="%s"]""" % (anidbid))[0]
-            if mappingData:
-                tvdbid = mappingData.get('tvdbid')
+            mappingData = scudlee.ScudLee(id)
         if source == "tvdbid": 
-            tvdbid = id
-            mappingData = self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))[0]
-            if mappingData:
-                anidbid = mappingData.get('anidbid')  
-        Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, anidbid, tvdbid))
+            mappingData = scudlee.ScudLee(None, id)
+        Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, mappingData.AnidbId, mappingData.TvdbId))
         
-        seriesFirst = None
-        mappingXml = self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))
-        for series in mappingXml:
-            if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
-                seriesFirst = series.get("anidbid")
-            
-        map = self.common.MapSeries(seriesFirst, mappingXml)
-        map = self.common.MapLocal(anidbid, media, map)
+        if mappingData != None:
+            map = common.MapSeries(mappingData)
+            #map = common.MapLocal(anidbid, media, map)
         
-        for mappedSeries in self.common.AniDB_TVDB_mapping_tree.xpath("""./anime[@tvdbid="%s"]""" % (tvdbid)):
-            anidbid_season = mappedSeries.get('anidbid')
-            Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, tvdbid))
+        #for mappedSeries in scudlee.MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (mappingData.TvdbId)):
+            #anidbid_season = mappedSeries.get('anidbid')
+            #Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, mappingData.TvdbId))
             #series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get('defaulttvdbseason')))[0]
             #if series:
             #    series.set("anidbid", anidbid)
             #    series.set("tvdbid", tvdbid)
         
-        self.common.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), seriesFirst + ".bundle.xml", "Bundles\\")
+            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
         
         #anidb. populateMetadata(anidbid, mappingData)
 

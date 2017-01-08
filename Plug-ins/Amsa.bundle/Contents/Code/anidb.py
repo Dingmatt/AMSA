@@ -1,35 +1,48 @@
-#from common import XMLFromURL
+import constants, functions
+from functions import XMLFromURL, GetElementText
 
-class AniDB():
-    ANIDB_TITLES                 = 'http://anidb.net/api/anime-titles.xml.gz'   
-    ANIDB_HTTP_API_URL           = 'http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid='          #
-    ANIDB_PIC_BASE_URL           = 'http://img7.anidb.net/pics/anime/'                                                                # AniDB picture directory
-    ANIDB_SERIE_URL              = 'http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s'                                           # AniDB link to the anime
-
-    SERIES_LANGUAGE_PRIORITY     = [Prefs['SerieLanguage1'].encode('utf-8'), Prefs['SerieLanguage2'].encode('utf-8'), Prefs['SerieLanguage3'].encode('utf-8'), 'main']  #override default language
-    EPISODE_LANGUAGE_PRIORITY    = [Prefs['EpisodeLanguage1'].encode('utf-8'), Prefs['EpisodeLanguage2'].encode('utf-8')]                                               #override default language
-    SERIES_METADATE_PRIORITY     = [Prefs['AgentPref1'].encode('utf-8'), Prefs['AgentPref2'].encode('utf-8'), Prefs['AgentPref3'].encode('utf-8')]                      #override default metadata 
-    SERIES_TYPE_PRIORITY         = ['main', 'official', 'syn', 'short']
-      
-    def getAniDBTitle(self, titles):    
-        #for title in sorted([[x.text, SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + SERIES_TYPE_PRIORITY.index(x.get('type')), SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
-        #    for x in titles if x.get('{http://www.w3.org/XML/1998/namespace}lang') in SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1], x[2])):
-        #    Log.Debug("AniDBTitle() - type: '%s', pri: '%s', sec: '%s'" % (title[0], title[1], title[2]))
-        title = None
-        try:
-            title = sorted([[x.text, self.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + self.SERIES_TYPE_PRIORITY.index(x.get('type')), self.SERIES_TYPE_PRIORITY.index(x.get('type'))] 
-                for x in titles if x.get('{http://www.w3.org/XML/1998/namespace}lang') in self.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1], x[2]))[0][0]
-        except: pass
+class AniDB(constants.Series):
+    Title = None
+    Network = None
+    Overview = None
+    FirstAired = None
+    Genre = None
+    ContentRating = None
+    Rating = None
+    Episodes = None
+    EpisodeCount = None
+    SpecialCount = None
+    OpedCount = None
+    
+    def __init__(self, id):
+        data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
+        if data.xpath("""./titles"""):
+            self.Title = functions.GetPreferedTitle(data.xpath("""./titles/title"""))
+        for creator in data.xpath("""./creators/name[@type="Animation Work"]"""):
+            self.Network = creator.text
+        if GetElementText(data, "description"):    
+            self.Overview = re.sub(r"http://anidb\.net/[a-z]{2}[0-9]+ \[(.+?)\]", r"\1", GetElementText(data, "description")).replace("`", "'")
+        if GetElementText(data, "startdate"):
+            self.FirstAired = GetElementText(data, "startdate")
+        for primetag in data.xpath("""./tags/tag/name[text()="elements"]"""):
+            self.Genre = []
+            for tag in data.xpath("""./tags/tag[@parentid="%s"]""" % (primetag.getparent().get("id"))):
+                if tag.get("weight") >= constants.MINIMUM_WEIGHT:
+                    self.Genre.append(GetElementText(tag, "name"))
+        for primetag in data.xpath("""./tags/tag/name[text()="content indicators"]"""):
+            for tag in data.xpath("""./tags/tag[@parentid="%s"]""" % (primetag.getparent().get("id"))):
+                if tag.get("weight") >= constants.MINIMUM_WEIGHT:
+                    self.ContentRating = "NC-17"
+        if GetElementText(data, "ratings/permanent") != "" and GetElementText(data, "ratings/temporary") != "": 
+            self.Rating = (float(GetElementText(data, "ratings/permanent")) + float(GetElementText(data, "ratings/temporary"))) / 2   
+        elif GetElementText(data, "ratings/permanent") != "": 
+            self.Rating = float(GetElementText(data, "ratings/permanent"))   
+        elif GetElementText(data, "ratings/temporary") != "": 
+            self.Rating = float(GetElementText(data, "ratings/temporary")) 
         
-        if title == None:
-            title = [x.text for x in titles if x.get('type') == 'main'][0]
+        self.EpisodeCount = int(GetElementText(data, "episodecount")) 
+        self.SpecialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
+        self.OpedCount = len(data.xpath("""./episodes/episode/epno[@type="3"]"""))
         
-        return title
-       
-    def populateMetadata(self, id, mappingData):
-        try: data = XMLFromURL(self.ANIDB_HTTP_API_URL + id, id+".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath('/anime')[0]
-        except: Log.Error("Anidb - PopulateMetadata() - AniDB Series XML: Exception raised, probably no return in xmlElementFromFile") 
-        if data:
-            langTitle = self.getAniDBTitle(data.xpath('/anime/titles')[0])
-        
-        return None
+        Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s'"
+        % (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount) )
