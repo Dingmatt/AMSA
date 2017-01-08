@@ -32,6 +32,13 @@ def CorrectionsTree():
     return pCorrectionsTree
 
 class ScudLee():
+    AnidbId = None
+    TvdbId = None
+    EpisodeOffset = 0
+    Absolute = False
+    DefaultTvdbSeason = 1
+    MappingList = []
+    
     def __init__(self, anidbid = None, tvdbid = None):
         if anidbid != None or tvdbid != None:
             if anidbid != None: 
@@ -44,17 +51,23 @@ class ScudLee():
                 if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
                     self.FirstSeries = series.get("anidbid")
     
-    def Load(self, data):  
-        self.AnidbId = data.get("anidbid")
-        self.TvdbId = data.get("tvdbid")
-        self.EpisodeOffset = int(data.get("episodeoffset")) if data.get("episodeoffset") else 0
-        self.Absolute = "True" if data.get("defaulttvdbseason") == "a" else "False"
-        self.DefaultTvdbSeason = int(data.get("defaulttvdbseason")) if self.Absolute == False else 1
-        self.MappingList = []
-        for item in data.xpath("""./mapping-list/mapping"""):
-            self.MappingList.append(self.Mapping(item))
+    def Load(self, data):
+        if data.get("anidbid"):
+            self.AnidbId = data.get("anidbid")
+        if data.get("tvdbid"): 
+            self.TvdbId = data.get("tvdbid")
+        if data.get("episodeoffset"):
+            self.EpisodeOffset = int(data.get("episodeoffset"))
+        if data.get("defaulttvdbseason") and data.get("defaulttvdbseason") == "a":
+            self.Absolute = True 
+        if data.get("defaulttvdbseason") and not self.Absolute:
+            self.DefaultTvdbSeason = int(data.get("defaulttvdbseason"))
+        if data.xpath("""./mapping-list/mapping"""):    
+            for item in data.xpath("""./mapping-list/mapping"""):
+                self.MappingList.append(self.Mapping(item))
             
     class Mapping(): 
+        Text = None
         Offset = None
         Start = None
         End = None

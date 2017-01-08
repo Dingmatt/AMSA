@@ -82,29 +82,38 @@ def MapSeries(mappingData):
             seriesMap = SubElement(mapping, "Series", anidbid = str(ScudLee.AnidbId), tvdbid = str(ScudLee.TvdbId), episodeoffset = str(ScudLee.EpisodeOffset), absolute = str(ScudLee.Absolute))
             
             for season in ScudLee.MappingList:
+                Log("Common - MapSeries() - Season - AniDB: '%s', TvDB: '%s'" % (season.AnidbSeason, season.TvdbSeason))
                 if season.Offset: 
                     for i in range(season.Start, season.End + 1):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.AnidbSeason, str(i).zfill(2)), tvdb="S%sE%s" % (season.TvdbSeason, str(i + season.Offset)))
+                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.AnidbSeason, str(i).zfill(2)), tvdb="S%sE%s" % (season.TvdbSeason, str(i + int(season.Offset))))
                 
                 if season.Text != None:
                     for string in filter(None, season.Text.split(';')):
                         for i in range(0, len(string.split('-')[1].split("+"))):
                             SubElement(seriesMap, "Episode", anidb="S%sE%s" % (season.AnidbSeason, string.split('-')[0].zfill(2)), tvdb="S%sE%s" % (season.TvdbSeason, string.split('-')[1].split("+")[i].zfill(2)))
                             
-            if not ScudLee.Absolute:
+            if not ScudLee.Absolute: 
                 for i in range(1, AniDB.EpisodeCount+1):
                     if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("01", str(i).zfill(2))):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(ScudLee.DefaultTvdbSeason).zfill(2), str(i + ScudLee.EpisodeOffset).zfill(2)))   
+                        if not mapping.xpath("""./Series/Episode[@tvdb="S%sE%s"]""" % (str(ScudLee.DefaultTvdbSeason).zfill(2), str(i + ScudLee.EpisodeOffset).zfill(2))):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S%sE%s" % (str(ScudLee.DefaultTvdbSeason).zfill(2), str(i + ScudLee.EpisodeOffset).zfill(2)))  
+                        else:
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(i).zfill(2)), tvdb="S00E00", missing="scudlee")  
+                            Log("Common - MapSeries() - Series: '%s', Episode: '%s' Not Mapped" % (ScudLee.AnidbId, i))
                 
-                for i in range(1, specialCount+1):
+                for i in range(1, AniDB.SpecialCount+1):
                     if not seriesMap.xpath("""./Episode[@anidb="S%sE%s"]""" % ("00", str(i).zfill(2))):
-                        SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("00", str(i).zfill(2)), tvdb="S%sE%s" % ("00", str(i + ScudLee.EpisodeOffset).zfill(2)))   
+                        if not mapping.xpath("""./Series/Episode[@tvdb="S%sE%s"]""" % ("00", str(i + ScudLee.EpisodeOffset).zfill(2))):
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("00", str(i).zfill(2)), tvdb="S%sE%s" % ("00", str(i + ScudLee.EpisodeOffset).zfill(2))) 
+                        else:
+                            SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("00", str(i).zfill(2)), tvdb="S00E00", missing="scudlee")
+                            Log("Common - MapSeries() - Series: '%s', Special: '%s' Not Mapped" % (ScudLee.AnidbId, i))                            
             else:
                 TvDB = tvdb.TvDB(ScudLee.TvdbId)
                 for episode in TvDB.Episodes if TvDB.Episodes else []:
                     if episode.Absolute: 
                         if episode.Absolute > ScudLee.EpisodeOffset and episode.Absolute <= AniDB.EpisodeCount + ScudLee.EpisodeOffset:
-                            #Log("Common - MapSeries() - Ab: %s, Eo: %s, Ec: %s" % (absoluteNumber, episodeoffset, episodeCount))
+                            #Log("Common - MapSeries() - Ab: %s, Eo: %s, Es: %s, Ee: %s" % (episode.Absolute, ScudLee.EpisodeOffset, episode.Season, episode.Number))
                             SubElement(seriesMap, "Episode", anidb="S%sE%s" % ("01", str(episode.Absolute - ScudLee.EpisodeOffset).zfill(2)), tvdb="S%sE%s" % (episode.Season, episode.Number))        
             
             seriesMap[:] = sorted(seriesMap, key=lambda x: (int(x.get("anidb").split('E')[0].replace("S","")), int(x.get("anidb").split('E')[1])))  

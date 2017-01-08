@@ -2,17 +2,6 @@ import constants, functions
 from functions import XMLFromURL, GetElementText
 
 class AniDB(constants.Series):
-    Title = None
-    Network = None
-    Overview = None
-    FirstAired = None
-    Genre = None
-    ContentRating = None
-    Rating = None
-    Episodes = None
-    EpisodeCount = None
-    SpecialCount = None
-    OpedCount = None
     
     def __init__(self, id):
         data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
@@ -38,8 +27,7 @@ class AniDB(constants.Series):
         elif GetElementText(data, "ratings/permanent") != "": 
             self.Rating = float(GetElementText(data, "ratings/permanent"))   
         elif GetElementText(data, "ratings/temporary") != "": 
-            self.Rating = float(GetElementText(data, "ratings/temporary")) 
-        
+            self.Rating = float(GetElementText(data, "ratings/temporary"))        
         self.EpisodeCount = int(GetElementText(data, "episodecount")) 
         self.SpecialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
         self.OpedCount = len(data.xpath("""./episodes/episode/epno[@type="3"]"""))
