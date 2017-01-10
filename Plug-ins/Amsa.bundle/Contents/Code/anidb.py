@@ -1,12 +1,16 @@
-import constants, functions
+import constants, functions, lxml 
 from functions import XMLFromURL, GetElementText
+from lxml import etree
+from lxml.builder import E
+from lxml.etree import Element, SubElement, Comment
 
 class AniDB(constants.Series):
     
     def __init__(self, id):
         data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
+        self.ID = id
         if data.xpath("""./titles"""):
-            self.Title = functions.GetPreferedTitle(data.xpath("""./titles/title"""))
+            self.Title = functions.GetPreferedTitle(data.xpath("""./titles/title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
         for creator in data.xpath("""./creators/name[@type="Animation Work"]"""):
             self.Network = creator.text
         if GetElementText(data, "description"):    
@@ -31,6 +35,35 @@ class AniDB(constants.Series):
         self.EpisodeCount = int(GetElementText(data, "episodecount")) 
         self.SpecialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
         self.OpedCount = len(data.xpath("""./episodes/episode/epno[@type="3"]"""))
-        
-        Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s'"
-        % (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount) )
+        if len(data.xpath("""./episodes/episode""")) > 0:
+            self.Episodes = []
+            for item in data.xpath("""./episodes/episode"""):
+                self.Episodes.append(self.Episode(item))
+        if GetElementText(data, "picture"): 
+            root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            root = XML.ElementFromString(root)
+            SubElement(root, "Banner", bannerType = "season", url = constants.ANIDB_PIC_BASE_URL + GetElementText(data, "picture"), thumb = "")
+            self.Posters = root
+            
+        #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
+        #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
+           
+    class Episode(constants.Episode):
+        def __init__(self, data):
+            if data.xpath("""./title"""):
+                self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
+            if GetElementText(data, "epno"):
+                self.Number = str(GetElementText(data, "epno")).zfill(2)
+            if data.xpath("""./epno""")[0].get("type"):
+                if data.xpath("""./epno""")[0].get("type") == "1":
+                    self.Season = "01"
+                else:
+                    self.Season = "00"
+            if GetElementText(data, "airdate"):
+                self.FirstAired = GetElementText(data, "airdate")
+            if GetElementText(data, "rating"):
+                self.Rating = GetElementText(data, "rating")
+            self.Overview = None
+            self.Poster = None
+            if  GetElementText(data, "epno"):
+                self.Absolute = str(GetElementText(data, "epno")).zfill(2)

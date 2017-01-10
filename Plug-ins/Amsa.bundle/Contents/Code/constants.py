@@ -12,24 +12,24 @@ StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#
-ANIDB_TITLES                 = 'http://anidb.net/api/anime-titles.xml.gz'   
-ANIDB_HTTP_API_URL           = 'http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid='          #
-ANIDB_PIC_BASE_URL           = 'http://img7.anidb.net/pics/anime/'                                                                # AniDB picture directory
-ANIDB_SERIE_URL              = 'http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s'                                           # AniDB link to the anime
+ANIDB_TITLES                 = "http://anidb.net/api/anime-titles.xml.gz"   
+ANIDB_HTTP_API_URL           = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          #
+ANIDB_PIC_BASE_URL           = "http://img7.anidb.net/pics/anime/"                                                                # AniDB picture directory
+ANIDB_SERIE_URL              = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           # AniDB link to the anime
 
-SERIES_LANGUAGE_PRIORITY     = [Prefs['SerieLanguage1'].encode('utf-8'), Prefs['SerieLanguage2'].encode('utf-8'), Prefs['SerieLanguage3'].encode('utf-8'), 'main']  #override default language
-EPISODE_LANGUAGE_PRIORITY    = [Prefs['EpisodeLanguage1'].encode('utf-8'), Prefs['EpisodeLanguage2'].encode('utf-8')]                                               #override default language
-SERIES_METADATE_PRIORITY     = [Prefs['AgentPref1'].encode('utf-8'), Prefs['AgentPref2'].encode('utf-8'), Prefs['AgentPref3'].encode('utf-8')]                      #override default metadata 
+SERIES_LANGUAGE_PRIORITY     = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  #override default language
+EPISODE_LANGUAGE_PRIORITY    = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                               #override default language
+SERIES_METADATE_PRIORITY     = [Prefs["AgentPref1"].encode("utf-8"), Prefs["AgentPref2"].encode("utf-8"), Prefs["AgentPref3"].encode("utf-8")]                      #override default metadata 
 MINIMUM_WEIGHT               = Prefs["MinimumWeight"]
-SERIES_TYPE_PRIORITY         = ['main', 'official', 'syn', 'short']
+SERIES_TYPE_PRIORITY         = ["main", "official", "syn", "synonym", "short"]
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#
-TVDB_HTTP_API_URL            = 'http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/all/en.xml'                                     # TVDB Serie XML for episodes sumaries for now
-TVDB_BANNERS_URL             = 'http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/banners.xml'                                    # TVDB Serie pictures xml: fanarts, posters, banners
-TVDB_SERIE_SEARCH            = 'http://thetvdb.com/api/GetSeries.php?seriesname='                                                 #
-TVDB_IMAGES_URL              = 'http://thetvdb.com/banners/'                                                                      # TVDB picture directory
-TVDB_SERIE_URL               = 'http://thetvdb.com/?tab=series&id=%s'  
+TVDB_HTTP_API_URL            = "http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/all/en.xml"                                     # TVDB Serie XML for episodes sumaries for now
+TVDB_BANNERS_URL             = "http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/banners.xml"                                    # TVDB Serie pictures xml: fanarts, posters, banners
+TVDB_SERIE_SEARCH            = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 #
+TVDB_IMAGES_URL              = "http://thetvdb.com/banners/"                                                                      # TVDB picture directory
+TVDB_SERIE_URL               = "http://thetvdb.com/?tab=series&id=%s"  
 #-------------------TVDB-------------------#
 
 #-------------------SCUDLEE----------------#
@@ -40,6 +40,7 @@ ANIDB_TVDB_MAPPING_CORRECTIONS  = "http://raw.githubusercontent.com/Dingmatt/AMS
 #-------------------SCUDLEE----------------#
 
 class Series():
+    ID = None
     Title = None
     Network = None
     Overview = None
@@ -51,13 +52,14 @@ class Series():
     EpisodeCount = None
     SpecialCount = None
     OpedCount = None
+    Posters = None
     
 class Episode():
-    Name = None
+    Title = None
     Number = None
     Season = None
     FirstAired = None
     Rating = None
     Overview = None
-    Filename = None
+    Poster = None
     Absolute = None

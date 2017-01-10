@@ -10,25 +10,25 @@ pCorrectionsTree = None
 def TitleTree():
     global pTitleTree
     if pTitleTree == None:
-        pTitleTree = XMLFromURL(constants.ANIDB_TITLES, os.path.splitext(os.path.basename(constants.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
+        pTitleTree = XMLFromURL(constants.ANIDB_TITLES, os.path.splitext(os.path.basename(constants.ANIDB_TITLES))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
     return pTitleTree
     
 def MappingTree():
     global pMappingTree
     if pMappingTree == None:
-        pMappingTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING))[0], "", CACHE_1HOUR * 24 * 2, 60)
+        pMappingTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
     return pMappingTree
     
 def CollectionTree():
     global pCollectionTree
     if pCollectionTree == None:
-        pCollectionTree = XMLFromURL(constants.ANIDB_COLLECTION, os.path.splitext(os.path.basename(constants.ANIDB_COLLECTION))[0], "", CACHE_1HOUR * 24 * 2, 60)
+        pCollectionTree = XMLFromURL(constants.ANIDB_COLLECTION, os.path.splitext(os.path.basename(constants.ANIDB_COLLECTION))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
     return pCollectionTree
 
 def CorrectionsTree():
     global pCorrectionsTree
     if pCorrectionsTree == None:
-        pCorrectionsTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING_CORRECTIONS))[0], "", CACHE_1HOUR * 24 * 2, 60)
+        pCorrectionsTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING_CORRECTIONS))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
     return pCorrectionsTree
 
 class ScudLee():

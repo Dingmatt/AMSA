@@ -18,7 +18,7 @@ from common import Titles
          
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
-    Log.Debug('--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------')
+    Log.Debug("--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------")
 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
@@ -27,32 +27,32 @@ def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
                   "GetPlexThemes", "MinimumWeight", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", 
                   "AgentPref1", "AgentPref2", "AgentPref3", "EpisodeLanguage1", "EpisodeLanguage2")
     try: [Prefs[key] for key in DefaultPrefs]
-    except: Log.Error("Init - ValidatePrefs() - DefaultPrefs.json invalid" );  return MessageContainer ('Error', "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
-    else: Log.Info ("Init - ValidatePrefs() - DefaultPrefs.json is valid");  return MessageContainer ('Success', 'AMSA - Provided preference values are ok')
+    except: Log.Error("Init - ValidatePrefs() - DefaultPrefs.json invalid" );  return MessageContainer ("Error", "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
+    else: Log.Info ("Init - ValidatePrefs() - DefaultPrefs.json is valid");  return MessageContainer ("Success", "AMSA - Provided preference values are ok")
   
   
 ### Agent declaration ###############################################################################################################################################
 class AmsaTVAgentTest(Agent.TV_Shows):    
-    name = 'Anime Multi Source Agent (Test)'
+    name = "Anime Multi Source Agent (Test)"
     primary_provider = True
     fallback_agent = False
     contributes_to = None
     languages = [Locale.Language.English]
-    accepts_from = ['com.plexapp.agents.localmedia'] 
+    accepts_from = ["com.plexapp.agents.localmedia"] 
     
     def search(self, results, media, lang, manual=False):
-        Log.Debug('--- Search Begin -------------------------------------------------------------------------------------------')
+        Log.Debug("--- Search Begin -------------------------------------------------------------------------------------------")
         common.RefreshData()
         orig_title = functions.CleanTitle(media.show)
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        Log.Info("Init - Search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else '', str(manual)))
+        Log.Info("Init - Search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else "", str(manual)))
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
-            title = match.group('show')
-            source = match.group('source').lower() 
+            title = match.group("show")
+            source = match.group("source").lower() 
             if source in ["anidb", "tvdb"]:
-                id = match.group('id')
+                id = match.group("id")
                 startdate = None
                 if source=="anidb":  
                     title = functions.GetPreferedTitle(common.GetAnimeTitleByID(id))
@@ -92,14 +92,14 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
             
         if len(elite) > 0 and not True in elite: del results[:]
-        results.Sort('score', descending=True)
+        results.Sort("score", descending=True)
         return
         
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):
-        Log.Debug('--- Update Begin -------------------------------------------------------------------------------------------')
+        Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
         common.RefreshData()
-        source, id = metadata.id.split('-')     
+        source, id = metadata.id.split("-")     
         
         mappingData = None
         if source == "anidb": 
@@ -110,17 +110,18 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         
         if mappingData != None:
             map = common.MapSeries(mappingData)
-            #map = common.MapLocal(anidbid, media, map)
+            map = common.MapLocal(media, map)
+            map = common.MapMeta(map)
         
         #for mappedSeries in scudlee.MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (mappingData.TvdbId)):
-            #anidbid_season = mappedSeries.get('anidbid')
+            #anidbid_season = mappedSeries.get("anidbid")
             #Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, mappingData.TvdbId))
-            #series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get('defaulttvdbseason')))[0]
+            #series = map.xpath("""./Season[@num="%s"]""" % (mappedSeries.get("defaulttvdbseason")))[0]
             #if series:
             #    series.set("anidbid", anidbid)
             #    series.set("tvdbid", tvdbid)
         
-            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding='UTF-8'), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
         
         #anidb. populateMetadata(anidbid, mappingData)
 
