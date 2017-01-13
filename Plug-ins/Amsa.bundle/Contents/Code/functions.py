@@ -35,11 +35,13 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         if url==constants.ANIDB_TVDB_MAPPING and Data.Exists(constants.ANIDB_TVDB_MAPPING_CUSTOM):
             if Data.Exists(constants.ANIDB_TVDB_MAPPING_CORRECTIONS):
                 Log.Debug("Functions - XMLFromURL() - Loading remote custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CORRECTIONS)
-                result_remote_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CORRECTIONS)
+                result_remote_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CORRECTIONS)     
                 result = result_remote_custom[:result_remote_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:]      
             Log.Debug("Functions - XMLFromURL() - Loading local custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CUSTOM)
             result_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CUSTOM)
             result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
+            
+            SaveFile(result, "Test.xml")
 
         if result:
             result = XML.ElementFromString(result)

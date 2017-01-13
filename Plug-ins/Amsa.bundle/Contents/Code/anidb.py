@@ -4,6 +4,44 @@ from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 
+
+def ParseNoFromSeason(season, episode):
+    if season == 1:
+        return str(episode)
+    elif season == 0:
+        return "S" + str(episode)
+        
+def ParseNoFromType(type, episode):
+    if type == 1:
+        return str(episode)
+    elif type == 2:
+        return "S" + str(episode)
+    elif type == 3:
+        return "C" + str(episode)    
+    elif type == 4:
+        return "T" + str(episode) 
+    elif type == 5:
+        return "P" + str(episode) 
+    elif type == 6:
+        return "O" + str(episode) 
+ 
+def ParseLocalNoFromType(type, episode, prefix = ""):
+    if type == 1:
+        return "S01" + str(episode).zfill(2)
+    elif type == 2:
+        return "S00" + str(episode).zfill(2) 
+    elif type == 3 and prefix.lower() == "op":
+        return "S00" + str(101 + episode)
+    elif type == 3 and prefix.lower() == "ed":
+        return "S00" + str(151 + episode) 
+    elif type == 4:
+        return "S00" + str(201 + episode) 
+    elif type == 5:
+        return "S00" + str(301 + episode) 
+    elif type == 6:
+        return "S00" + str(401 + episode) 
+
+        
 class AniDB(constants.Series):
     
     def __init__(self, id):
@@ -53,7 +91,7 @@ class AniDB(constants.Series):
             if data.xpath("""./title"""):
                 self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
             if GetElementText(data, "epno"):
-                self.Number = str(GetElementText(data, "epno")).zfill(2)
+                self.Number = str(GetElementText(data, "epno")).replace('S','').zfill(2)                
             if data.xpath("""./epno""")[0].get("type"):
                 if data.xpath("""./epno""")[0].get("type") == "1":
                     self.Season = "01"

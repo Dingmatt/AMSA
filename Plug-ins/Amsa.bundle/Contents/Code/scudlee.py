@@ -10,25 +10,25 @@ pCorrectionsTree = None
 def TitleTree():
     global pTitleTree
     if pTitleTree == None:
-        pTitleTree = XMLFromURL(constants.ANIDB_TITLES, os.path.splitext(os.path.basename(constants.ANIDB_TITLES))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
+        pTitleTree = XMLFromURL(constants.ANIDB_TITLES, os.path.splitext(os.path.basename(constants.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
     return pTitleTree
     
 def MappingTree():
     global pMappingTree
     if pMappingTree == None:
-        pMappingTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
+        pMappingTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING, os.path.basename(constants.ANIDB_TVDB_MAPPING), "", CACHE_1HOUR * 24 * 2, 60)
     return pMappingTree
     
 def CollectionTree():
     global pCollectionTree
     if pCollectionTree == None:
-        pCollectionTree = XMLFromURL(constants.ANIDB_COLLECTION, os.path.splitext(os.path.basename(constants.ANIDB_COLLECTION))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
+        pCollectionTree = XMLFromURL(constants.ANIDB_COLLECTION, os.path.basename(constants.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2, 60)
     return pCollectionTree
 
 def CorrectionsTree():
     global pCorrectionsTree
     if pCorrectionsTree == None:
-        pCorrectionsTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.splitext(os.path.basename(constants.ANIDB_TVDB_MAPPING_CORRECTIONS))[0]+".xml", "", CACHE_1HOUR * 24 * 2, 60)
+        pCorrectionsTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(constants.ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2, 60)
     return pCorrectionsTree
 
 class ScudLee():
@@ -46,8 +46,21 @@ class ScudLee():
             elif tvdbid != None: 
                 data = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))[0]
             self.Load(data)
+            self.SeriesList = []
             self.SeriesList = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (self.TvdbId))
+            visited = []
+            remove = []
             for series in self.SeriesList:
+                current = series.get("anidbid")
+                if current in visited:
+                    remove.append(series)
+                else:
+                    visited.append(current)
+                    
+            for item in remove:
+                self.SeriesList.remove(item)
+
+            for series in self.SeriesList:            
                 if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
                     self.FirstSeries = series.get("anidbid")
     
@@ -62,8 +75,10 @@ class ScudLee():
             self.Absolute = True 
         if data.get("defaulttvdbseason") and not self.Absolute:
             self.DefaultTvdbSeason = int(data.get("defaulttvdbseason"))
-        if data.xpath("""./mapping-list/mapping"""):    
+        if data.xpath("""./mapping-list/mapping"""):  
+            self.MappingList = []
             for item in data.xpath("""./mapping-list/mapping"""):
+                Log("MappingEntry: %s" % (self.AnidbId))
                 self.MappingList.append(self.Mapping(item))
             
     class Mapping(): 
