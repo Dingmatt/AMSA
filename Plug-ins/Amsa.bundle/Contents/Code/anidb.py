@@ -6,7 +6,7 @@ from lxml.etree import Element, SubElement, Comment
 
 
 def ParseNoFromSeason(season, episode):
-    if season == 1:
+    if season >= 1:
         return str(episode)
     elif season == 0:
         return "S" + str(episode)
@@ -91,7 +91,7 @@ class AniDB(constants.Series):
             if data.xpath("""./title"""):
                 self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
             if GetElementText(data, "epno"):
-                self.Number = str(GetElementText(data, "epno")).replace('S','').zfill(2)                
+                self.Number = str(GetElementText(data, "epno"))             
             if data.xpath("""./epno""")[0].get("type"):
                 if data.xpath("""./epno""")[0].get("type") == "1":
                     self.Season = "01"

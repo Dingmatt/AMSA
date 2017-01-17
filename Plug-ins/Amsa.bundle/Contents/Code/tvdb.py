@@ -4,6 +4,12 @@ from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 
+def ParseNoFromSeason(season, episode, default):
+    #if season == 0 and episode == 0:
+    #    return "S" + str(default).zfill(2) + "E00"
+    #else:
+    return "S" + str(season).zfill(2) + "E"  + str(episode).zfill(2)
+        
 class TvDB(constants.Series):
     def __init__(self, id):
         self.ID = id
