@@ -49,7 +49,6 @@ class TvDB(constants.Series):
                         "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
                         "season"    if bannerType == "season" and bannerType2=="season" else None)            
             SubElement(root, "Banner", bannerType = metatype, url = os.path.join(constants.TVDB_IMAGES_URL, bannerPath), thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb))
-            Log("Poster: '%s', '%s', '%s'" % (metatype, bannerPath, bannerThumb))
             self.Posters = root 
              
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
