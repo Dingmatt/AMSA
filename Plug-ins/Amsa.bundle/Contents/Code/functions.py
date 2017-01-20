@@ -41,7 +41,7 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
             result_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CUSTOM)
             result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
             
-            SaveFile(result, "Test.xml")
+            #SaveFile(result, "Test.xml")
 
         if result:
             result = XML.ElementFromString(result)

@@ -80,11 +80,11 @@ class AniDB(constants.Series):
         if GetElementText(data, "picture"): 
             root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             root = XML.ElementFromString(root)
-            SubElement(root, "Banner", bannerType = "season", url = constants.ANIDB_PIC_BASE_URL + GetElementText(data, "picture"), thumb = "")
+            SubElement(root, "Banner", bannerType = "season", url = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture")), thumb = "")
             self.Posters = root
             
-        #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
-        #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
+        Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
+        % (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
            
     class Episode(constants.Episode):
         def __init__(self, data):

@@ -37,9 +37,9 @@ class TvDB(constants.Series):
                 self.Episodes.append(self.Episode(item))               
         banners = []
         bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "AniDB\\" + id, CACHE_1HOUR * 24)
+        root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        root = XML.ElementFromString(root)
         for banner in bannersXml.xpath("./Banner"):
-            root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-            root = XML.ElementFromString(root)
             bannerType = GetElementText(banner, "BannerType")
             bannerType2 = GetElementText(banner, "BannerType2")
             bannerPath = GetElementText(banner, "BannerPath")
@@ -48,7 +48,8 @@ class TvDB(constants.Series):
                         "posters"   if bannerType == "poster" else \
                         "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
                         "season"    if bannerType == "season" and bannerType2=="season" else None)            
-            SubElement(root, "Banner", bannerType = metatype, url = bannerPath, thumb = bannerThumb)
+            SubElement(root, "Banner", bannerType = metatype, url = os.path.join(constants.TVDB_IMAGES_URL, bannerPath), thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb))
+            Log("Poster: '%s', '%s', '%s'" % (metatype, bannerPath, bannerThumb))
             self.Posters = root 
              
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
@@ -69,6 +70,6 @@ class TvDB(constants.Series):
             if GetElementText(data, "Overview"):
                 self.Overview = GetElementText(data, "Overview")
             if GetElementText(data, "filename"):
-                self.Poster = GetElementText(data, "filename")
+                self.Poster = os.path.join(constants.TVDB_IMAGES_URL, GetElementText(data, "filename"))
             if GetElementText(data, "absolute_number"):
                 self.Absolute = int(GetElementText(data, "absolute_number"))
