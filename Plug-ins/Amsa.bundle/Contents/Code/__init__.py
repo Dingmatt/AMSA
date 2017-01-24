@@ -110,7 +110,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         
         if mappingData != None:
             map = common.MapSeries(mappingData)
-            map = common.MapLocal(media, map)
+            map = common.MapLocal(media, map, mappingData.AnidbId)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             map = common.MapMeta(map)
         

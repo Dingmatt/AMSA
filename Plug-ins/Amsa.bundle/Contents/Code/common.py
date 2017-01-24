@@ -61,7 +61,7 @@ def MapSeries(mappingData):
     root = None
     existing = None
     if not root: 
-        #existing = functions.LoadFile(mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+        existing = functions.LoadFile(mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
         if existing:
             root = XML.ElementFromString(existing) 
         
@@ -157,9 +157,9 @@ def MapSeries(mappingData):
             for episode in unmappedlist:
                 SubElement(unmapped, "Episode", anidbid = episode.getparent().get("anidbid"), anidb = episode.get("anidb"), missing = episode.get("missing"), id = str(i))
                 i = i + 1
-        return root
+    return root
 
-def MapLocal(media, root):    
+def MapLocal(media, root, anidbid):    
     mapping = etree.Element("Mapping")
     guessId = 1
     @parallelize
@@ -202,8 +202,6 @@ def MapLocal(media, root):
                                     for stream in item_part.streams:
                                         SubElement(streams, "Stream", type=str(constants.StreamTypes.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
                                         
-                                    match = re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE)
-                                    
                                     anidbSeriesNumber = ""
                                     anidbEpisodeNumber = ""
                                     tvdbSeriesNumber = ""
@@ -211,36 +209,51 @@ def MapLocal(media, root):
                                     mappedEpisode = None
                                     guessEpisode = None
                                     
+                                    match = re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE)
                                     if match:
                                         #Log ("Common - MapLocal() - TVDB Matched: S%sE%s" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
                                         mappedEpisode = root.xpath("""./Mapping/Series/Episode[@tvdb="S%sE%s"]""" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
-                                        if mappedEpisode:
-                                            Log("mappedEpisode: '%s', '%s', 'S%sE%s', 'S%sE00'" % (mappedEpisode, anidb.ParseNoFromSeason(int(media_season), media_episode), media_season, media_episode, str(media_season).zfill(2)))
+                                        if mappedEpisode: 
+                                            Log("Mapped")
+                                            #Log("mappedEpisode: '%s', '%s', 'S%sE%s', 'S%sE00'" % (mappedEpisode, anidb.ParseNoFromSeason(int(media_season), media_episode), media_season, media_episode, str(media_season).zfill(2)))
                                             #if mappedEpisode[0].getparent().get("absolute") == "False": 
                                             anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
                                             anidbEpisodeNumber = mappedEpisode[0].get("anidb")
                                             tvdbSeriesNumber = mappedEpisode[0].getparent().get("tvdbid")
-                                            tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")
+                                            tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")      
                                         else:
-                                            guessEpisode = root.xpath("""./Mapping/Unmapped/Episode[@id="%s"]""" % (guessId))
-                                            if guessEpisode:
-                                                anidbSeriesNumber = guessEpisode[0].get("anidbid")
-                                                anidbEpisodeNumber = guessEpisode[0].get("anidb")
-                                                Log("mappedEpisode: '%s', '%s', '%s', '%s'" % (guessEpisode, guessId, anidbSeriesNumber, anidbEpisodeNumber))
-                                                guessId = guessId + 1
-                                        
-                                        if anidbSeriesNumber != "" and anidbEpisodeNumber != "" and guessEpisode == None:                                    
-                                            SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber)
-                                        elif anidbSeriesNumber != "" and anidbEpisodeNumber != "":
-                                            SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber, guess=str(guessId - 1))
-                                        if tvdbSeriesNumber != "" and tvdbEpisodeNumber != "":   
-                                            SubElement(mapped, "Tvdb", episode=tvdbEpisodeNumber, series=tvdbSeriesNumber)
+                                            Log("Override")
+                                            match = re.search(r".*\B\[(?P<provider>\D+)(?P<id>\d+)\]\B.*", filename, re.IGNORECASE)
+                                            if match:
+                                                provider = match.group('provider').lower()
+                                                anidbSeriesNumber = match.group('id').lower()
+                                                anidbEpisodeNumber = anidb.ParseNoFromSeason(int(media_season), int(media_episode))
+                                            else:
+                                                guessEpisode = root.xpath("""./Mapping/Unmapped/Episode[@id="%s"]""" % (guessId)) 
+                                                if guessEpisode:
+                                                    anidbSeriesNumber = guessEpisode[0].get("anidbid")
+                                                    anidbEpisodeNumber = guessEpisode[0].get("anidb")
+                                                    Log("mappedEpisode: '%s', '%s', '%s', '%s'" % (guessEpisode, guessId, anidbSeriesNumber, anidbEpisodeNumber))
+                                    else:
+                                        Log("Absolute")
+                                        match = re.search(r".*\b(?P<episode>E\d+)\b.*", filename, re.IGNORECASE)
+                                        mappedEpisode = root.xpath("""./Mapping/Series[@anidbid="%s"]/Episode[@anidb="%s"]""" % (anidbid, anidb.ParseNoFromSeason(int(media_season), int(media_episode))))
+                                        anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
+                                        anidbEpisodeNumber = mappedEpisode[0].get("anidb")
+                                        tvdbSeriesNumber = mappedEpisode[0].getparent().get("tvdbid")
+                                        tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")  
+                                    
+                                    if anidbSeriesNumber != "" and anidbEpisodeNumber != "" and guessEpisode == None:                                    
+                                        SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber)
+                                    elif anidbSeriesNumber != "" and anidbEpisodeNumber != "":
+                                        SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber, guess=str(guessId - 1))
+                                    if tvdbSeriesNumber != "" and tvdbEpisodeNumber != "":   
+                                        SubElement(mapped, "Tvdb", episode=tvdbEpisodeNumber, series=tvdbSeriesNumber)
                                                                      
                             collection = []            
                             if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0: collection.append("English Dubbed")
                             if streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and streams.xpath("""count(./Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0: collection.append("English Subbed")
-                            SubElement(episode, "Collection").text = ";".join(collection)
-                             
+                            SubElement(episode, "Collection").text = ";".join(collection)                            
     return root
 
 def MapMeta(root): 
@@ -249,9 +262,11 @@ def MapMeta(root):
     
     for provider in providers:
         data = None
-        
         for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (provider)), key=lambda x: int(x.get("series") if x.get("series") else 0)):
             if map.get("series"):
+                for existing in map.getparent().getparent().xpath(""".//%s""" % (provider)):
+                    if not existing.getparent().tag == "Mapped":
+                        existing.getparent().remove(existing)
                 if data == None or data.ID != map.get("series"):
                     if provider == "Anidb":
                         data = anidb.AniDB(map.get("series"))
@@ -259,7 +274,7 @@ def MapMeta(root):
                         data = tvdb.TvDB(map.get("series"))
                 for episode in data.Episodes:     
                     if (provider == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (provider == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
-                        if not map.getparent().getparent().getparent().xpath("""./Title/%s""" % (provider)):
+                        if not map.getparent().getparent().getparent().xpath("""./Title/%s""" % (provider)):                           
                             SubElement(map.getparent().getparent().getparent().xpath("""./Title""")[0], provider).text = (u'%s' % (data.Title))
                         if not map.getparent().getparent().getparent().xpath("""./Network/%s""" % (provider)):
                             SubElement(map.getparent().getparent().getparent().xpath("""./Network""")[0], provider).text = (u'%s' % (data.Network))
@@ -281,4 +296,6 @@ def MapMeta(root):
                         SubElement(map.getparent().getparent().xpath("""./Overview""")[0], provider).text = episode.Overview
                         SubElement(map.getparent().getparent().xpath("""./Poster""")[0], provider).text = episode.Poster               
                    
-    return root        
+    return root 
+
+  
