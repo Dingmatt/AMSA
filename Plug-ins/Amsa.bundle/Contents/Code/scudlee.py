@@ -78,7 +78,6 @@ class ScudLee():
         if data.xpath("""./mapping-list/mapping"""):  
             self.MappingList = []
             for item in data.xpath("""./mapping-list/mapping"""):
-                Log("MappingEntry: %s" % (self.AnidbId))
                 self.MappingList.append(self.Mapping(item))
             
     class Mapping(): 

@@ -51,7 +51,8 @@ class Series():
     Episodes = None
     EpisodeCount = None
     SpecialCount = None
-    OpedCount = None
+    OpList = None
+    EdList = None
     Posters = None
     
 class Episode():

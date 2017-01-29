@@ -27,19 +27,19 @@ def ParseNoFromType(type, episode):
  
 def ParseLocalNoFromType(type, episode, prefix = ""):
     if type == 1:
-        return "S01" + str(episode).zfill(2)
+        return "S01E" + str(episode).zfill(2)
     elif type == 2:
-        return "S00" + str(episode).zfill(2) 
+        return "S00E" + str(episode).zfill(2) 
     elif type == 3 and prefix.lower() == "op":
-        return "S00" + str(101 + episode)
+        return "S00E" + str(101 + episode)
     elif type == 3 and prefix.lower() == "ed":
-        return "S00" + str(151 + episode) 
+        return "S00E" + str(151 + episode) 
     elif type == 4:
-        return "S00" + str(201 + episode) 
+        return "S00E" + str(201 + episode) 
     elif type == 5:
-        return "S00" + str(301 + episode) 
+        return "S00E" + str(301 + episode) 
     elif type == 6:
-        return "S00" + str(401 + episode) 
+        return "S00E" + str(401 + episode) 
 
         
 class AniDB(constants.Series):
@@ -72,7 +72,13 @@ class AniDB(constants.Series):
             self.Rating = float(GetElementText(data, "ratings/temporary"))        
         self.EpisodeCount = int(GetElementText(data, "episodecount")) 
         self.SpecialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
-        self.OpedCount = len(data.xpath("""./episodes/episode/epno[@type="3"]"""))
+        self.OpList = []
+        self.EdList = []
+        for specials in data.xpath("""./episodes/episode/epno[@type="3"]/.."""):
+            if functions.GetPreferedTitleNoType(specials.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars).startswith("Opening"):
+                self.OpList.append(str(GetElementText(specials, "epno")))
+            if functions.GetPreferedTitleNoType(specials.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars).startswith("Ending"):
+                self.EdList.append(str(GetElementText(specials, "epno")))
         if len(data.xpath("""./episodes/episode""")) > 0:
             self.Episodes = []
             for item in data.xpath("""./episodes/episode"""):
@@ -83,8 +89,8 @@ class AniDB(constants.Series):
             SubElement(root, "Banner", bannerType = "season", url = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture")), thumb = "")
             self.Posters = root
             
-        Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
-        % (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
+        #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpCount: '%s', EdCount: '%s', Posters: '%s'"
+        #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, len(self.OpList), len(self.EdList), self.Posters) )
            
     class Episode(constants.Episode):
         def __init__(self, data):
