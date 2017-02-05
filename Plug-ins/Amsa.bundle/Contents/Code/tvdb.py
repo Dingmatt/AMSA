@@ -14,23 +14,57 @@ class TvDB(constants.Series):
     def __init__(self, id):
         self.ID = id
         data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", "TvDB\\" + id, CACHE_1HOUR * 24).xpath("""/Data""")[0]
+        
+        ##--------------------------------Title--------------------------------##
         if GetElementText(data, "Series/SeriesName"):
             self.Title = str(GetElementText(data, "Series/SeriesName")).encode('utf-8').strip().translate(constants.ReplaceChars)
-        if GetElementText(data, "Series/Network"):
-            self.Network = GetElementText(data, "Series/Network")
+            
+        ##--------------------------------Summary------------------------------##
         if GetElementText(data, "Series/Overview"): 
-            self.Overview = GetElementText(data, "Series/Overview")
+            self.Summary = GetElementText(data, "Series/Overview")
+            
+        ##--------------------------------Originally_Available_At--------------##     
         if GetElementText(data, "Series/FirstAired"):
-            self.FirstAired = GetElementText(data, "Series/FirstAired")
-        if GetElementText(data, "Series/Genre"):
-            self.Genre = filter(None, GetElementText(data, "Series/Genre").split("|"))
-        if GetElementText(data, "Series/ContentRating"):
-            self.ContentRating = GetElementText(data, "Series/ContentRating")
+            self.Originally_Available_At = GetElementText(data, "Series/FirstAired")
+            
+        ##--------------------------------Rating-------------------------------##     
         if GetElementText(data, "Series/Rating"):    
             self.Rating = GetElementText(data, "Series/Rating")
+
+        ##--------------------------------Studio-------------------------------##    
+        if GetElementText(data, "Series/Network"):
+            self.Studio = GetElementText(data, "Series/Network")
+
+        ##--------------------------------Countries----------------------------##
+        
+        ##--------------------------------Duration-----------------------------##
+        
+        ##--------------------------------Genres-------------------------------##
+        if GetElementText(data, "Series/Genre"):
+            self.Genres = filter(None, GetElementText(data, "Series/Genre").split("|"))
+            
+        ##--------------------------------Tags---------------------------------##
+        
+        ##--------------------------------Collections--------------------------## 
+        
+        ##--------------------------------Content_Rating-----------------------##
+        if GetElementText(data, "Series/ContentRating"):
+            self.Content_Rating = GetElementText(data, "Series/ContentRating")
+
+            
+        ##--------------------------------Writers------------------------------##
+
+        ##--------------------------------Directors----------------------------##
+
+        ##--------------------------------Producers----------------------------##
+        
+        ##--------------------------------Roles--------------------------------##
+        self.Roles = []
+        
         self.EpisodeCount = len(data.xpath("""./Episode/SeasonNumber[text()>0]"""))
         self.SpecialCount = len(data.xpath("""./Episode/SeasonNumber[text()=0]"""))
-        self.OpedCount = 0
+        self.OpList = []
+        self.EdList = []
         if len(data.xpath("""./Episode""")) > 0:
             self.Episodes = []
             for item in data.xpath("""./Episode"""):

@@ -42,17 +42,25 @@ ANIDB_TVDB_MAPPING_CORRECTIONS  = "http://raw.githubusercontent.com/Dingmatt/AMS
 class Series():
     ID = None
     Title = None
-    Network = None
-    Overview = None
-    FirstAired = None
-    Genre = None
-    ContentRating = None
+    Summary = None
+    Originally_Available_At = None
     Rating = None
-    Episodes = None
+    Studio = None
+    Countries = None
+    Duration = None
+    Genres = None
+    Tags = None
+    Collections = None
+    Content_Rating = None
+    Writers = None
+    Directors = None
+    Producers = None
+    Roles = None
     EpisodeCount = None
     SpecialCount = None
     OpList = None
     EdList = None
+    Episodes = None
     Posters = None
     
 class Episode():
