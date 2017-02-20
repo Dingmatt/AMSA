@@ -96,8 +96,9 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         return
         
     ### Parse the AniDB anime title XML ##################################################################################################################################
-    def update(self, metadata, media, lang, force=False):
+    def update(self, metadata, media, lang, force=False):       
         Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
+    
         common.RefreshData()
         source, id = metadata.id.split("-")     
         
@@ -111,9 +112,9 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         if mappingData != None:
             map = common.MapSeries(mappingData)
             map = common.MapLocal(media, map, mappingData.AnidbId)
-            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             map = common.MapMeta(map)
-        
+            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            common.MapMedia(map, metadata)
         #for mappedSeries in scudlee.MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (mappingData.TvdbId)):
             #anidbid_season = mappedSeries.get("anidbid")
             #Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, mappingData.TvdbId))
@@ -122,7 +123,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             #    series.set("anidbid", anidbid)
             #    series.set("tvdbid", tvdbid)
         
-            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            
         
         #anidb. populateMetadata(anidbid, mappingData)
 

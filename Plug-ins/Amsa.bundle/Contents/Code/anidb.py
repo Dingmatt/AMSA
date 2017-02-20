@@ -46,6 +46,8 @@ class AniDB(constants.Series):
     
     def __init__(self, id):
         data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
+        
+        ##--------------------------------ID-----------------------------------##
         self.ID = id
         
         ##--------------------------------Title--------------------------------##
@@ -136,17 +138,31 @@ class AniDB(constants.Series):
         for role in data.xpath("""./characters/character/charactertype[text()="Character"]/.."""):
             if GetElementText(role, "name"):               
                 character_name  = str(GetElementText(role, "name")) 
-                Log("character_name: '%s'" % (character_name))
             if GetElementText(role, "seiyuu"):       
                 seiyuu_name  = GetElementText(role, "seiyuu")
-                seiyuu_pic  = constants.ANIDB_PIC_BASE_URL + role.find('seiyuu').get('picture') 
-                Log("seiyuu_name: '%s'" % (seiyuu_name))
-                Log("seiyuu_pic: '%s'" % (seiyuu_pic))
+                seiyuu_pic = ''
+                if role.find('seiyuu').get('picture'):
+                    seiyuu_pic  = constants.ANIDB_PIC_BASE_URL + role.find('seiyuu').get('picture') 
             SubElement(roles, "Role", character_name = character_name, seiyuu_name = seiyuu_name, seiyuu_pic = seiyuu_pic)   
         if not roles is None: self.Roles = roles
         
+        ##--------------------------------Images------------------------------##
+        if GetElementText(data, "picture"): 
+            root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            root = XML.ElementFromString(root)
+            SubElement(root, "Banner", bannerType = "season", url = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture")), thumb = "")
+            self.Images = root
+        
+        ##--------------------------------Themes-------------------------------##
+        self.Themes = []
+        
+        ##--------------------------------EpisodeCount-------------------------##
         self.EpisodeCount = int(GetElementText(data, "episodecount")) 
+        
+        ##--------------------------------SpecialCount-------------------------##
         self.SpecialCount = len(data.xpath("""./episodes/episode/epno[@type="2"]"""))
+        
+        ##--------------------------------OP/ED_List---------------------------##
         self.OpList = []
         self.EdList = []
         for specials in data.xpath("""./episodes/episode/epno[@type="3"]/.."""):
@@ -154,35 +170,58 @@ class AniDB(constants.Series):
                 self.OpList.append(str(GetElementText(specials, "epno")))
             if functions.GetPreferedTitleNoType(specials.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars).startswith("Ending"):
                 self.EdList.append(str(GetElementText(specials, "epno")))
+                
+        ##--------------------------------Episodes-----------------------------##        
         if len(data.xpath("""./episodes/episode""")) > 0:
             self.Episodes = []
             for item in data.xpath("""./episodes/episode"""):
                 self.Episodes.append(self.Episode(item))
-        if GetElementText(data, "picture"): 
-            root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-            root = XML.ElementFromString(root)
-            SubElement(root, "Banner", bannerType = "season", url = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture")), thumb = "")
-            self.Posters = root
+        
             
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpCount: '%s', EdCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, len(self.OpList), len(self.EdList), self.Posters) )
            
     class Episode(constants.Episode):
         def __init__(self, data):
+            ##--------------------------------Title--------------------------------##
             if data.xpath("""./title"""):
                 self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
+                
+            ##--------------------------------Summary------------------------------##   
+
+            ##--------------------------------Originally_Available_At--------------## 
+            if GetElementText(data, "airdate"):
+                self.Originally_Available_At = GetElementText(data, "airdate")
+            
+            ##--------------------------------Rating-------------------------------##  
+            if GetElementText(data, "rating"):
+                self.Rating = GetElementText(data, "rating")
+                
+            ##--------------------------------Absolute_Index-----------------------## 
             if GetElementText(data, "epno"):
-                self.Number = str(GetElementText(data, "epno"))             
+                self.Absolute_Index = GetElementText(data, "epno")
+                
+            ##--------------------------------Writers------------------------------##
+        
+        
+            ##--------------------------------Directors----------------------------##
+          
+
+            ##--------------------------------Producers----------------------------##
+        
+        
+            ##--------------------------------Thumbs-------------------------------##
+
+            
+            ##--------------------------------Number-------------------------------##
+            if GetElementText(data, "epno"):
+                self.Number = str(GetElementText(data, "epno")) 
+             
+            ##--------------------------------Season-------------------------------##
             if data.xpath("""./epno""")[0].get("type"):
                 if data.xpath("""./epno""")[0].get("type") == "1":
                     self.Season = "01"
                 else:
                     self.Season = "00"
-            if GetElementText(data, "airdate"):
-                self.FirstAired = GetElementText(data, "airdate")
-            if GetElementText(data, "rating"):
-                self.Rating = GetElementText(data, "rating")
-            self.Overview = None
-            self.Poster = None
-            if  GetElementText(data, "epno"):
-                self.Absolute = str(GetElementText(data, "epno")).zfill(2)
+            
+            

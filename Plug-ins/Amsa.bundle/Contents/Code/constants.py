@@ -19,7 +19,9 @@ ANIDB_SERIE_URL              = "http://anidb.net/perl-bin/animedb.pl?show=anime&
 
 SERIES_LANGUAGE_PRIORITY     = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  #override default language
 EPISODE_LANGUAGE_PRIORITY    = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                               #override default language
-SERIES_METADATE_PRIORITY     = [Prefs["AgentPref1"].encode("utf-8"), Prefs["AgentPref2"].encode("utf-8"), Prefs["AgentPref3"].encode("utf-8")]                      #override default metadata 
+#SERIES_METADATE_PRIORITY     = [Prefs["SeasonTitle"].encode("utf-8"), Prefs["SeasonSummary"].encode("utf-8")]                      #override default metadata 
+SERIES_TITLE_PRIORITY        = Prefs["SeriesTitle"].encode("utf-8")
+SERIES_SUMMARY_PRIORITY      = Prefs["SeriesSummary"].encode("utf-8")
 MINIMUM_WEIGHT               = Prefs["MinimumWeight"]
 SERIES_TYPE_PRIORITY         = ["main", "official", "syn", "synonym", "short"]
 #-------------------ANIDB------------------#
@@ -56,19 +58,24 @@ class Series():
     Directors = None
     Producers = None
     Roles = None
+    Images = None
+    Themes = None
     EpisodeCount = None
     SpecialCount = None
     OpList = None
     EdList = None
     Episodes = None
-    Posters = None
+
     
 class Episode():
     Title = None
+    Summary = None
+    Originally_Available_At = None
+    Rating = None
+    Absolute_Index = None
+    Writers = None
+    Directors = None
+    Producers = None
+    Thumbs = None
     Number = None
     Season = None
-    FirstAired = None
-    Rating = None
-    Overview = None
-    Poster = None
-    Absolute = None

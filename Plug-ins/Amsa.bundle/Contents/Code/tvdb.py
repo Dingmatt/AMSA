@@ -37,8 +37,7 @@ class TvDB(constants.Series):
 
         ##--------------------------------Countries----------------------------##
         
-        ##--------------------------------Duration-----------------------------##
-        
+
         ##--------------------------------Genres-------------------------------##
         if GetElementText(data, "Series/Genre"):
             self.Genres = filter(None, GetElementText(data, "Series/Genre").split("|"))
@@ -61,14 +60,7 @@ class TvDB(constants.Series):
         ##--------------------------------Roles--------------------------------##
         self.Roles = []
         
-        self.EpisodeCount = len(data.xpath("""./Episode/SeasonNumber[text()>0]"""))
-        self.SpecialCount = len(data.xpath("""./Episode/SeasonNumber[text()=0]"""))
-        self.OpList = []
-        self.EdList = []
-        if len(data.xpath("""./Episode""")) > 0:
-            self.Episodes = []
-            for item in data.xpath("""./Episode"""):
-                self.Episodes.append(self.Episode(item))               
+        ##--------------------------------Images-------------------------------##
         banners = []
         bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "AniDB\\" + id, CACHE_1HOUR * 24)
         root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
@@ -83,26 +75,83 @@ class TvDB(constants.Series):
                         "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
                         "season"    if bannerType == "season" and bannerType2=="season" else None)            
             SubElement(root, "Banner", bannerType = metatype, url = os.path.join(constants.TVDB_IMAGES_URL, bannerPath), thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb))
-            self.Posters = root 
+            self.Images = root 
+
+        ##--------------------------------Themes-------------------------------##
+        self.Themes = []
+         
+        ##--------------------------------EpisodeCount-------------------------##
+        self.EpisodeCount = len(data.xpath("""./Episode/SeasonNumber[text()>0]"""))
+        
+        ##--------------------------------SpecialCount-------------------------##
+        self.SpecialCount = len(data.xpath("""./Episode/SeasonNumber[text()=0]"""))
+        
+        ##--------------------------------Duration-----------------------------##
+        if GetElementText(data, "Series/Runtime"):
+            self.Duration = int(self.EpisodeCount) * int(GetElementText(data, "Series/Runtime"))
+        
+        ##--------------------------------OP/ED_List---------------------------##
+        self.OpList = []
+        self.EdList = []
+        
+        ##--------------------------------Episodes-----------------------------## 
+        if len(data.xpath("""./Episode""")) > 0:
+            self.Episodes = []
+            for item in data.xpath("""./Episode"""):
+                self.Episodes.append(self.Episode(item))               
+
              
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
         
     class Episode(constants.Episode):
         def __init__(self, data):
+            ##--------------------------------Title--------------------------------##
             if GetElementText(data, "EpisodeName"):
                 self.Title = str(GetElementText(data, "EpisodeName")).encode('utf-8').strip().translate(constants.ReplaceChars)
-            if GetElementText(data, "EpisodeNumber"):
-                self.Number = str(GetElementText(data, "EpisodeNumber")).zfill(2)
-            if GetElementText(data, "SeasonNumber"):
-                self.Season = str(GetElementText(data, "SeasonNumber")).zfill(2)
+            
+            ##--------------------------------Summary------------------------------##
+            if GetElementText(data, "Overview"):
+                self.Summary = GetElementText(data, "Overview")
+            
+            ##--------------------------------Originally_Available_At--------------##
             if GetElementText(data, "FirstAired" ):
-                self.FirstAired = GetElementText(data, "FirstAired" )
+                self.Originally_Available_At = GetElementText(data, "FirstAired")
+            
+            ##--------------------------------Rating-------------------------------##
             if GetElementText(data, "Rating"):
                 self.Rating = GetElementText(data, "Rating")
-            if GetElementText(data, "Overview"):
-                self.Overview = GetElementText(data, "Overview")
-            if GetElementText(data, "filename"):
-                self.Poster = os.path.join(constants.TVDB_IMAGES_URL, GetElementText(data, "filename"))
+            
+            ##--------------------------------Absolute_Index-----------------------## 
             if GetElementText(data, "absolute_number"):
-                self.Absolute = int(GetElementText(data, "absolute_number"))
+                self.Absolute_Index = int(GetElementText(data, "absolute_number"))
+                
+            ##--------------------------------Writers------------------------------##
+            if GetElementText(data, "Writer"):
+                if self.Writers is None: self.Writers = [] 
+                self.Writers.append(GetElementText(data, "Writer"))
+        
+            ##--------------------------------Directors----------------------------##
+            if GetElementText(data, "Director"):
+                if self.Directors is None: self.Directors = [] 
+                self.Directors.append(GetElementText(data, "Director"))
+
+            ##--------------------------------Producers----------------------------##
+            
+        
+            ##--------------------------------Thumbs-------------------------------##
+            if GetElementText(data, "filename"):
+                self.Thumbs = os.path.join(constants.TVDB_IMAGES_URL, GetElementText(data, "filename"))
+            
+            ##--------------------------------Number-------------------------------##            
+            if GetElementText(data, "EpisodeNumber"):
+                self.Number = str(GetElementText(data, "EpisodeNumber")).zfill(2)
+            
+            ##--------------------------------Season-------------------------------##
+            if GetElementText(data, "SeasonNumber"):
+                self.Season = str(GetElementText(data, "SeasonNumber")).zfill(2)
+            
+            
+            
+            
+            
