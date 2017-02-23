@@ -125,7 +125,7 @@ class TvDB(constants.Series):
             ##--------------------------------Absolute_Index-----------------------## 
             if GetElementText(data, "absolute_number"):
                 self.Absolute_Index = int(GetElementText(data, "absolute_number"))
-                
+
             ##--------------------------------Writers------------------------------##
             if GetElementText(data, "Writer"):
                 if self.Writers is None: self.Writers = [] 

@@ -1,4 +1,4 @@
-import constants, unicodedata
+import constants, unicodedata, ast
 from time import sleep
 from datetime import timedelta  
 
@@ -118,3 +118,28 @@ def CleanTitle(title):
     
 def GetElementText(el, xp):
     return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
+    
+def GetByPriority(list, priorityList):
+    try:
+        text = sorted(filter(lambda i: i.text != None and i.text != "None", list), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
+    except: text = ""
+    return text 
+    
+def GetByPriorityList(list, priorityList):
+    try:
+        list = ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", list), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
+    except: list = []
+    return list 
+
+def AddPeople(people_list, priorityList, meta_people_obj):
+    try:
+        meta_people_obj.clear()   
+        if len(people_list):
+            for person in sorted(people_list, key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]:
+                new_person_obj = meta_people_obj.new()
+                new_person_obj.name = person.get('seiyuu_name', '')
+                new_person_obj.role = person.get('character_name', '')
+                new_person_obj.photo = person.get('seiyuu_pic', '')
+
+    except Exception, e:
+        pass    

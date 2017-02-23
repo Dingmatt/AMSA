@@ -296,49 +296,21 @@ def MapMeta(root):
                                 data = tvdb.TvDB(map.get("series"))
                         for episode in data.Episodes: 
                             if (provider == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (provider == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
-                                if not map.getparent().getparent().getparent().xpath("""./Title/%s""" % (provider)):                           
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Title""")[0], provider).text = (u'%s' % (data.Title))
-                                if not map.getparent().getparent().getparent().xpath("""./Summary/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Summary""")[0], provider).text = (u'%s' % (data.Summary))
-                                if not map.getparent().getparent().getparent().xpath("""./Originally_Available_At/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Originally_Available_At""")[0], provider).text = (u'%s' % (data.Originally_Available_At))                        
-                                if not map.getparent().getparent().getparent().xpath("""./Rating/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Rating""")[0], provider).text = (u'%s' % (data.Rating))
-                                if not map.getparent().getparent().getparent().xpath("""./Studio/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Studio""")[0], provider).text = (u'%s' % (data.Studio))
-                                if not map.getparent().getparent().getparent().xpath("""./Countries/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Countries""")[0], provider).text = (u'%s' % (data.Countries))
-                                if not map.getparent().getparent().getparent().xpath("""./Duration/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Duration""")[0], provider).text = (u'%s' % (data.Duration))
-                                if not map.getparent().getparent().getparent().xpath("""./Genres/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Genres""")[0], provider).text = (u'%s' % (data.Genres))
-                                if not map.getparent().getparent().getparent().xpath("""./Tags/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Tags""")[0], provider).text = (u'%s' % (data.Tags))
-                                if not map.getparent().getparent().getparent().xpath("""./Collections/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Collections""")[0], provider).text = (u'%s' % (data.Collections))
-                                if not map.getparent().getparent().getparent().xpath("""./Content_Rating/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Content_Rating""")[0], provider).text = (u'%s' % (data.Content_Rating))
-                                if not map.getparent().getparent().getparent().xpath("""./Writers/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Writers""")[0], provider).text = (u'%s' % (data.Writers))
-                                if not map.getparent().getparent().getparent().xpath("""./Directors/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Directors""")[0], provider).text = (u'%s' % (data.Directors))
-                                if not map.getparent().getparent().getparent().xpath("""./Producers/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Producers""")[0], provider).text = (u'%s' % (data.Producers))
-                                if not map.getparent().getparent().getparent().xpath("""./Roles/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Roles""")[0], provider).extend(data.Roles)
-                                if not map.getparent().getparent().getparent().xpath("""./Images/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Images""")[0], provider).extend(data.Images)
-                                if not map.getparent().getparent().getparent().xpath("""./Themes/%s""" % (provider)):
-                                    SubElement(map.getparent().getparent().getparent().xpath("""./Themes""")[0], provider).extend(data.Themes)
-                                SubElement(map.getparent().getparent().xpath("""./Title""")[0], provider).text =  (u'%s' % (episode.Title))
-                                SubElement(map.getparent().getparent().xpath("""./Summary""")[0], provider).text =  (u'%s' % (episode.Summary))
-                                SubElement(map.getparent().getparent().xpath("""./Originally_Available_At""")[0], provider).text =  (u'%s' % (episode.Originally_Available_At))
-                                SubElement(map.getparent().getparent().xpath("""./Rating""")[0], provider).text =  (u'%s' % (episode.Rating))
-                                SubElement(map.getparent().getparent().xpath("""./Absolute_Index""")[0], provider).text =  (u'%s' % (episode.Absolute_Index))
-                                SubElement(map.getparent().getparent().xpath("""./Writers""")[0], provider).text =  (u'%s' % (episode.Writers))  
-                                SubElement(map.getparent().getparent().xpath("""./Directors""")[0], provider).text =  (u'%s' % (episode.Directors))    
-                                SubElement(map.getparent().getparent().xpath("""./Producers""")[0], provider).text =  (u'%s' % (episode.Producers))                            
-                                SubElement(map.getparent().getparent().xpath("""./Thumbs""")[0], provider).text =  (u'%s' % (episode.Thumbs))                   
+                                for attrib in constants.SeriesAttribs:
+                                    if not map.getparent().getparent().getparent().xpath("""./%s/%s""" % (attrib, provider)):
+                                        if getattr(data, attrib):
+                                            if not isinstance(getattr(data, attrib), type(Element("None"))):
+                                                SubElement(map.getparent().getparent().getparent().xpath("""./%s""" % (attrib))[0], provider).text = (u'%s' % (getattr(data, attrib)))
+                                            else:
+                                                SubElement(map.getparent().getparent().getparent().xpath("""./%s""" % (attrib))[0], provider).extend(getattr(data, attrib))
+                                          
+                                for attrib in constants.EpisodeAttribs:
+                                    if getattr(episode, attrib):
+                                        if not isinstance(getattr(episode, attrib), type(Element("None"))):
+                                            SubElement(map.getparent().getparent().xpath("""./%s""" % (attrib))[0], provider).text =  (u'%s' % (getattr(episode, attrib)))
+                                        else:
+                                            SubElement(map.getparent().getparent().xpath("""./%s""" % (attrib))[0], provider).extend(getattr(episode, attrib))
+ 
     return root 
 
 def MapMedia(root, metadata):
@@ -346,10 +318,49 @@ def MapMedia(root, metadata):
         season = map.getparent().get('num')
         episode = map.get('num')
         if map.getparent().xpath("""./Title"""):
-            #sorted(filter(lambda i: i.value.title != None, map.getparent().xpath("""./Title""")), key=lambda x: x.provider,  reverse=False)[0].value.title
-            metadata.title = map.getparent().xpath("""./Title/Anidb""")[0].text
-        if map.getparent().xpath("""./Summary/Anidb"""):
-            metadata.summary = map.getparent().xpath("""./Summary/Anidb""")[0].text
+            metadata.title = functions.GetByPriority(map.getparent().xpath("""./Title/*[node()]"""), constants.SERIES_TITLE_PRIORITY)
+        if map.getparent().xpath("""./Summary"""):
+            metadata.summary = functions.GetByPriority(map.getparent().xpath("""./Summary/*[node()]"""), constants.SERIES_SUMMARY_PRIORITY)
+        if map.getparent().xpath("""./Originally_Available_At"""):
+            metadata.originally_available_at = datetime.datetime.strptime(functions.GetByPriority(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY), "%Y-%m-%d").date()
+        if map.getparent().xpath("""./Rating"""):
+            metadata.rating = float(functions.GetByPriority(map.getparent().xpath("""./Rating/*[node()]"""), constants.SERIES_RATING_PRIORITY))
+        if map.getparent().xpath("""./Studio"""):
+            metadata.studio = functions.GetByPriority(map.getparent().xpath("""./Studio/*[node()]"""), constants.SERIES_STUDIO_PRIORITY)
+        if map.getparent().xpath("""./Countries"""):
+            metadata.countries.clear()
+            for country in functions.GetByPriorityList(map.getparent().xpath("""./Countries/*[node()]"""), constants.SERIES_PRODUCERS_PRIORITY): 
+                metadata.countries.add(country) 
+        if map.getparent().xpath("""./Duration"""):
+            metadata.duration = int(float(functions.GetByPriority(map.getparent().xpath("""./Duration/*[node()]"""), constants.SERIES_DURATION_PRIORITY)))
+        if map.getparent().xpath("""./Genres"""):
+            metadata.genres.clear()
+            for genre in functions.GetByPriorityList(map.getparent().xpath("""./Genres/*[node()]"""), constants.SERIES_GENRES_PRIORITY): 
+                metadata.genres.add(genre)
+        if map.getparent().xpath("""./Tags"""):
+            metadata.tags.clear()
+            for tag in functions.GetByPriorityList(map.getparent().xpath("""./Tags/*[node()]"""), constants.SERIES_TAGS_PRIORITY): 
+                metadata.tags.add(tag)   
+        if map.getparent().xpath("""./Collections"""):
+            metadata.collections.clear()
+            for collection in functions.GetByPriorityList(map.getparent().xpath("""./Collections/*[node()]"""), constants.SERIES_COLLECTIONS_PRIORITY): 
+                metadata.collections.add(collection)
+        if map.getparent().xpath("""./Content_Rating"""):
+            metadata.content_rating = functions.GetByPriority(map.getparent().xpath("""./Content_Rating/*[node()]"""), constants.SERIES_CONTENTRATING_PRIORITY)                
+        #if map.getparent().xpath("""./Writers"""):
+        #    metadata.writers.clear()
+        #    for writer in functions.GetByPriorityList(map.getparent().xpath("""./Writers/*"""), constants.SERIES_WRITERS_PRIORITY): 
+        #        metadata.writers.add(writer) 
+        #if map.getparent().xpath("""./Directors"""):
+        #    metadata.directors.clear()
+        #    for director in functions.GetByPriorityList(map.getparent().xpath("""./Directors/*"""), constants.SERIES_DIRECTORS_PRIORITY): 
+        #        metadata.directors.add(director) 
+        #if map.getparent().xpath("""./Producers"""):
+        #    metadata.producers.clear()
+        #    for producer in functions.GetByPriorityList(map.getparent().xpath("""./Producers/*"""), constants.SERIES_PRODUCERS_PRIORITY): 
+        #        metadata.producers.add(producer) 
+        if map.getparent().xpath("""./Roles"""):
+            functions.AddPeople(map.getparent().xpath("""./Roles/*[node()]"""), constants.SERIES_ROLES_PRIORITY, metadata.roles)
         Log("Season: '%s', Episode: '%s'" % (season, episode))
         if map.xpath("""./Title/Anidb"""):
             metadata.seasons[season].episodes[episode].title = map.xpath("""./Title/Anidb""")[0].text
