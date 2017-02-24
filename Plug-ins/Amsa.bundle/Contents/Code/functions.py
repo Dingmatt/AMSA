@@ -1,4 +1,4 @@
-import constants, unicodedata, ast
+import constants, unicodedata, ast, datetime
 from time import sleep
 from datetime import timedelta  
 
@@ -131,15 +131,29 @@ def GetByPriorityList(list, priorityList):
     except: list = []
     return list 
 
-def AddPeople(people_list, priorityList, meta_people_obj):
+def AddPeople(people_list, priorityList, metadata):
     try:
-        meta_people_obj.clear()   
+        metadata.clear()   
         if len(people_list):
             for person in sorted(people_list, key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]:
-                new_person_obj = meta_people_obj.new()
+                new_person_obj = metadata.new()
                 new_person_obj.name = person.get('seiyuu_name', '')
                 new_person_obj.role = person.get('character_name', '')
                 new_person_obj.photo = person.get('seiyuu_pic', '')
+                Log("Person: %s" %(person.get('seiyuu_name', '')))
 
     except Exception, e:
-        pass    
+        pass   
+
+def PopulateMetadata(map, metadata, priorityList):
+    if map:
+        if isinstance(metadata, datetime.date):
+            metadata = datetime.datetime.strptime(GetByPriority(map, priorityList), "%Y-%m-%d").date()
+        if isinstance(metadata, list):    
+            metadata.clear()
+            for item in GetByPriority(map, priorityList):
+                metadata.add(item) 
+        else:
+            metadata = GetByPriority(map, priorityList)
+        
+        

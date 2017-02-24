@@ -183,23 +183,8 @@ def MapLocal(media, root, anidbid):
             @task
             def mapSeason(media_season=media_season, mapping=mapping, guessId=guessId):
                 season = SubElement(root, "Season", num=media_season)
-                SubElement(season, "Title")
-                SubElement(season, "Summary")
-                SubElement(season, "Originally_Available_At")
-                SubElement(season, "Rating")
-                SubElement(season, "Studio")
-                SubElement(season, "Countries")
-                SubElement(season, "Duration")
-                SubElement(season, "Genres")
-                SubElement(season, "Tags")
-                SubElement(season, "Collections")
-                SubElement(season, "Content_Rating")
-                SubElement(season, "Writers")
-                SubElement(season, "Directors")
-                SubElement(season, "Producers")
-                SubElement(season, "Roles")
-                SubElement(season, "Images")
-                SubElement(season, "Themes")
+                for attrib in constants.SeriesAttribs:
+                    SubElement(season, attrib)
                 
                 @parallelize
                 def mapEpisodes():
@@ -209,15 +194,8 @@ def MapLocal(media, root, anidbid):
                             episode = SubElement(season, "Episode", num=media_episode)
                             mapped = SubElement(episode, "Mapped")
                             streams = SubElement(episode, "Streams")
-                            SubElement(episode, "Title")
-                            SubElement(episode, "Summary")
-                            SubElement(episode, "Originally_Available_At")
-                            SubElement(episode, "Rating")
-                            SubElement(episode, "Absolute_Index")
-                            SubElement(episode, "Writers")
-                            SubElement(episode, "Directors")
-                            SubElement(episode, "Producers")
-                            SubElement(episode, "Thumbs")
+                            for attrib in constants.EpisodeAttribs:
+                                SubElement(episode, attrib)
 
                             for media_item in media.seasons[media_season].episodes[media_episode].items:
                                 for item_part in media_item.parts:
@@ -317,36 +295,20 @@ def MapMedia(root, metadata):
     for map in root.xpath("""./Season/Episode"""):
         season = map.getparent().get('num')
         episode = map.get('num')
-        if map.getparent().xpath("""./Title"""):
-            metadata.title = functions.GetByPriority(map.getparent().xpath("""./Title/*[node()]"""), constants.SERIES_TITLE_PRIORITY)
-        if map.getparent().xpath("""./Summary"""):
-            metadata.summary = functions.GetByPriority(map.getparent().xpath("""./Summary/*[node()]"""), constants.SERIES_SUMMARY_PRIORITY)
-        if map.getparent().xpath("""./Originally_Available_At"""):
-            metadata.originally_available_at = datetime.datetime.strptime(functions.GetByPriority(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY), "%Y-%m-%d").date()
-        if map.getparent().xpath("""./Rating"""):
-            metadata.rating = float(functions.GetByPriority(map.getparent().xpath("""./Rating/*[node()]"""), constants.SERIES_RATING_PRIORITY))
-        if map.getparent().xpath("""./Studio"""):
-            metadata.studio = functions.GetByPriority(map.getparent().xpath("""./Studio/*[node()]"""), constants.SERIES_STUDIO_PRIORITY)
-        if map.getparent().xpath("""./Countries"""):
-            metadata.countries.clear()
-            for country in functions.GetByPriorityList(map.getparent().xpath("""./Countries/*[node()]"""), constants.SERIES_PRODUCERS_PRIORITY): 
-                metadata.countries.add(country) 
-        if map.getparent().xpath("""./Duration"""):
-            metadata.duration = int(float(functions.GetByPriority(map.getparent().xpath("""./Duration/*[node()]"""), constants.SERIES_DURATION_PRIORITY)))
-        if map.getparent().xpath("""./Genres"""):
-            metadata.genres.clear()
-            for genre in functions.GetByPriorityList(map.getparent().xpath("""./Genres/*[node()]"""), constants.SERIES_GENRES_PRIORITY): 
-                metadata.genres.add(genre)
-        if map.getparent().xpath("""./Tags"""):
-            metadata.tags.clear()
-            for tag in functions.GetByPriorityList(map.getparent().xpath("""./Tags/*[node()]"""), constants.SERIES_TAGS_PRIORITY): 
-                metadata.tags.add(tag)   
-        if map.getparent().xpath("""./Collections"""):
-            metadata.collections.clear()
-            for collection in functions.GetByPriorityList(map.getparent().xpath("""./Collections/*[node()]"""), constants.SERIES_COLLECTIONS_PRIORITY): 
-                metadata.collections.add(collection)
-        if map.getparent().xpath("""./Content_Rating"""):
-            metadata.content_rating = functions.GetByPriority(map.getparent().xpath("""./Content_Rating/*[node()]"""), constants.SERIES_CONTENTRATING_PRIORITY)                
+        
+        functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), metadata.title, constants.SERIES_TITLE_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), metadata.summary, constants.SERIES_SUMMARY_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), metadata.originally_available_at, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Rating/*[node()]"""), metadata.rating, constants.SERIES_RATING_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Studio/*[node()]"""), metadata.studio, constants.SERIES_STUDIO_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Countries/*[node()]"""), metadata.countries, constants.SERIES_PRODUCERS_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Duration/*[node()]"""), metadata.duration, constants.SERIES_DURATION_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Genres/*[node()]"""), metadata.genres, constants.SERIES_GENRES_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Tags/*[node()]"""), metadata.tags, constants.SERIES_TAGS_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), metadata.collections, constants.SERIES_COLLECTIONS_PRIORITY)
+        functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), metadata.content_rating, constants.SERIES_CONTENTRATING_PRIORITY)
+ 
+ 
         #if map.getparent().xpath("""./Writers"""):
         #    metadata.writers.clear()
         #    for writer in functions.GetByPriorityList(map.getparent().xpath("""./Writers/*"""), constants.SERIES_WRITERS_PRIORITY): 
