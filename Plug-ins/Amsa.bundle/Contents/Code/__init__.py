@@ -111,10 +111,12 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         
         if mappingData != None:
             map = common.MapSeries(mappingData)
-            map = common.MapLocal(media, map, mappingData.AnidbId)
-            map = common.MapMeta(map)
+            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            common.MapLocal(media, map, mappingData.AnidbId)
+            common.MapMeta(map)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             common.MapMedia(map, metadata)
+            Log("MM: %s" % (metadata.roles))
         #for mappedSeries in scudlee.MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (mappingData.TvdbId)):
             #anidbid_season = mappedSeries.get("anidbid")
             #Log.Debug("Init - Update() - anidbid_season: '%s', tvdbid: '%s'" % (anidbid_season, mappingData.TvdbId))

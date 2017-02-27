@@ -31,15 +31,15 @@ def ParseLocalNoFromType(type, episode, prefix = ""):
     elif type == 2:
         return "S00E" + str(episode).zfill(2) 
     elif type == 3 and prefix.lower() == "op":
-        return "S00E" + str(101 + episode)
+        return "S00E" + str(episode)
     elif type == 3 and prefix.lower() == "ed":
-        return "S00E" + str(151 + episode) 
+        return "S00E" + str(episode) 
     elif type == 4:
-        return "S00E" + str(201 + episode) 
+        return "S00E" + str(episode) 
     elif type == 5:
-        return "S00E" + str(301 + episode) 
+        return "S00E" + str(episode) 
     elif type == 6:
-        return "S00E" + str(401 + episode) 
+        return "S00E" + str(episode) 
 
         
 class AniDB(constants.Series):
@@ -88,7 +88,7 @@ class AniDB(constants.Series):
         for length in data.xpath("""./episodes/episode/epno[@type="1"]/.."""):
             if GetElementText(length, "length"): 
                 if self.Duration is None: self.Duration = 0 
-                self.Duration = self.Duration + float(GetElementText(length, "length"))
+                self.Duration = self.Duration + int(GetElementText(length, "length"))
         
         ##--------------------------------Genres-------------------------------##         
         for element in data.xpath("""./tags/tag/name[text()="elements"]/.."""):

@@ -88,7 +88,7 @@ class TvDB(constants.Series):
         
         ##--------------------------------Duration-----------------------------##
         if GetElementText(data, "Series/Runtime"):
-            self.Duration = int(self.EpisodeCount) * int(GetElementText(data, "Series/Runtime"))
+            self.Duration = int(int(self.EpisodeCount) * int(GetElementText(data, "Series/Runtime")))
         
         ##--------------------------------OP/ED_List---------------------------##
         self.OpList = []

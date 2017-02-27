@@ -59,7 +59,8 @@ class ScudLee():
                     
             for item in remove:
                 self.SeriesList.remove(item)
-
+            
+            self.SeriesList = sorted(self.SeriesList, key=lambda x: int(x.get("anidbid")))   
             for series in self.SeriesList:            
                 if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
                     self.FirstSeries = series.get("anidbid")
