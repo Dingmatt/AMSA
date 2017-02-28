@@ -150,7 +150,7 @@ class AniDB(constants.Series):
         if GetElementText(data, "picture"): 
             root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             root = XML.ElementFromString(root)
-            directory = "AniDB\\" + id
+            directory = os.path.join("AniDB", id, "season")
             remoteUrl = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture"))
             functions.FileFromURL(constants.ANIDB_PIC_BASE_URL, os.path.basename(remoteUrl), directory, CACHE_1HOUR * 24)
             filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl)) 

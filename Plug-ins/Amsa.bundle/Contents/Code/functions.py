@@ -189,12 +189,12 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                         new_person_obj.role = person.get('character_name', '')
                         new_person_obj.photo = person.get('seiyuu_pic', '')
                     #Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
-                return new_person_obj
+                return metaList
             if metaType is Framework.modelling.attributes.ProxyContainerObject:
-                Log("Data: %s, %s, %s" %(map, data, type(metaList)))
                 for image in data:
-                    Log("Poster: %s" % (image))
+                    Log("Poster: %s" % (image.get("local")))
                     metaList[image.get("url")] = Proxy.Preview(image.get("thumb"), sort_order=image.get("id")) if len(image.get("thumb")) > 0 else Proxy.Media(Data.Load(image.get("local")), sort_order=image.get("id"))
+                return metaList
             else:
                 return (metaType)(data)   
         

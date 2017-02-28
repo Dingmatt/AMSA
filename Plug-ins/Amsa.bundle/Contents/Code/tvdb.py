@@ -76,9 +76,11 @@ class TvDB(constants.Series):
                         "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
                         "season"    if bannerType == "season" and bannerType2=="season" else None)  
             remoteUrl = os.path.join(constants.TVDB_IMAGES_URL, bannerPath)
-            directory = "TvDB\\" + id
+            directory = os.path.join("TvDB", id, metatype)
             functions.FileFromURL(os.path.join(constants.TVDB_IMAGES_URL, bannerPath), os.path.basename(remoteUrl), directory, CACHE_1HOUR * 24)
-            filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl)) 
+            filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl))
+            #if len(bannerThumb) > 0:
+            
             localPath = os.path.abspath(os.path.join(constants.CachePath, "..", filename))
             
             SubElement(root, "Banner", id = str(order), bannerType = metatype, url = remoteUrl, thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb) if len(bannerThumb) > 0 else "", local = localPath)
