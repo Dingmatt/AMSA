@@ -54,6 +54,38 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         
     return None
 
+def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
+    Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
+    global AniDB_WaitUntil
+    try:
+        netLock.acquire()
+        result = LoadFile(filename, directory, cache) 
+        if not result:
+            try: 
+                if url.startswith(constants.ANIDB_HTTP_API_URL):
+                    while AniDB_WaitUntil > datetime.datetime.now(): 
+                        sleep(1)
+                    Log("Functions - FileFromURL() - AniDB AntiBan Delay")    
+                    AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=3) 
+                result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
+            except Exception as e: 
+                result = None 
+                Log.Debug("Functions - FileFromURL() - Issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
+        
+            if result and filename: 
+                try: SaveFile(result, os.path.basename(filename), directory)
+                except Exception as e: Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s' saving failed: %s" % (url, filename, e))
+            elif filename and Data.Exists(filename):  # Loading locally if backup exists
+                Log.Debug("Functions - FileFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
+                try: result = Data.Load(filename)
+                except: Log.Debug("Functions - FileFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
+        
+        if result:     
+            return result  
+    finally:
+        netLock.release()
+        
+    return None
 def LoadFile(filename="", directory="", cache=constants.DefaultCache):  
     filename = os.path.join(str(constants.CacheDirectory), str(directory), str(filename)) 
     result = None
@@ -122,33 +154,47 @@ def GetElementText(el, xp):
 def GetByPriority(metaList, priorityList, metaType):
     try:
         if metaType is list:
-            data = ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
+            return ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
+        if metaType is Framework.modelling.attributes.SetObject or metaType is Framework.modelling.attributes.ProxyContainerObject:
+            return sorted(filter(lambda i: len(i.getchildren()) > 0, metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]
         else:
-            data = sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
+            return sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
     except: 
-        data = ""
-    return data
-
-def AddPeople(people_list, priorityList, metadata):
-    metadata.clear() 
-    #if isinstance(person, basestring):
-    if len(people_list):
-        for person in sorted(people_list, key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]:
-            new_person_obj = metadata.new()
-            new_person_obj.name = person.get('seiyuu_name', '')
-            new_person_obj.role = person.get('character_name', '')
-            new_person_obj.photo = person.get('seiyuu_pic', '')
-            Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
-
+        return ""               
+    
 def PopulateMetadata(map, metaType, priorityList, metaList=None):
     if map:
-        if metaType is datetime.date:
-            return datetime.datetime.strptime(GetByPriority(map, priorityList, metaType), "%Y-%m-%d").date()
-        if metaType is list:
-            metaList.clear()
-            for item in GetByPriority(map, priorityList, metaType):
-                metaList.add(item) 
-            return metaList           
-        else:
-            return (metaType)(GetByPriority(map, priorityList, metaType))   
+        data = GetByPriority(map, priorityList, metaType)
+        if data:
+            
+            if metaType is datetime.date:
+                return datetime.datetime.strptime(data, "%Y-%m-%d").date()
+            if metaType is list:
+                metaList.clear()
+                for item in data:
+                    metaList.add(item) 
+                return metaList    
+            if metaType is Framework.modelling.attributes.SetObject:
+                metaList.clear()
+                for person in data:
+                    if isinstance(person, basestring):
+                        if not len(person):
+                            continue
+                        else:
+                            new_person_obj = metaList.new()
+                            new_person_obj.name = person
+                    else:
+                        new_person_obj = metaList.new()
+                        new_person_obj.name = person.get('seiyuu_name', '')
+                        new_person_obj.role = person.get('character_name', '')
+                        new_person_obj.photo = person.get('seiyuu_pic', '')
+                    #Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
+                return new_person_obj
+            if metaType is Framework.modelling.attributes.ProxyContainerObject:
+                Log("Data: %s, %s, %s" %(map, data, type(metaList)))
+                for image in data:
+                    Log("Poster: %s" % (image))
+                    metaList[image.get("url")] = Proxy.Preview(image.get("thumb"), sort_order=image.get("id")) if len(image.get("thumb")) > 0 else Proxy.Media(Data.Load(image.get("local")), sort_order=image.get("id"))
+            else:
+                return (metaType)(data)   
         

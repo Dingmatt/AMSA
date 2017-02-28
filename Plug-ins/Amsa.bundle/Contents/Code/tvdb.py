@@ -62,10 +62,11 @@ class TvDB(constants.Series):
         
         ##--------------------------------Images-------------------------------##
         banners = []
-        bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "AniDB\\" + id, CACHE_1HOUR * 24)
+        bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "TvDB\\" + id, CACHE_1HOUR * 24)
         root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
         root = XML.ElementFromString(root)
-        for banner in bannersXml.xpath("./Banner"):
+        order = 1
+        for banner in sorted(bannersXml.xpath("./Banner"), key=lambda x: (GetElementText(x, "BannerType"), GetElementText(x, "id")),  reverse=False):
             bannerType = GetElementText(banner, "BannerType")
             bannerType2 = GetElementText(banner, "BannerType2")
             bannerPath = GetElementText(banner, "BannerPath")
@@ -73,9 +74,17 @@ class TvDB(constants.Series):
             metatype = ("art"       if bannerType == "fanart" else \
                         "posters"   if bannerType == "poster" else \
                         "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
-                        "season"    if bannerType == "season" and bannerType2=="season" else None)            
-            SubElement(root, "Banner", bannerType = metatype, url = os.path.join(constants.TVDB_IMAGES_URL, bannerPath), thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb))
-            self.Images = root 
+                        "season"    if bannerType == "season" and bannerType2=="season" else None)  
+            remoteUrl = os.path.join(constants.TVDB_IMAGES_URL, bannerPath)
+            directory = "TvDB\\" + id
+            functions.FileFromURL(os.path.join(constants.TVDB_IMAGES_URL, bannerPath), os.path.basename(remoteUrl), directory, CACHE_1HOUR * 24)
+            filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl)) 
+            localPath = os.path.abspath(os.path.join(constants.CachePath, "..", filename))
+            
+            SubElement(root, "Banner", id = str(order), bannerType = metatype, url = remoteUrl, thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb) if len(bannerThumb) > 0 else "", local = localPath)
+            order = order + 1
+        self.Images = root 
+            
 
         ##--------------------------------Themes-------------------------------##
         self.Themes = []
