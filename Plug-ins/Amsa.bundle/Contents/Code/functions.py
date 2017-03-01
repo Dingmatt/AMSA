@@ -191,10 +191,30 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                     #Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
                 return metaList
             if metaType is Framework.modelling.attributes.ProxyContainerObject:
-                for image in data:
+                for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
                     Log("Poster: %s" % (image.get("local")))
-                    metaList[image.get("url")] = Proxy.Preview(image.get("thumb"), sort_order=image.get("id")) if len(image.get("thumb")) > 0 else Proxy.Media(Data.Load(image.get("local")), sort_order=image.get("id"))
+                    if len(image.get("thumbUrl")) > 0:
+                        FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
+                    else:
+                        FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
+                    if image.getparent().getparent().tag == "Season":
+                        metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                    else:
+                        metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
                 return metaList
             else:
                 return (metaType)(data)   
-        
+
+def ParseImage(imagePath, baseURL, baseFolder, thumbPath = None):
+    mainUrl = os.path.join(baseURL, imagePath)
+    mainFilename = os.path.join(constants.CacheDirectory, baseFolder, os.path.basename(mainUrl))
+    mainLocalPath = os.path.abspath(os.path.join(constants.CachePath, "..", mainFilename))
+    if thumbPath:
+        thumbUrl = os.path.join(baseURL, thumbPath)
+        thumbFilename = os.path.join(constants.CacheDirectory, baseFolder, "thumb_" + os.path.basename(thumbUrl))
+        thumbLocalPath = os.path.abspath(os.path.join(constants.CachePath, "..", thumbFilename))
+    else:
+        thumbUrl = ""
+        thumbLocalPath = ""       
+    return mainUrl, thumbUrl, mainLocalPath, thumbLocalPath
+    

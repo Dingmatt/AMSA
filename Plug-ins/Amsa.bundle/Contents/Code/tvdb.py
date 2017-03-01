@@ -63,29 +63,47 @@ class TvDB(constants.Series):
         ##--------------------------------Images-------------------------------##
         banners = []
         bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "TvDB\\" + id, CACHE_1HOUR * 24)
-        root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-        root = XML.ElementFromString(root)
-        order = 1
-        for banner in sorted(bannersXml.xpath("./Banner"), key=lambda x: (GetElementText(x, "BannerType"), GetElementText(x, "id")),  reverse=False):
-            bannerType = GetElementText(banner, "BannerType")
-            bannerType2 = GetElementText(banner, "BannerType2")
-            bannerPath = GetElementText(banner, "BannerPath")
-            bannerThumb = GetElementText(banner, "ThumbnailPath")
-            metatype = ("art"       if bannerType == "fanart" else \
-                        "posters"   if bannerType == "poster" else \
-                        "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
-                        "season"    if bannerType == "season" and bannerType2=="season" else None)  
-            remoteUrl = os.path.join(constants.TVDB_IMAGES_URL, bannerPath)
-            directory = os.path.join("TvDB", id, metatype)
-            functions.FileFromURL(os.path.join(constants.TVDB_IMAGES_URL, bannerPath), os.path.basename(remoteUrl), directory, CACHE_1HOUR * 24)
-            filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl))
-            #if len(bannerThumb) > 0:
+        if bannersXml:
+            art = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            art = XML.ElementFromString(art)
+            artCount = 1
+            posters = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            posters = XML.ElementFromString(posters)
+            postersCount = 1
+            banners = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            banners = XML.ElementFromString(banners)
+            bannersCount = 1
+            season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            season = XML.ElementFromString(season)
             
-            localPath = os.path.abspath(os.path.join(constants.CachePath, "..", filename))
-            
-            SubElement(root, "Banner", id = str(order), bannerType = metatype, url = remoteUrl, thumb = os.path.join(constants.TVDB_IMAGES_URL, bannerThumb) if len(bannerThumb) > 0 else "", local = localPath)
-            order = order + 1
-        self.Images = root 
+            for banner in bannersXml.xpath("./Banner"):
+                bannerType = GetElementText(banner, "BannerType")
+                bannerType2 = GetElementText(banner, "BannerType2")
+                bannerPath = GetElementText(banner, "BannerPath")
+                bannerThumb = GetElementText(banner, "ThumbnailPath")
+                metatype = ("art"       if bannerType == "fanart" else \
+                            "posters"   if bannerType == "poster" else \
+                            "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
+                            "season"    if bannerType == "season" and bannerType2=="season" else None)  
+                
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)               
+                if metatype == "art":
+                    SubElement(art, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    artCount = artCount + 1
+                if metatype == "posters":
+                    SubElement(posters, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    postersCount = postersCount + 1
+                if metatype == "banners":
+                    SubElement(banners, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    bannersCount = bannersCount + 1
+                if metatype == "season":
+                    SubElement(season, "Image", id = str(GetElementText(banner, "Season")), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                  
+                    
+            self.Art = art
+            self.Posters = posters 
+            self.Banners = banners 
+            self.Season = season 
             
 
         ##--------------------------------Themes-------------------------------##

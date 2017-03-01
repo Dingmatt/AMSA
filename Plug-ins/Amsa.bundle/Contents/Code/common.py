@@ -238,13 +238,13 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
             if re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE) or re.search(r".*\b(?P<type>ncop|op|nced|ed)(?P<episode>\d+)\b.*", filename, re.IGNORECASE):
                 mappedEpisode = root.xpath("""./Mapping/Series/Episode[@tvdb="S%sE%s"]""" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
                 if mappedEpisode: 
-                    #Log("Mapped: '%s', 'S%sE%s'" % (filename, media_season, media_episode))
+                    Log("Mapped: '%s', 'S%sE%s'" % (filename, media_season, media_episode))
                     anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
                     anidbEpisodeNumber = mappedEpisode[0].get("anidb")
                     tvdbSeriesNumber = mappedEpisode[0].getparent().get("tvdbid")
                     tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")  
                 else:
-                    #Log("Override: '%s'" % (filename))
+                    Log("Override: '%s'" % (filename))
                     match = re.search(r".*\B\[(?P<provider>\D+)(?P<id>\d+)\]\B.*", filename, re.IGNORECASE)
                     if match:
                         provider = match.group('provider').lower()
@@ -258,7 +258,7 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
                     #        anidbEpisodeNumber = guessEpisode[0].get("anidb")
                     #        #Log("mappedEpisode: '%s', '%s', '%s', '%s'" % (guessEpisode, guessId, anidbSeriesNumber, anidbEpisodeNumber))
             elif re.search(r".*\b(?P<episode>E\d+)\b.*", filename, re.IGNORECASE):
-                #Log("Absolute: '%s'" % (filename))
+                Log("Absolute: '%s'" % (filename))
                 mappedEpisode = root.xpath("""./Mapping/Series[@anidbid="%s"]/Episode[@anidb="%s"]""" % (anidbid, anidb.ParseNoFromSeason(int(media_season), int(media_episode))))
                 anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
                 anidbEpisodeNumber = mappedEpisode[0].get("anidb")
@@ -301,30 +301,32 @@ def MapMeta(root):
                                     if not map.getparent().getparent().getparent().xpath("""./%s/%s""" % (attrib, provider)):
                                         #Log("Attrib: %s, %s, %s, %s" % (attrib, getattr(data, attrib), type(getattr(data, attrib)), type(getattr(data, attrib)) is type(Element("None"))))
                                         if getattr(data, attrib):
-                                            if not type(getattr(data, attrib)) is type(Element("None")):
-                                                elementItem = copy.copy(getattr(data, attrib))
-                                                SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).text = (u'%s' % (elementItem))
-                                            else:
+                                            if type(getattr(data, attrib)) is type(Element("None")):
                                                 elementList = copy.deepcopy(getattr(data, attrib))
                                                 SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList.getchildren())
+                                            else:
+                                                elementItem = copy.copy(getattr(data, attrib))
+                                                SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).text = (u'%s' % (elementItem))
+                                                
                                          
                                 for attrib in constants.EpisodeAttribs:
                                     if getattr(episode, attrib):
-                                        if not type(getattr(episode, attrib)) is type(Element("None")):
-                                            elementItem = copy.copy(getattr(episode, attrib))
-                                            SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
-                                        else:
+                                        if type(getattr(episode, attrib)) is type(Element("None")):
                                             elementList = copy.deepcopy(getattr(episode, attrib))
                                             SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList)
- 
+                                        else:
+                                            elementItem = copy.copy(getattr(episode, attrib))
+                                            SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
+                                            
 
 def MapMedia(root, metadata):
     seriesPopulate = True
     for map in root.xpath("""./Season/Episode"""):
+        Log("MapMedia!")
         season = map.getparent().get('num')
         episode = map.get('num')
         
-        if seriesPopulate:
+        if seriesPopulate and season == "1":
             metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
             metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
             metadata.originally_available_at = functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
@@ -336,29 +338,11 @@ def MapMedia(root, metadata):
             functions.PopulateMetadata(map.getparent().xpath("""./Tags/*[node()]"""), list, constants.SERIES_TAGS_PRIORITY, metadata.tags)
             functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), list, constants.SERIES_COLLECTIONS_PRIORITY, metadata.collections)
             metadata.content_rating = functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), str, constants.SERIES_CONTENTRATING_PRIORITY)
-            functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)
-            
-            posterList = map.getparent().xpath("""./Images/*[node()]""")
-            artList = copy.deepcopy(posterList)
-            seasonList = copy.deepcopy(posterList)
-            bannerList = copy.deepcopy(posterList)
-            for source in posterList:
-                for item in source.xpath("""./Banner[not(@bannerType="posters")]"""):
-                    source.remove(item)
-            for source in artList:
-                for item in source.xpath("""./Banner[not(@bannerType="art")]"""):
-                    source.remove(item)
-            for source in seasonList:
-                for item in source.xpath("""./Banner[not(@bannerType="season")]"""):
-                    source.remove(item)
-            for source in bannerList:
-                for item in source.xpath("""./Banner[not(@bannerType="banners")]"""):
-                    source.remove(item)  
-                
-            functions.PopulateMetadata(posterList, Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
-            functions.PopulateMetadata(artList, Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
-            functions.PopulateMetadata(bannerList, Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
-            #functions.PopulateMetadata(seasonList, Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.season)
+            functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)   
+            functions.PopulateMetadata(map.getparent().xpath("""./Posters/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
+            functions.PopulateMetadata(map.getparent().xpath("""./Art/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
+            functions.PopulateMetadata(map.getparent().xpath("""./Banners/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
+            functions.PopulateMetadata(map.getparent().xpath("""./Season/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
             seriesPopulate = False
             
         if map.xpath("""./Title/Anidb"""):

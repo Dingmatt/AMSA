@@ -9,7 +9,7 @@ DefaultCache = CACHE_1HOUR * 24
 DeleteChars = ":;"
 ReplaceChars = maketrans("`", "'")
 StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
-SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Images", "Themes"]
+SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes"]
 EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Absolute_Index", "Writers", "Directors", "Producers", "Thumbs"]
 #-------------------AMSA-------------------#
 
@@ -75,7 +75,10 @@ class Series():
     Directors = None
     Producers = None
     Roles = None
-    Images = None
+    Art = None
+    Posters = None
+    Banners = None
+    Season = None
     Themes = None
     EpisodeCount = None
     SpecialCount = None

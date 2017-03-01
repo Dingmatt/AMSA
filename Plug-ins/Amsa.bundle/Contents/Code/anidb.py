@@ -1,4 +1,4 @@
-import constants, functions, lxml 
+import constants, functions, lxml, copy
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E
@@ -148,16 +148,13 @@ class AniDB(constants.Series):
         
         ##--------------------------------Images------------------------------##
         if GetElementText(data, "picture"): 
-            root = etree.tostring(E.Banners(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-            root = XML.ElementFromString(root)
-            directory = os.path.join("AniDB", id, "season")
-            remoteUrl = os.path.join(constants.ANIDB_PIC_BASE_URL, GetElementText(data, "picture"))
-            functions.FileFromURL(constants.ANIDB_PIC_BASE_URL, os.path.basename(remoteUrl), directory, CACHE_1HOUR * 24)
-            filename = os.path.join(constants.CacheDirectory, directory, os.path.basename(remoteUrl)) 
-            localPath = os.path.abspath(os.path.join(constants.CachePath, "..", filename))
-            SubElement(root, "Banner", id = "1", bannerType = "season", url = remoteUrl, thumb = "", local = localPath)
-            self.Images = root
-            
+            season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            season = XML.ElementFromString(season)
+            bannerPath = GetElementText(data, "picture")
+            mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.ANIDB_PIC_BASE_URL, os.path.join("AniDB", id, "season"))  
+            SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+            self.Season = season
+            self.Posters = copy.deepcopy(season)
         ##--------------------------------Themes-------------------------------##
         self.Themes = []
         
