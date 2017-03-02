@@ -136,11 +136,14 @@ class AniDB(constants.Series):
         roles = etree.tostring(E.Roles(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
         roles = XML.ElementFromString(roles)
         for role in data.xpath("""./characters/character/charactertype[text()="Character"]/.."""):
+            character_name = ""
+            seiyuu_name = ""
+            seiyuu_pic = ""        
             if GetElementText(role, "name"):               
                 character_name  = str(GetElementText(role, "name")) 
             if GetElementText(role, "seiyuu"):       
                 seiyuu_name  = GetElementText(role, "seiyuu")
-                seiyuu_pic = ''
+                seiyuu_pic = ""
                 if role.find('seiyuu').get('picture'):
                     seiyuu_pic  = constants.ANIDB_PIC_BASE_URL + role.find('seiyuu').get('picture') 
             SubElement(roles, "Role", character_name = character_name, seiyuu_name = seiyuu_name, seiyuu_pic = seiyuu_pic)   

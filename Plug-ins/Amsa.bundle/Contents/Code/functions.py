@@ -18,7 +18,7 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
                     while AniDB_WaitUntil > datetime.datetime.now(): 
                         sleep(1)
                     Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
-                    AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=3) 
+                    AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2) 
                 result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
             except Exception as e: 
                 result = None 
@@ -107,7 +107,7 @@ def SaveFile(file, filename="", directory=""):
     Data.Save(filename, file)
     
 def GetAnimeTitleByID(Tree, Id):    
-    return Tree.xpath("/animetitles/anime[@aid='%s']/*" % Id)
+    return Tree.xpath("""/animetitles/anime[@aid="s"]/*""" % Id)
     
 def GetAnimeTitleByName(Tree, Name):    
     return Tree.xpath("""./anime/title
@@ -155,8 +155,12 @@ def GetByPriority(metaList, priorityList, metaType):
     try:
         if metaType is list:
             return ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
-        if metaType is Framework.modelling.attributes.SetObject or metaType is Framework.modelling.attributes.ProxyContainerObject:
+        if metaType is Framework.modelling.attributes.SetObject:
             return sorted(filter(lambda i: len(i.getchildren()) > 0, metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]
+        elif metaType is Framework.modelling.attributes.ProxyContainerObject:
+            dataList = sorted(metaList, key=lambda x: priorityList.index(x.getparent().tag.lower()),  reverse=False)
+            dataList[0].set('id', '0')
+            return dataList
         else:
             return sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
     except: 
@@ -166,7 +170,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
     if map:
         data = GetByPriority(map, priorityList, metaType)
         if data:
-            
+            #Log("Data: %s" % (data))
             if metaType is datetime.date:
                 return datetime.datetime.strptime(data, "%Y-%m-%d").date()
             if metaType is list:
@@ -191,16 +195,20 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                     #Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
                 return metaList
             if metaType is Framework.modelling.attributes.ProxyContainerObject:
-                for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
-                    Log("Poster: %s" % (image.get("local")))
-                    if len(image.get("thumbUrl")) > 0:
-                        FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
-                    else:
-                        FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
-                    if image.getparent().getparent().tag == "Season":
-                        metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
-                    else:
-                        metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                @parallelize
+                def Image_Par():
+                    for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
+                        @task
+                        def Image_Task(image=image, metaList=metaList):
+                            #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
+                            if len(image.get("thumbUrl")) > 0:
+                                FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
+                            else:
+                                FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
+                            if image.getparent().getparent().tag == "Season":
+                                metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                            else:
+                                metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
                 return metaList
             else:
                 return (metaType)(data)   
@@ -217,4 +225,26 @@ def ParseImage(imagePath, baseURL, baseFolder, thumbPath = None):
         thumbUrl = ""
         thumbLocalPath = ""       
     return mainUrl, thumbUrl, mainLocalPath, thumbLocalPath
+  
+def lev_ratio(s1, s2):
+    distance = Util.LevenshteinDistance(safe_unicode(s1), safe_unicode(s2))
+    max_len = float(max([ len(s1), len(s2) ]))
+
+    ratio = 0.0
+    try:
+        ratio = float(1 - (distance/max_len))
+    except:
+        pass
+
+    return ratio  
     
+def safe_unicode(s, encoding='utf-8'):
+    if s is None:
+        return None
+    if isinstance(s, basestring):
+        if isinstance(s, types.UnicodeType):
+            return s
+        else:
+            return s.decode(encoding)
+    else:
+        return str(s).decode(encoding)

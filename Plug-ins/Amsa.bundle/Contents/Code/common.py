@@ -15,11 +15,15 @@ class Titles():
         element = entry.getparent()
         id = element.get("aid")
         langTitle = functions.GetPreferedTitle(element)
-        if str(langTitle).translate(constants.ReplaceChars, constants.DeleteChars).lower() == orig_title.lower():
+        cleanTitle = str(langTitle).translate(constants.ReplaceChars, constants.DeleteChars)
+        if cleanTitle.lower() == orig_title.lower():
             score = 100
-        else:   
-            score = 100 * len(orig_title) / len(str(langTitle).translate(constants.ReplaceChars, constants.DeleteChars)) 
-        
+        else: 
+            if len(orig_title) < len(cleanTitle):
+                score = 100 * len(orig_title) / len(cleanTitle) 
+            else:
+                score = 100 * len(cleanTitle) / len(orig_title)
+        Log("Score: '%s', '%s'" % (score, functions.lev_ratio(orig_title, cleanTitle)))
         self.Entry = entry
         self.Id = id
         self.Title = langTitle
@@ -322,7 +326,6 @@ def MapMeta(root):
 def MapMedia(root, metadata):
     seriesPopulate = True
     for map in root.xpath("""./Season/Episode"""):
-        Log("MapMedia!")
         season = map.getparent().get('num')
         episode = map.get('num')
         
@@ -339,10 +342,10 @@ def MapMedia(root, metadata):
             functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), list, constants.SERIES_COLLECTIONS_PRIORITY, metadata.collections)
             metadata.content_rating = functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), str, constants.SERIES_CONTENTRATING_PRIORITY)
             functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)   
-            functions.PopulateMetadata(map.getparent().xpath("""./Posters/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
-            functions.PopulateMetadata(map.getparent().xpath("""./Art/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
-            functions.PopulateMetadata(map.getparent().xpath("""./Banners/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
-            functions.PopulateMetadata(map.getparent().xpath("""./Season/*[node()]"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
+            functions.PopulateMetadata(map.getparent().xpath("""./Posters//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
+            functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
+            functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
+            functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
             seriesPopulate = False
             
         if map.xpath("""./Title/Anidb"""):

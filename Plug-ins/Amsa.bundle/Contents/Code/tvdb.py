@@ -66,13 +66,13 @@ class TvDB(constants.Series):
         if bannersXml:
             art = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             art = XML.ElementFromString(art)
-            artCount = 1
+            artCount = 2
             posters = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             posters = XML.ElementFromString(posters)
-            postersCount = 1
+            postersCount = 2
             banners = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             banners = XML.ElementFromString(banners)
-            bannersCount = 1
+            bannersCount = 2
             season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             season = XML.ElementFromString(season)
             
@@ -88,13 +88,13 @@ class TvDB(constants.Series):
                 
                 mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)               
                 if metatype == "art":
-                    SubElement(art, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
                     artCount = artCount + 1
                 if metatype == "posters":
-                    SubElement(posters, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    SubElement(posters, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
                     postersCount = postersCount + 1
                 if metatype == "banners":
-                    SubElement(banners, "Image", id = str(0 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                    SubElement(banners, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
                     bannersCount = bannersCount + 1
                 if metatype == "season":
                     SubElement(season, "Image", id = str(GetElementText(banner, "Season")), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)

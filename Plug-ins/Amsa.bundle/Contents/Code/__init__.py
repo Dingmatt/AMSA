@@ -67,7 +67,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         def searchTitles():
             for anime in common.GetAnimeTitleByName(orig_title):
                 @task
-                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb):                
+                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb): 
                     anime = Titles(anime, orig_title)
                     if not anime.Id in maxi:                        
                         isValid = True
