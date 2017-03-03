@@ -1,4 +1,4 @@
-import constants, functions
+import constants, functions, copy
 from functions import XMLFromURL, GetElementText
  
 global pTitleTree, pMappingTree, pCollectionTree, pCorrectionsTree
@@ -38,6 +38,7 @@ class ScudLee():
     Absolute = False
     DefaultTvdbSeason = 1
     MappingList = []
+    FirstSeries = None
     
     def __init__(self, anidbid = None, tvdbid = None):
         if anidbid != None or tvdbid != None:
@@ -47,9 +48,13 @@ class ScudLee():
                 data = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))[0]
             self.Load(data)
             self.SeriesList = []
-            self.SeriesList = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (self.TvdbId))
+            if self.TvdbId:
+                self.SeriesList = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (self.TvdbId))
+            else:
+                self.SeriesList = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (self.AnidbId))
             visited = []
             remove = []
+
             for series in self.SeriesList:
                 current = series.get("anidbid")
                 if current in visited:
@@ -60,19 +65,26 @@ class ScudLee():
             for item in remove:
                 self.SeriesList.remove(item)
             
-            Log("SeriesList: %s %s" % (self.SeriesList, self.TvdbId))
+            Log("SeriesList: %s %s %s" % (self.SeriesList, self.TvdbId, self.AnidbId))
             self.SeriesList = sorted(self.SeriesList, key=lambda x: int(x.get("anidbid")))   
             for series in self.SeriesList:            
                 if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
                     self.FirstSeries = series.get("anidbid")
-            if not FirstSeries:
-                FirstSeries = anidbid
+            if not self.FirstSeries:
+                self.FirstSeries = anidbid
     
     def Load(self, data):
         if data.get("anidbid"):
             self.AnidbId = data.get("anidbid")
+            if not (u"%s" % (self.AnidbId)).isnumeric(): 
+                Log("Anidb: %s" %(self.AnidbId))
+                self.AnidbId = None   
+                
         if data.get("tvdbid"): 
             self.TvdbId = data.get("tvdbid")
+            if not (u"%s" % (self.TvdbId)).isnumeric(): 
+                Log("TvdbId: %s" %(self.TvdbId))
+                self.TvdbId = None   
         if data.get("episodeoffset"):
             self.EpisodeOffset = int(data.get("episodeoffset"))
         if data.get("defaulttvdbseason") and data.get("defaulttvdbseason") == "a":

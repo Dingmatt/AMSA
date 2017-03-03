@@ -171,9 +171,9 @@ class AniDB(constants.Series):
         self.OpList = []
         self.EdList = []
         for specials in data.xpath("""./episodes/episode/epno[@type="3"]/.."""):
-            if functions.GetPreferedTitleNoType(specials.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars).startswith("Opening"):
+            if functions.CleanTitle(functions.GetPreferedTitleNoType(specials.xpath("""./title"""))).startswith("Opening"):
                 self.OpList.append(str(GetElementText(specials, "epno")))
-            if functions.GetPreferedTitleNoType(specials.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars).startswith("Ending"):
+            if functions.CleanTitle(functions.GetPreferedTitleNoType(specials.xpath("""./title"""))).startswith("Ending"):
                 self.EdList.append(str(GetElementText(specials, "epno")))
                 
         ##--------------------------------Episodes-----------------------------##        

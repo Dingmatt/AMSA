@@ -1,4 +1,4 @@
-import constants, unicodedata, ast, datetime
+import constants, unicodedata, ast, datetime, re
 from time import sleep
 from datetime import timedelta  
 
@@ -109,11 +109,12 @@ def SaveFile(file, filename="", directory=""):
 def GetAnimeTitleByID(Tree, Id):    
     return Tree.xpath("""/animetitles/anime[@aid="s"]/*""" % Id)
     
-def GetAnimeTitleByName(Tree, Name):    
+def GetAnimeTitleByName(Tree, Name): 
+    Name = CleanTitle(Name)
     return Tree.xpath("""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
-                [translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' ")="%s"
-                or contains(translate(text(),"ABCDEFGHJIKLMNOPQRSTUVWXYZ 0123456789 .` :;", "abcdefghjiklmnopqrstuvwxyz 0123456789 .' "),"%s")]""" % (Name.lower().replace("'", "\'"), Name.lower().replace("'", "\'")))
+                [translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")="%s"
+                or contains(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"),"%s")]""" % (Name.lower().replace("'", "\'"), Name.lower().replace("'", "\'")))
     
 def GetPreferedTitle(titles):    
     #for title in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + constants.SERIES_TYPE_PRIORITY.index(x.get('type')), constants.SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
@@ -146,7 +147,10 @@ def GetPreferedTitleNoType(titles):
     return title
    
 def CleanTitle(title):
-    return str(unicodedata.normalize('NFC', unicode(title)).strip()).translate(constants.ReplaceChars, constants.DeleteChars)
+
+    title = re.sub(r'[\'":\-&,.!~()/]', ' ', title)
+    title = re.sub(r'[ ]+', ' ', title)
+    return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
     
 def GetElementText(el, xp):
     return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
@@ -200,7 +204,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                     for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
                         @task
                         def Image_Task(image=image, metaList=metaList):
-                            #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
+                            Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
                             if len(image.get("thumbUrl")) > 0:
                                 FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
                             else:

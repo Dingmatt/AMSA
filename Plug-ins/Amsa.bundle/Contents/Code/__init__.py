@@ -45,7 +45,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         common.RefreshData()
         orig_title = functions.CleanTitle(media.show)
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        Log.Info("Init - Search() - Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (orig_title, media.name, urllib.unquote(media.filename) if media.filename else "", str(manual)))
+        Log.Info("Init - Search() - Show: '%s', Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (media.show, orig_title, media.name, urllib.unquote(media.filename) if media.filename else "", str(manual)))
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
@@ -115,7 +115,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             common.MapLocal(media, map, mappingData.AnidbId)
             common.MapMeta(map)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
-            common.MapMedia(map, metadata)
+            common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
             
         #for mappedSeries in scudlee.MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (mappingData.TvdbId)):
             #anidbid_season = mappedSeries.get("anidbid")

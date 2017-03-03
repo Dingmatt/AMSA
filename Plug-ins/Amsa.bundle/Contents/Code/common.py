@@ -15,15 +15,38 @@ class Titles():
         element = entry.getparent()
         id = element.get("aid")
         langTitle = functions.GetPreferedTitle(element)
-        cleanTitle = str(langTitle).translate(constants.ReplaceChars, constants.DeleteChars)
+        cleanTitle = functions.CleanTitle(langTitle)
+
         if cleanTitle.lower() == orig_title.lower():
             score = 100
-        else: 
-            if len(orig_title) < len(cleanTitle):
-                score = 100 * len(orig_title) / len(cleanTitle) 
-            else:
-                score = 100 * len(cleanTitle) / len(orig_title)
-        Log("Score: '%s', '%s'" % (score, functions.lev_ratio(orig_title, cleanTitle)))
+        else:      
+            score = 90 # Start word matches off at a slight defecit compared to guid matches.
+
+            # Remove year suffixes that can mess things up.
+            searchTitle = orig_title
+            if len(orig_title) > 8:
+                searchTitle = re.sub(r'([ ]+\(?[0-9]{4}\)?)', '', searchTitle)
+
+            foundTitle = cleanTitle
+            if len(foundTitle) > 8:
+                foundTitle = re.sub(r'([ ]+\(?[0-9]{4}\)?)', '', foundTitle)
+
+            # Remove prefixes that can screw things up.
+            searchTitle = re.sub('^[Bb][Bb][Cc] ', '', searchTitle)
+            foundTitle = re.sub('^[Bb][Bb][Cc] ', '', foundTitle)
+
+            # Adjust if both have 'the' prefix by adding a prefix that won't be stripped.
+            distTitle = searchTitle
+            distFoundTitle = foundTitle
+            if searchTitle.lower()[0:4] == 'the ' and foundTitle.lower()[0:4] == 'the ':
+                distTitle = 'xxx' + searchTitle
+                distFoundTitle = 'xxx' + foundTitle
+
+            # Score adjustment for title distance.
+            score = score - int(30 * (1 - functions.lev_ratio(searchTitle, foundTitle)))
+    
+        Log("Score: '%s', '%s', '%s', '%s'" % (score, functions.lev_ratio(orig_title, cleanTitle), orig_title, cleanTitle))
+        
         self.Entry = entry
         self.Id = id
         self.Title = langTitle
@@ -294,10 +317,11 @@ def MapMeta(root):
                                 existing.getparent().remove(existing)
                         if data == None or data.ID != map.get("series"):
                             if provider == "Anidb":
-                                data = anidb.AniDB(map.get("series")) 
+                                data = anidb.AniDB(map.get("series"))
+                                map.getparent().getparent().getparent().attrib["AnidbId"] = data.ID
                             elif provider == "Tvdb":
                                 data = tvdb.TvDB(map.get("series")) 
-                               
+                                map.getparent().getparent().getparent().attrib["TvdbId"] = data.ID
                         for episode in data.Episodes: 
                             
                             if (provider == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (provider == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
@@ -323,13 +347,14 @@ def MapMeta(root):
                                             SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
                                             
 
-def MapMedia(root, metadata):
+def MapMedia(root, metadata, anidbId, tvdbID):
     seriesPopulate = True
     for map in root.xpath("""./Season/Episode"""):
         season = map.getparent().get('num')
         episode = map.get('num')
         
-        if seriesPopulate and season == "1":
+        Log("This: '%s' , '%s', '%s', '%s'" %(map.getparent().get('AnidbId'), map.getparent().get('TvdbId'), anidbId, tvdbID))
+        if seriesPopulate and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
             metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
             metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
             metadata.originally_available_at = functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)

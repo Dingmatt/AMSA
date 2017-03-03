@@ -6,7 +6,6 @@ CacheDirectory = "Cache"
 CachePath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems", CacheDirectory))
 DefaultTimeout = 30
 DefaultCache = CACHE_1HOUR * 24
-DeleteChars = ":;"
 ReplaceChars = maketrans("`", "'")
 StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
 SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes"]
@@ -85,7 +84,6 @@ class Series():
     OpList = None
     EdList = None
     Episodes = None
-
     
 class Episode():
     Title = None
