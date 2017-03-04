@@ -127,14 +127,14 @@ class TvDB(constants.Series):
         if len(data.xpath("""./Episode""")) > 0:
             self.Episodes = []
             for item in data.xpath("""./Episode"""):
-                self.Episodes.append(self.Episode(item))               
+                self.Episodes.append(self.Episode(item, id))               
 
              
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
         
     class Episode(constants.Episode):
-        def __init__(self, data):
+        def __init__(self, data, id):
             ##--------------------------------Title--------------------------------##
             if GetElementText(data, "EpisodeName"):
                 self.Title = str(GetElementText(data, "EpisodeName")).encode('utf-8').strip().translate(constants.ReplaceChars)
@@ -170,7 +170,11 @@ class TvDB(constants.Series):
         
             ##--------------------------------Thumbs-------------------------------##
             if GetElementText(data, "filename"):
-                self.Thumbs = os.path.join(constants.TVDB_IMAGES_URL, GetElementText(data, "filename"))
+                root = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+                root = XML.ElementFromString(root)
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(GetElementText(data, "filename"), constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), "")  
+                SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)                
+                self.Thumbs = root
             
             ##--------------------------------Number-------------------------------##            
             if GetElementText(data, "EpisodeNumber"):

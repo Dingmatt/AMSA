@@ -37,14 +37,23 @@ SERIES_PRODUCERS_PRIORITY                   = [item.lower() for item in Prefs["S
 SERIES_ROLES_PRIORITY                       = [item.lower() for item in Prefs["SeriesRoles"].encode("utf-8").split(',')]
 SERIES_IMAGES_PRIORITY                      = [item.lower() for item in Prefs["SeriesImages"].encode("utf-8").split(',')]
 SERIES_THEMES_PRIORITY                      = [item.lower() for item in Prefs["SeriesThemes"].encode("utf-8").split(',')]
+EPISODE_TITLE_PRIORITY                      = [item.lower() for item in Prefs["EpisodeTitle"].encode("utf-8").split(',')] 
+EPISODE_SUMMARY_PRIORITY                    = [item.lower() for item in Prefs["EpisodeSummary"].encode("utf-8").split(',')] 
+EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY      = [item.lower() for item in Prefs["EpisodeOriginally_Available_At"].encode("utf-8").split(',')] 
+EPISODE_RATING_PRIORITY                     = [item.lower() for item in Prefs["EpisodeRating"].encode("utf-8").split(',')] 
+EPISODE_ABSOLUTE_INDEX_PRIORITY             = [item.lower() for item in Prefs["EpisodeAbsolute_Index"].encode("utf-8").split(',')] 
+EPISODE_WRITERS_PRIORITY                    = [item.lower() for item in Prefs["EpisodeWriters"].encode("utf-8").split(',')] 
+EPISODE_DIRECTORS_PRIORITY                  = [item.lower() for item in Prefs["EpisodeDirectors"].encode("utf-8").split(',')] 
+EPISODE_PRODUCERS_PRIORITY                  = [item.lower() for item in Prefs["EpisodeProducers"].encode("utf-8").split(',')] 
+EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["EpisodeThumbs"].encode("utf-8").split(',')]
 
 MINIMUM_WEIGHT               = Prefs["MinimumWeight"]
 SERIES_TYPE_PRIORITY         = ["main", "official", "syn", "synonym", "short"]
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#
-TVDB_HTTP_API_URL            = "http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/all/en.xml"                                     # TVDB Serie XML for episodes sumaries for now
-TVDB_BANNERS_URL             = "http://thetvdb.com/api/A27AD9BE0DA63333/series/%s/banners.xml"                                    # TVDB Serie pictures xml: fanarts, posters, banners
+TVDB_HTTP_API_URL            = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/all/en.xml"                                     # TVDB Serie XML for episodes sumaries for now
+TVDB_BANNERS_URL             = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/banners.xml"                                    # TVDB Serie pictures xml: fanarts, posters, banners
 TVDB_SERIE_SEARCH            = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 #
 TVDB_IMAGES_URL              = "http://thetvdb.com/banners/"                                                                      # TVDB picture directory
 TVDB_SERIE_URL               = "http://thetvdb.com/?tab=series&id=%s"  

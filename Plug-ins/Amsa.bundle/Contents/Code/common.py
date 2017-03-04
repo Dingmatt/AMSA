@@ -241,7 +241,7 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
             for attrib in constants.EpisodeAttribs:
                 SubElement(episode, attrib)
                                 
-    Log("MapEpisode - Season: '%s', Episode: '%s'" %(media_season, media_episode))
+    #Log("MapEpisode - Season: '%s', Episode: '%s'" %(media_season, media_episode))
     mapped = SubElement(episode, "Mapped")
     streams = SubElement(episode, "Streams")
     
@@ -265,13 +265,13 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
             if re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE) or re.search(r".*\b(?P<type>ncop|op|nced|ed)(?P<episode>\d+)\b.*", filename, re.IGNORECASE):
                 mappedEpisode = root.xpath("""./Mapping/Series/Episode[@tvdb="S%sE%s"]""" % (str(media_season).zfill(2), str(media_episode).zfill(2)))
                 if mappedEpisode: 
-                    Log("Mapped: '%s', 'S%sE%s'" % (filename, media_season, media_episode))
+                    #Log("Mapped: '%s', 'S%sE%s'" % (filename, media_season, media_episode))
                     anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
                     anidbEpisodeNumber = mappedEpisode[0].get("anidb")
                     tvdbSeriesNumber = mappedEpisode[0].getparent().get("tvdbid")
                     tvdbEpisodeNumber = mappedEpisode[0].get("tvdb")  
                 else:
-                    Log("Override: '%s'" % (filename))
+                    #Log("Override: '%s'" % (filename))
                     match = re.search(r".*\B\[(?P<provider>\D+)(?P<id>\d+)\]\B.*", filename, re.IGNORECASE)
                     if match:
                         provider = match.group('provider').lower()
@@ -285,7 +285,7 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
                     #        anidbEpisodeNumber = guessEpisode[0].get("anidb")
                     #        #Log("mappedEpisode: '%s', '%s', '%s', '%s'" % (guessEpisode, guessId, anidbSeriesNumber, anidbEpisodeNumber))
             elif re.search(r".*\b(?P<episode>E\d+)\b.*", filename, re.IGNORECASE):
-                Log("Absolute: '%s'" % (filename))
+                #Log("Absolute: '%s'" % (filename))
                 mappedEpisode = root.xpath("""./Mapping/Series[@anidbid="%s"]/Episode[@anidb="%s"]""" % (anidbid, anidb.ParseNoFromSeason(int(media_season), int(media_episode))))
                 anidbSeriesNumber = mappedEpisode[0].getparent().get("anidbid")
                 anidbEpisodeNumber = mappedEpisode[0].get("anidb")
@@ -298,8 +298,7 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
             #    SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber, guess=str(guessId - 1))
             if tvdbSeriesNumber != "" and tvdbEpisodeNumber != "":   
                 SubElement(mapped, "Tvdb", episode=tvdbEpisodeNumber, series=tvdbSeriesNumber)
-                                             
-    #SubElement(episode, "Collection").text = ";".join(collection)    
+ 
     
 def MapMeta(root): 
     providers = ["Anidb", "Tvdb"]
@@ -310,7 +309,7 @@ def MapMeta(root):
             def Provider_Task(root=root, provider=provider):
                 data = None
                 for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (provider)), key=lambda x: int(x.get("series") if x.get("series") else 0)):
-                    Log("Season: %s, Episode: %s" % (map.getparent().getparent().getparent().get("num"), map.getparent().getparent().get("num")))
+                    #Log("Season: %s, Episode: %s, Series: %s" % (map.getparent().getparent().getparent().get("num"), map.getparent().getparent().get("num"), map.get("series")))
                     if map.get("series"):
                         for existing in map.getparent().getparent().xpath(""".//%s""" % (provider)):
                             if not existing.getparent().tag == "Mapped":
@@ -318,10 +317,12 @@ def MapMeta(root):
                         if data == None or data.ID != map.get("series"):
                             if provider == "Anidb":
                                 data = anidb.AniDB(map.get("series"))
-                                map.getparent().getparent().getparent().attrib["AnidbId"] = data.ID
                             elif provider == "Tvdb":
                                 data = tvdb.TvDB(map.get("series")) 
-                                map.getparent().getparent().getparent().attrib["TvdbId"] = data.ID
+                                
+                        if not map.getparent().getparent().getparent().get("%s" % provider + "Id"):    
+                            map.getparent().getparent().getparent().attrib["%s" % provider + "Id"] = map.get("series")
+                            
                         for episode in data.Episodes: 
                             
                             if (provider == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (provider == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
@@ -345,15 +346,16 @@ def MapMeta(root):
                                         else:
                                             elementItem = copy.copy(getattr(episode, attrib))
                                             SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
-                                            
+                                                
 
 def MapMedia(root, metadata, anidbId, tvdbID):
     seriesPopulate = True
+    streamTag = []
     for map in root.xpath("""./Season/Episode"""):
         season = map.getparent().get('num')
         episode = map.get('num')
         
-        Log("This: '%s' , '%s', '%s', '%s'" %(map.getparent().get('AnidbId'), map.getparent().get('TvdbId'), anidbId, tvdbID))
+        #Log("This: '%s' , '%s', '%s', '%s'" %(map.getparent().get('AnidbId'), map.getparent().get('TvdbId'), anidbId, tvdbID))
         if seriesPopulate and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
             metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
             metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
@@ -372,8 +374,22 @@ def MapMedia(root, metadata, anidbId, tvdbID):
             functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
             functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
             seriesPopulate = False
-            
-        if map.xpath("""./Title/Anidb"""):
-            metadata.seasons[season].episodes[episode].title = map.xpath("""./Title/Anidb""")[0].text
-        if map.xpath("""./Summary/Tvdb"""):
-            metadata.seasons[season].episodes[episode].summary = map.xpath("""./Summary/Tvdb""")[0].text
+        
+        metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)
+        metadata.seasons[season].episodes[episode].summary = functions.PopulateMetadata(map.xpath("""./Summary/*[node()]"""), str, constants.EPISODE_SUMMARY_PRIORITY)
+        metadata.seasons[season].episodes[episode].originally_available_at = functions.PopulateMetadata(map.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY)
+        metadata.seasons[season].episodes[episode].rating = functions.PopulateMetadata(map.xpath("""./Rating/*[node()]"""), float, constants.EPISODE_RATING_PRIORITY)
+        metadata.seasons[season].episodes[episode].absolute_index = functions.PopulateMetadata(map.xpath("""./Absolute_Index/*[node()]"""), int, constants.EPISODE_ABSOLUTE_INDEX_PRIORITY)
+        
+        functions.PopulateMetadata(map.xpath("""./Writers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_WRITERS_PRIORITY, metadata.seasons[season].episodes[episode].writers) 
+        functions.PopulateMetadata(map.xpath("""./Directors/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_DIRECTORS_PRIORITY, metadata.seasons[season].episodes[episode].directors) 
+        functions.PopulateMetadata(map.xpath("""./Producers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_PRODUCERS_PRIORITY, metadata.seasons[season].episodes[episode].producers) 
+        functions.PopulateMetadata(map.xpath("""./Thumbs//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.EPISODE_THUMBS_PRIORITY, metadata.seasons[season].episodes[episode].thumbs)
+
+        if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0 and not "English Dubbed" in metadata.collections:
+            metadata.collections.add("English Dubbed")
+            streamTag.append("English Dubbed")
+        if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0 and not "English Subbed" in metadata.collections: 
+            metadata.collections.add("English Subbed")
+            streamTag.append("English Subbed")
+    

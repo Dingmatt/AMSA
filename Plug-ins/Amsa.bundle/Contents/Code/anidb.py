@@ -180,14 +180,14 @@ class AniDB(constants.Series):
         if len(data.xpath("""./episodes/episode""")) > 0:
             self.Episodes = []
             for item in data.xpath("""./episodes/episode"""):
-                self.Episodes.append(self.Episode(item))
+                self.Episodes.append(self.Episode(item, id))
         
             
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpCount: '%s', EdCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, len(self.OpList), len(self.EdList), self.Posters) )
            
     class Episode(constants.Episode):
-        def __init__(self, data):
+        def __init__(self, data, id):
             ##--------------------------------Title--------------------------------##
             if data.xpath("""./title"""):
                 self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
@@ -203,7 +203,7 @@ class AniDB(constants.Series):
                 self.Rating = GetElementText(data, "rating")
                 
             ##--------------------------------Absolute_Index-----------------------## 
-            if GetElementText(data, "epno"):
+            if GetElementText(data, "epno") and GetElementText(data, "epno").isdigit():
                 self.Absolute_Index = GetElementText(data, "epno")
                 
             ##--------------------------------Writers------------------------------##

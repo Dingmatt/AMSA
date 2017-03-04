@@ -113,8 +113,8 @@ def GetAnimeTitleByName(Tree, Name):
     Name = CleanTitle(Name)
     return Tree.xpath("""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
-                [translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")="%s"
-                or contains(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"),"%s")]""" % (Name.lower().replace("'", "\'"), Name.lower().replace("'", "\'")))
+                [normalize-space(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
+                or contains(normalize-space(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (Name.lower().replace("'", "\'"), Name.lower().replace("'", "\'")))
     
 def GetPreferedTitle(titles):    
     #for title in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + constants.SERIES_TYPE_PRIORITY.index(x.get('type')), constants.SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
@@ -174,7 +174,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
     if map:
         data = GetByPriority(map, priorityList, metaType)
         if data:
-            #Log("Data: %s" % (data))
+            #Log("Data: %s, %s" % (data, metaList))
             if metaType is datetime.date:
                 return datetime.datetime.strptime(data, "%Y-%m-%d").date()
             if metaType is list:
@@ -204,7 +204,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                     for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
                         @task
                         def Image_Task(image=image, metaList=metaList):
-                            Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
+                            #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
                             if len(image.get("thumbUrl")) > 0:
                                 FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
                             else:

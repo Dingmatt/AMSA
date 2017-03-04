@@ -65,7 +65,7 @@ class ScudLee():
             for item in remove:
                 self.SeriesList.remove(item)
             
-            Log("SeriesList: %s %s %s" % (self.SeriesList, self.TvdbId, self.AnidbId))
+            #Log("SeriesList: %s %s %s" % (self.SeriesList, self.TvdbId, self.AnidbId))
             self.SeriesList = sorted(self.SeriesList, key=lambda x: int(x.get("anidbid")))   
             for series in self.SeriesList:            
                 if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
@@ -77,13 +77,13 @@ class ScudLee():
         if data.get("anidbid"):
             self.AnidbId = data.get("anidbid")
             if not (u"%s" % (self.AnidbId)).isnumeric(): 
-                Log("Anidb: %s" %(self.AnidbId))
+                #Log("Anidb: %s" %(self.AnidbId))
                 self.AnidbId = None   
                 
         if data.get("tvdbid"): 
             self.TvdbId = data.get("tvdbid")
             if not (u"%s" % (self.TvdbId)).isnumeric(): 
-                Log("TvdbId: %s" %(self.TvdbId))
+                #Log("TvdbId: %s" %(self.TvdbId))
                 self.TvdbId = None   
         if data.get("episodeoffset"):
             self.EpisodeOffset = int(data.get("episodeoffset"))
