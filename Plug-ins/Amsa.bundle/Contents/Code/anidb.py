@@ -55,8 +55,9 @@ class AniDB(constants.Series):
             self.Title = functions.GetPreferedTitle(data.xpath("""./titles/title""")).encode('utf-8').strip().translate(constants.ReplaceChars)
         
         ##--------------------------------Summary------------------------------##
-        if GetElementText(data, "description"):    
-            self.Summary = re.sub(r"http://anidb\.net/[a-z]{2}[0-9]+ \[(.+?)\]", r"\1", GetElementText(data, "description")).replace("`", "'")
+        if GetElementText(data, "description"):  
+            description = re.sub(r'(?m)^\*.*\n?', '',  GetElementText(data, "description").replace("`", "'")).strip()
+            self.Summary = re.sub(r"http://anidb\.net/[a-z]{2}[0-9]+ \[(.+?)\]", r"\1", description)
             
         ##--------------------------------Originally_Available_At--------------##  
         if GetElementText(data, "startdate"):
