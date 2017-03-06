@@ -1,4 +1,5 @@
 import constants, unicodedata, ast, datetime, re
+from unidecode import unidecode
 from time import sleep
 from datetime import timedelta  
 
@@ -16,7 +17,7 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
             try: 
                 if url.startswith(constants.ANIDB_HTTP_API_URL):
                     while AniDB_WaitUntil > datetime.datetime.now(): 
-                        sleep(1)
+                        sleep(0.1)
                     Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
                     AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2) 
                 result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
@@ -109,12 +110,24 @@ def SaveFile(file, filename="", directory=""):
 def GetAnimeTitleByID(Tree, Id):    
     return Tree.xpath("""/animetitles/anime[@aid="s"]/*""" % Id)
     
-def GetAnimeTitleByName(Tree, Name): 
-    Name = CleanTitle(Name)
-    return Tree.xpath("""./anime/title
+def GetAnimeTitleByName(Tree, Name, OriginalName): 
+    Name = Name.lower().replace("'", "\'")
+    result = Tree.xpath(u"""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
-                [normalize-space(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
-                or contains(normalize-space(translate(translate(text(),".`' :;-&,.!~()/", "               "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (Name.lower().replace("'", "\'"), Name.lower().replace("'", "\'")))
+                [normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
+                or contains(normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (Name, Name))
+    if not result:
+        OriginalName = OriginalName.lower().replace("'", "\'")
+        match = re.search('^(.*)\s*\([0-9]+\)$', OriginalName)
+        if match:
+            OriginalName = match.group(1)
+            OriginalName = CleanTitle(OriginalName)
+            result = Tree.xpath(u"""./anime/title
+                    [@type='main' or @type='official' or @type='syn' or @type='short']
+                    [normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
+                    or contains(normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (OriginalName, OriginalName))
+    #Log("Name: %s, %s, %s" % (OriginalName, Name, match.group(1)))
+    return result
     
 def GetPreferedTitle(titles):    
     #for title in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + constants.SERIES_TYPE_PRIORITY.index(x.get('type')), constants.SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
@@ -148,8 +161,9 @@ def GetPreferedTitleNoType(titles):
    
 def CleanTitle(title):
 
-    title = re.sub(r'[\'":\-&,.!~()/]', ' ', title)
+    title = re.sub(r'[\'`":;\-&,.!~()?/]', ' ', title)
     title = re.sub(r'[ ]+', ' ', title)
+    title = unidecode(u"%s" % (title))
     return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
     
 def GetElementText(el, xp):

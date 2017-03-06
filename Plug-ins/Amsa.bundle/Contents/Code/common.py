@@ -14,10 +14,11 @@ class Titles():
     def __init__(self, entry, orig_title):
         element = entry.getparent()
         id = element.get("aid")
-        langTitle = functions.GetPreferedTitle(element)
-        cleanTitle = functions.CleanTitle(langTitle)
-
-        if cleanTitle.lower() == orig_title.lower():
+        
+        langTitle = functions.GetPreferedTitle(element).replace("`", "'")
+        matchedTitle = functions.CleanTitle(entry.text)
+        
+        if matchedTitle.lower() == orig_title.lower():
             score = 100
         else:      
             score = 90 # Start word matches off at a slight defecit compared to guid matches.
@@ -27,7 +28,7 @@ class Titles():
             if len(orig_title) > 8:
                 searchTitle = re.sub(r'([ ]+\(?[0-9]{4}\)?)', '', searchTitle)
 
-            foundTitle = cleanTitle
+            foundTitle = matchedTitle
             if len(foundTitle) > 8:
                 foundTitle = re.sub(r'([ ]+\(?[0-9]{4}\)?)', '', foundTitle)
 
@@ -45,7 +46,7 @@ class Titles():
             # Score adjustment for title distance.
             score = score - int(30 * (1 - functions.lev_ratio(searchTitle, foundTitle)))
     
-        Log("Score: '%s', '%s', '%s', '%s'" % (score, functions.lev_ratio(orig_title, cleanTitle), orig_title, cleanTitle))
+        Log("Score: '%s', '%s', '%s', '%s', '%s'" % (score, functions.lev_ratio(orig_title, matchedTitle), orig_title, matchedTitle, entry.text))
         
         self.Entry = entry
         self.Id = id
@@ -55,8 +56,8 @@ class Titles():
 def GetAnimeTitleByID(Id):
     return functions.GetAnimeTitleByID(scudlee.TitleTree(), Id)
     
-def GetAnimeTitleByName(Name): 
-    return functions.GetAnimeTitleByName(scudlee.TitleTree(), Name)  
+def GetAnimeTitleByName(Name, OrignalName): 
+    return functions.GetAnimeTitleByName(scudlee.TitleTree(), Name, OrignalName)  
             
 def RefreshData():
     global CleanCache_WaitUntil
@@ -189,11 +190,12 @@ def MapSeries(mappingData):
             seriesMap[:] = sorted(seriesMap, key=lambda x: (0 if re.sub('[^A-Z]','', x.get("anidb")) else 1, int(re.sub('[^0-9]','', x.get("anidb")))))  
         
         
-        unmappedlist = sorted(mapping.xpath("""./Series/Episode[@tvdb="S00E00"]"""), key=lambda x: x.getparent().get("anidbid"))  
+        unmappedlist = sorted(mapping.xpath("""./Series/Episode[@tvdb="S00E00" and @missing]"""), key=lambda x: x.getparent().get("anidbid"))  
         if unmappedlist:
             unmapped = SubElement(mapping, "Unmapped")
             i = 1
             for episode in unmappedlist:
+                Log("Unmapped: '%s', '%s' , '%s'" % (episode.getparent().get("anidbid"), episode.get("anidb"), episode.get("missing")))
                 SubElement(unmapped, "Episode", anidbid = episode.getparent().get("anidbid"), anidb = episode.get("anidb"), missing = episode.get("missing"), id = str(i))
                 i = i + 1
     return root

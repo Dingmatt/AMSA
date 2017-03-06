@@ -65,7 +65,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         elite = []
         @parallelize
         def searchTitles():
-            for anime in common.GetAnimeTitleByName(orig_title):
+            for anime in common.GetAnimeTitleByName(orig_title, media.show):
                 @task
                 def scoreTitle(anime=anime, maxi=maxi, anidb=anidb): 
                     anime = Titles(anime, orig_title)
