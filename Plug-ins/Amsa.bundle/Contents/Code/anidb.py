@@ -162,6 +162,45 @@ class AniDB(constants.Series):
         ##--------------------------------Themes-------------------------------##
         self.Themes = []
         
+        ##--------------------------------Links--------------------------------##
+        if GetElementText(data, "resources"):
+            links = etree.tostring(E.Links(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            links = XML.ElementFromString(links)
+            value = []            
+            for externalentity in data.xpath("""./resources/resource/*"""):
+                Log("externalentity")
+                for identifier in externalentity.xpath("""./identifier"""):
+                    Log("identifier: %s" % (externalentity.getparent().get("type")))
+                    if externalentity.getparent().get("type") == "1":
+                        SubElement(links, "Link", type = "ANN", url = constants.ANIDB_RESOURCES_ANN % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "2":
+                        SubElement(links, "Link", type = "MAL", url = constants.ANIDB_RESOURCES_MAL % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "3":
+                        value.append(identifier.text)
+                    elif externalentity.getparent().get("type") == "4":
+                        SubElement(links, "Link", type = "OfficialJP", url = identifier.text) 
+                    elif externalentity.getparent().get("type") == "5":
+                        SubElement(links, "Link", type = "OfficialEN", url = identifier.text) 
+                    elif externalentity.getparent().get("type") == "6":
+                        SubElement(links, "Link", type = "WikiEN", url = constants.ANIDB_RESOURCES_WIKIEN % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "7":
+                        SubElement(links, "Link", type = "WikiJP", url = constants.ANIDB_RESOURCES_WIKIJP % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "8":
+                        SubElement(links, "Link", type = "Schedule", url = constants.ANIDB_RESOURCES_SCHEDULE % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "9":
+                        SubElement(links, "Link", type = "AllCinema", url = constants.ANIDB_RESOURCES_ALLCINEMA % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "10":
+                        SubElement(links, "Link", type = "Anison", url = constants.ANIDB_RESOURCES_ANISON % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "11":
+                        SubElement(links, "Link", type = "Lain", url = constants.ANIDB_RESOURCES_LAIN % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "14":
+                        SubElement(links, "Link", type = "VNDB", url = constants.ANIDB_RESOURCES_VNDB % (identifier.text), value = identifier.text)
+                    elif externalentity.getparent().get("type") == "15":
+                        SubElement(links, "Link", type = "Marumegane", url = constants.ANIDB_RESOURCES_MARUMEGANE % (identifier.text), value = identifier.text)
+                if externalentity.getparent().get("type") == "3":
+                    SubElement(links, "Link", type = "AnimeNfo", url = constants.ANIDB_RESOURCES_ANIMENFO % (value[0], value[1]), value = value)       
+            self.Links = links     
+        
         ##--------------------------------EpisodeCount-------------------------##
         self.EpisodeCount = int(GetElementText(data, "episodecount")) 
         

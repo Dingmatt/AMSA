@@ -8,18 +8,31 @@ DefaultTimeout = 30
 DefaultCache = CACHE_1HOUR * 24
 ReplaceChars = maketrans("`", "'")
 StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
-SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes"]
+SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes", "Links"]
 EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Absolute_Index", "Writers", "Directors", "Producers", "Thumbs"]
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#
-ANIDB_TITLES                 = "http://anidb.net/api/anime-titles.xml.gz"   
-ANIDB_HTTP_API_URL           = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          #
-ANIDB_PIC_BASE_URL           = "http://img7.anidb.net/pics/anime/"                                                                # AniDB picture directory
-ANIDB_SERIE_URL              = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           # AniDB link to the anime
+ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml.gz"   
+ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
+ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"                                                                
+ANIDB_SERIE_URL                             = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           
 
-SERIES_LANGUAGE_PRIORITY                    = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  #override default language
-EPISODE_LANGUAGE_PRIORITY                   = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                               #override default language
+ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
+ANIDB_RESOURCES_MAL                         = "http://myanimelist.net/anime/%s"
+ANIDB_RESOURCES_ANIMENFO                    = "http://www.animenfo.com/animetitle,%s,%s,a.html"
+ANIDB_RESOURCES_WIKIEN                      = "http://en.wikipedia.org/wiki/%s"
+ANIDB_RESOURCES_WIKIJP                      = "http://ja.wikipedia.org/wiki/%s"
+ANIDB_RESOURCES_SCHEDULE                    = "http://cal.syoboi.jp/tid/%s/time"
+ANIDB_RESOURCES_ALLCINEMA                   = "http://www.allcinema.net/prog/show_c.php?num_c=%s"
+ANIDB_RESOURCES_ANISON                      = "http://anison.info/data/program/%s.html"
+ANIDB_RESOURCES_LAIN                        = "http://lain.gr.jp/%s"
+ANIDB_RESOURCES_VNDB                        = "http://vndb.org/v%s"
+ANIDB_RESOURCES_MARUMEGANE                  = "http://www.anime.marumegane.com/%s.html"
+ANIDB_RESOURCES_HOMEAKI                     = "http://home-aki.cool.ne.jp/anime-list/%s.htm"
+
+SERIES_LANGUAGE_PRIORITY                    = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  
+EPISODE_LANGUAGE_PRIORITY                   = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                              
 SERIES_TITLE_PRIORITY                       = [item.lower() for item in Prefs["SeriesTitle"].encode("utf-8").split(',')] 
 SERIES_SUMMARY_PRIORITY                     = [item.lower() for item in Prefs["SeriesSummary"].encode("utf-8").split(',')] 
 SERIES_ORIGINALLYAVAILABLEAT_PRIORITY       = [item.lower() for item in Prefs["SeriesOriginally_Available_At"].encode("utf-8").split(',')] 
@@ -47,23 +60,23 @@ EPISODE_DIRECTORS_PRIORITY                  = [item.lower() for item in Prefs["E
 EPISODE_PRODUCERS_PRIORITY                  = [item.lower() for item in Prefs["EpisodeProducers"].encode("utf-8").split(',')] 
 EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["EpisodeThumbs"].encode("utf-8").split(',')]
 
-MINIMUM_WEIGHT               = Prefs["MinimumWeight"]
-SERIES_TYPE_PRIORITY         = ["main", "official", "syn", "synonym", "short"]
+MINIMUM_WEIGHT                              = Prefs["MinimumWeight"]
+SERIES_TYPE_PRIORITY                        = ["main", "official", "syn", "synonym", "short"]
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#
-TVDB_HTTP_API_URL            = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/all/en.xml"                                     # TVDB Serie XML for episodes sumaries for now
-TVDB_BANNERS_URL             = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/banners.xml"                                    # TVDB Serie pictures xml: fanarts, posters, banners
-TVDB_SERIE_SEARCH            = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 #
-TVDB_IMAGES_URL              = "http://thetvdb.com/banners/"                                                                      # TVDB picture directory
-TVDB_SERIE_URL               = "http://thetvdb.com/?tab=series&id=%s"  
+TVDB_HTTP_API_URL                           = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/all/en.xml"                                   
+TVDB_BANNERS_URL                            = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/banners.xml"                                 
+TVDB_SERIE_SEARCH                           = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 
+TVDB_IMAGES_URL                             = "http://thetvdb.com/banners/"                                                                      
+TVDB_SERIE_URL                              = "http://thetvdb.com/?tab=series&id=%s"  
 #-------------------TVDB-------------------#
 
 #-------------------SCUDLEE----------------#
-ANIDB_TVDB_MAPPING              = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml"                                                                                
-ANIDB_COLLECTION                = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-movieset-list.xml"
-ANIDB_TVDB_MAPPING_CUSTOM       = os.path.join(CacheDirectory, "anime-list-custom.xml")
-ANIDB_TVDB_MAPPING_CORRECTIONS  = "http://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml"  
+ANIDB_TVDB_MAPPING                          = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml"                                                                                
+ANIDB_COLLECTION                            = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-movieset-list.xml"
+ANIDB_TVDB_MAPPING_CUSTOM                   = os.path.join(CacheDirectory, "anime-list-custom.xml")
+ANIDB_TVDB_MAPPING_CORRECTIONS              = "http://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml"  
 #-------------------SCUDLEE----------------#
 
 class Series():
@@ -93,6 +106,7 @@ class Series():
     OpList = None
     EdList = None
     Episodes = None
+    Links = None
     
 class Episode():
     Title = None
