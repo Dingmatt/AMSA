@@ -3,90 +3,92 @@ from unidecode import unidecode
 from time import sleep
 from datetime import timedelta  
 
-global netLock, AniDB_WaitUntil
+
+global netLock, AniDB_WaitUntil, queue
 AniDB_WaitUntil = datetime.datetime.now() 
 netLock = Thread.Lock()
 
+    
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
-    try:
-        netLock.acquire()
-        result = LoadFile(filename, directory, cache) 
-        if not result:
-            try: 
-                if url.startswith(constants.ANIDB_HTTP_API_URL):
-                    while AniDB_WaitUntil > datetime.datetime.now(): 
-                        sleep(0.1)
-                    Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
-                    AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2) 
-                result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
-            except Exception as e: 
-                result = None 
-                Log.Debug("Functions - XMLFromURL() - XML issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
+    #try:
+    #    netLock.acquire()
+    result = LoadFile(filename, directory, cache) 
+    if not result:
+        try: 
+            if url.startswith(constants.ANIDB_HTTP_API_URL):
+                while AniDB_WaitUntil > datetime.datetime.now(): 
+                    sleep(0.1)
+                Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
+                AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2) 
+            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
+        except Exception as e: 
+            result = None 
+            Log.Debug("Functions - XMLFromURL() - XML issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
+    
+        if result and len(result) > 1024 and filename: 
+            try: SaveFile(result, os.path.basename(filename), directory)
+            except Exception as e: Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s' saving failed: %s" % (url, filename, e))
+        elif filename and Data.Exists(filename):  # Loading locally if backup exists
+            Log.Debug("Functions - XMLFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
+            try: result = Data.Load(filename)
+            except: Log.Debug("Functions - XMLFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
+    
+    if url==constants.ANIDB_TVDB_MAPPING and Data.Exists(constants.ANIDB_TVDB_MAPPING_CUSTOM):
+        if Data.Exists(constants.ANIDB_TVDB_MAPPING_CORRECTIONS):
+            Log.Debug("Functions - XMLFromURL() - Loading remote custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CORRECTIONS)
+            result_remote_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CORRECTIONS)     
+            result = result_remote_custom[:result_remote_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:]      
+        Log.Debug("Functions - XMLFromURL() - Loading local custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CUSTOM)
+        result_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CUSTOM)
+        result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
         
-            if result and len(result) > 1024 and filename: 
-                try: SaveFile(result, os.path.basename(filename), directory)
-                except Exception as e: Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s' saving failed: %s" % (url, filename, e))
-            elif filename and Data.Exists(filename):  # Loading locally if backup exists
-                Log.Debug("Functions - XMLFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
-                try: result = Data.Load(filename)
-                except: Log.Debug("Functions - XMLFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
-        
-        if url==constants.ANIDB_TVDB_MAPPING and Data.Exists(constants.ANIDB_TVDB_MAPPING_CUSTOM):
-            if Data.Exists(constants.ANIDB_TVDB_MAPPING_CORRECTIONS):
-                Log.Debug("Functions - XMLFromURL() - Loading remote custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CORRECTIONS)
-                result_remote_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CORRECTIONS)     
-                result = result_remote_custom[:result_remote_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:]      
-            Log.Debug("Functions - XMLFromURL() - Loading local custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CUSTOM)
-            result_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CUSTOM)
-            result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
-            
-            #SaveFile(result, "Test.xml")
+        #SaveFile(result, "Test.xml")
 
-        if result:
-            result = XML.ElementFromString(result)
-            if str(result).startswith("<Element error at "):  
-                Log.Debug("Functions - XMLFromURL() - Not an XML file, AniDB banned possibly, result: '%s'" % result)
-            else:       
-                return result  
-    finally:
-        netLock.release()
+    if result:
+        result = XML.ElementFromString(result)
+        if str(result).startswith("<Element error at "):  
+            Log.Debug("Functions - XMLFromURL() - Not an XML file, AniDB banned possibly, result: '%s'" % result)
+        else:       
+            return result  
+    #finally:
+    #    netLock.release()
         
     return None
 
 def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
-    try:
-        netLock.acquire()
-        result = LoadFile(filename, directory, cache) 
-        if not result:
-            try: 
-                if url.startswith(constants.ANIDB_HTTP_API_URL):
-                    while AniDB_WaitUntil > datetime.datetime.now(): 
-                        sleep(1)
-                    Log("Functions - FileFromURL() - AniDB AntiBan Delay")    
-                    AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=3) 
-                result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
-            except Exception as e: 
-                result = None 
-                Log.Debug("Functions - FileFromURL() - Issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
-        
-            if result and filename: 
-                try: SaveFile(result, os.path.basename(filename), directory)
-                except Exception as e: Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s' saving failed: %s" % (url, filename, e))
-            elif filename and Data.Exists(filename):  # Loading locally if backup exists
-                Log.Debug("Functions - FileFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
-                try: result = Data.Load(filename)
-                except: Log.Debug("Functions - FileFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
-        
-        if result:     
-            return result  
-    finally:
-        netLock.release()
-        
+    #try:
+    #    netLock.acquire()
+    result = LoadFile(filename, directory, cache) 
+    if not result:
+        try: 
+            if url.startswith(constants.ANIDB_HTTP_API_URL):
+                while AniDB_WaitUntil > datetime.datetime.now(): 
+                    sleep(1)
+                Log("Functions - FileFromURL() - AniDB AntiBan Delay")    
+                AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=3) 
+            result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
+        except Exception as e: 
+            result = None 
+            Log.Debug("Functions - FileFromURL() - Issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
+    
+        if result and filename: 
+            try: SaveFile(result, os.path.basename(filename), directory)
+            except Exception as e: Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s' saving failed: %s" % (url, filename, e))
+        elif filename and Data.Exists(filename):  # Loading locally if backup exists
+            Log.Debug("Functions - FileFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
+            try: result = Data.Load(filename)
+            except: Log.Debug("Functions - FileFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
+    
+    if result:     
+        return result  
+    #finally:
+    #    netLock.release()     
     return None
+    
 def LoadFile(filename="", directory="", cache=constants.DefaultCache):  
     filename = os.path.join(str(constants.CacheDirectory), str(directory), str(filename)) 
     result = None

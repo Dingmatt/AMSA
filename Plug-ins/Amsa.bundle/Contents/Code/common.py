@@ -1,4 +1,4 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb, scudlee, functions, constants, copy
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb, scudlee, functions, constants, copy, logging
 
 from lxml import etree
 from lxml.builder import E
@@ -86,6 +86,7 @@ def CleanCache():
             except: pass  
    
 def MapSeries(mappingData):
+    logging.Log_Milestone("MapSeries")
     root = None
     existing = None
     if not root: 
@@ -198,9 +199,11 @@ def MapSeries(mappingData):
                 Log("Unmapped: '%s', '%s' , '%s'" % (episode.getparent().get("anidbid"), episode.get("anidb"), episode.get("missing")))
                 SubElement(unmapped, "Episode", anidbid = episode.getparent().get("anidbid"), anidb = episode.get("anidb"), missing = episode.get("missing"), id = str(i))
                 i = i + 1
+    logging.Log_Milestone("MapSeries")
     return root
 
-def MapLocal(media, root, anidbid):    
+def MapLocal(media, root, anidbid):
+    logging.Log_Milestone("MapLocal")
     @parallelize
     def mapSeasons():
         for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
@@ -224,9 +227,10 @@ def MapLocal(media, root, anidbid):
                         @task
                         def mapEpisode(media_season=media_season, media_episode=media_episode, season=season, episode=episode): #, guessId=guessId):
                             MapEpisode(media, root, media_season, media_episode, anidbid, season, episode)
-                                                         
-
+    logging.Log_Milestone("MapLocal")                                                     
+    
 def MapEpisode(media, root, media_season, media_episode, anidbid, season = None, episode = None):
+    logging.Log_Milestone("MapEpisode_S"+str(media_season)+"E"+(str(media_episode)))
     if season == None:
         season = root.find("""./Season[@num="%s"]""" % (media_season))
         if season == None:
@@ -300,9 +304,10 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
             #    SubElement(mapped, "Anidb", episode=anidbEpisodeNumber, series=anidbSeriesNumber, guess=str(guessId - 1))
             if tvdbSeriesNumber != "" and tvdbEpisodeNumber != "":   
                 SubElement(mapped, "Tvdb", episode=tvdbEpisodeNumber, series=tvdbSeriesNumber)
- 
+    logging.Log_Milestone("MapEpisode_S"+str(media_season)+"E"+(str(media_episode)))
     
-def MapMeta(root): 
+def MapMeta(root):
+    logging.Log_Milestone("MapMeta")
     providers = ["Anidb", "Tvdb"]
     @parallelize
     def Provider_Par():
@@ -348,50 +353,59 @@ def MapMeta(root):
                                         else:
                                             elementItem = copy.copy(getattr(episode, attrib))
                                             SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
-                                                
+    logging.Log_Milestone("MapMeta")                                            
 
 def MapMedia(root, metadata, anidbId, tvdbID):
-    seriesPopulate = True
+    logging.Log_Milestone("MapMedia")
+    seriesPopulated = []
     streamTag = []
-    for map in root.xpath("""./Season/Episode"""):
-        season = map.getparent().get('num')
-        episode = map.get('num')
-        
-        #Log("This: '%s' , '%s', '%s', '%s'" %(map.getparent().get('AnidbId'), map.getparent().get('TvdbId'), anidbId, tvdbID))
-        if seriesPopulate and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
-            metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
-            metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
-            metadata.originally_available_at = functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
-            metadata.rating = functions.PopulateMetadata(map.getparent().xpath("""./Rating/*[node()]"""), float, constants.SERIES_RATING_PRIORITY)
-            metadata.studio = functions.PopulateMetadata(map.getparent().xpath("""./Studio/*[node()]"""), str, constants.SERIES_STUDIO_PRIORITY)
-            functions.PopulateMetadata(map.getparent().xpath("""./Countries/*[node()]"""), list, constants.SERIES_COUNTRIES_PRIORITY, metadata.countries)
-            metadata.duration = functions.PopulateMetadata(map.getparent().xpath("""./Duration/*[node()]"""), int, constants.SERIES_DURATION_PRIORITY)
-            functions.PopulateMetadata(map.getparent().xpath("""./Genres/*[node()]"""), list, constants.SERIES_GENRES_PRIORITY, metadata.genres)
-            functions.PopulateMetadata(map.getparent().xpath("""./Tags/*[node()]"""), list, constants.SERIES_TAGS_PRIORITY, metadata.tags)
-            functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), list, constants.SERIES_COLLECTIONS_PRIORITY, metadata.collections)
-            metadata.content_rating = functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), str, constants.SERIES_CONTENTRATING_PRIORITY)
-            functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)   
-            functions.PopulateMetadata(map.getparent().xpath("""./Posters//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
-            functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
-            functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
-            functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
-            seriesPopulate = False
-        
-        metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)
-        metadata.seasons[season].episodes[episode].summary = functions.PopulateMetadata(map.xpath("""./Summary/*[node()]"""), str, constants.EPISODE_SUMMARY_PRIORITY)
-        metadata.seasons[season].episodes[episode].originally_available_at = functions.PopulateMetadata(map.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY)
-        metadata.seasons[season].episodes[episode].rating = functions.PopulateMetadata(map.xpath("""./Rating/*[node()]"""), float, constants.EPISODE_RATING_PRIORITY)
-        metadata.seasons[season].episodes[episode].absolute_index = functions.PopulateMetadata(map.xpath("""./Absolute_Index/*[node()]"""), int, constants.EPISODE_ABSOLUTE_INDEX_PRIORITY)
-        
-        functions.PopulateMetadata(map.xpath("""./Writers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_WRITERS_PRIORITY, metadata.seasons[season].episodes[episode].writers) 
-        functions.PopulateMetadata(map.xpath("""./Directors/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_DIRECTORS_PRIORITY, metadata.seasons[season].episodes[episode].directors) 
-        functions.PopulateMetadata(map.xpath("""./Producers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_PRODUCERS_PRIORITY, metadata.seasons[season].episodes[episode].producers) 
-        functions.PopulateMetadata(map.xpath("""./Thumbs//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.EPISODE_THUMBS_PRIORITY, metadata.seasons[season].episodes[episode].thumbs)
+    @parallelize
+    def Episode_Par():
+        for map in root.xpath("""./Season/Episode"""):
+            @task
+            def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbID=tvdbID, seriesPopulated=seriesPopulated):
+                season = map.getparent().get('num')
+                episode = map.get('num')
+                
+                #Log("This: '%s' , '%s', '%s', '%s'" %(map.getparent().get('AnidbId'), map.getparent().get('TvdbId'), anidbId, tvdbID))
+                if (str(anidbId) + str(tvdbID)) not in seriesPopulated and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
+                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
+                    metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
+                    metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
+                    metadata.originally_available_at = functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
+                    metadata.rating = functions.PopulateMetadata(map.getparent().xpath("""./Rating/*[node()]"""), float, constants.SERIES_RATING_PRIORITY)
+                    metadata.studio = functions.PopulateMetadata(map.getparent().xpath("""./Studio/*[node()]"""), str, constants.SERIES_STUDIO_PRIORITY)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Countries/*[node()]"""), list, constants.SERIES_COUNTRIES_PRIORITY, metadata.countries)
+                    metadata.duration = functions.PopulateMetadata(map.getparent().xpath("""./Duration/*[node()]"""), int, constants.SERIES_DURATION_PRIORITY)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Genres/*[node()]"""), list, constants.SERIES_GENRES_PRIORITY, metadata.genres)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Tags/*[node()]"""), list, constants.SERIES_TAGS_PRIORITY, metadata.tags)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), list, constants.SERIES_COLLECTIONS_PRIORITY, metadata.collections)
+                    metadata.content_rating = functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), str, constants.SERIES_CONTENTRATING_PRIORITY)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)   
+                    functions.PopulateMetadata(map.getparent().xpath("""./Posters//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
+                    seriesPopulated.append(str(anidbId) + str(tvdbID))
+                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
+                
+                logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
+                metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)
+                metadata.seasons[season].episodes[episode].summary = functions.PopulateMetadata(map.xpath("""./Summary/*[node()]"""), str, constants.EPISODE_SUMMARY_PRIORITY)
+                metadata.seasons[season].episodes[episode].originally_available_at = functions.PopulateMetadata(map.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY)
+                metadata.seasons[season].episodes[episode].rating = functions.PopulateMetadata(map.xpath("""./Rating/*[node()]"""), float, constants.EPISODE_RATING_PRIORITY)
+                metadata.seasons[season].episodes[episode].absolute_index = functions.PopulateMetadata(map.xpath("""./Absolute_Index/*[node()]"""), int, constants.EPISODE_ABSOLUTE_INDEX_PRIORITY)
+                
+                functions.PopulateMetadata(map.xpath("""./Writers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_WRITERS_PRIORITY, metadata.seasons[season].episodes[episode].writers) 
+                functions.PopulateMetadata(map.xpath("""./Directors/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_DIRECTORS_PRIORITY, metadata.seasons[season].episodes[episode].directors) 
+                functions.PopulateMetadata(map.xpath("""./Producers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_PRODUCERS_PRIORITY, metadata.seasons[season].episodes[episode].producers) 
+                functions.PopulateMetadata(map.xpath("""./Thumbs//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.EPISODE_THUMBS_PRIORITY, metadata.seasons[season].episodes[episode].thumbs)
 
-        if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0 and not "English Dubbed" in metadata.collections:
-            metadata.collections.add("English Dubbed")
-            streamTag.append("English Dubbed")
-        if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0 and not "English Subbed" in metadata.collections: 
-            metadata.collections.add("English Subbed")
-            streamTag.append("English Subbed")
-    
+                if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0 and not "English Dubbed" in metadata.collections:
+                    metadata.collections.add("English Dubbed")
+                    streamTag.append("English Dubbed")
+                if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0 and not "English Subbed" in metadata.collections: 
+                    metadata.collections.add("English Subbed")
+                    streamTag.append("English Subbed")
+                logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
+    logging.Log_Milestone("MapMedia")

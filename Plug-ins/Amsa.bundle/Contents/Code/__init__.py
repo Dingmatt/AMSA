@@ -6,6 +6,7 @@ import urllib
 import string
 import functions
 import scudlee
+import logging
 
 from functions import XMLFromURL
 #from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
@@ -42,6 +43,8 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     
     def search(self, results, media, lang, manual=False):
         Log.Debug("--- Search Begin -------------------------------------------------------------------------------------------")
+        logging.New_Milestones()
+        logging.Log_Milestone("WholeSearch")
         common.RefreshData()
         orig_title = functions.CleanTitle(media.show)
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
@@ -93,12 +96,14 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             
         if len(elite) > 0 and not True in elite: del results[:]
         results.Sort("score", descending=True)
+        logging.Log_Milestone("WholeSearch")
         return
         
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):       
         Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
-    
+        logging.New_Milestones()
+        logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
         
@@ -116,6 +121,6 @@ class AmsaTVAgentTest(Agent.TV_Shows):
             common.MapMeta(map)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
-            
+        logging.Log_Milestone("WholeUpdate")    
 
     

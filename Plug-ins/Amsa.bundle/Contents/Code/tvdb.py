@@ -1,4 +1,4 @@
-import constants, functions, lxml
+import constants, functions, lxml, logging
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E
@@ -12,6 +12,7 @@ def ParseNoFromSeason(season, episode, default):
         
 class TvDB(constants.Series):
     def __init__(self, id):
+        logging.Log_Milestone("TvDB" + "_" + id)
         self.ID = id
         data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", "TvDB\\" + id, CACHE_1HOUR * 24).xpath("""/Data""")[0]
         
@@ -132,6 +133,7 @@ class TvDB(constants.Series):
              
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
+        logging.Log_Milestone("TvDB" + "_" + id)
         
     class Episode(constants.Episode):
         def __init__(self, data, id):

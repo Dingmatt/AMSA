@@ -1,4 +1,4 @@
-import constants, functions, lxml, copy
+import constants, functions, lxml, copy, logging
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E
@@ -45,6 +45,7 @@ def ParseLocalNoFromType(type, episode, prefix = ""):
 class AniDB(constants.Series):
     
     def __init__(self, id):
+        logging.Log_Milestone("AniDB" + "_" + id)
         data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
         
         ##--------------------------------ID-----------------------------------##
@@ -168,9 +169,7 @@ class AniDB(constants.Series):
             links = XML.ElementFromString(links)
             value = []            
             for externalentity in data.xpath("""./resources/resource/*"""):
-                Log("externalentity")
                 for identifier in externalentity.xpath("""./identifier"""):
-                    Log("identifier: %s" % (externalentity.getparent().get("type")))
                     if externalentity.getparent().get("type") == "1":
                         SubElement(links, "Link", type = "ANN", url = constants.ANIDB_RESOURCES_ANN % (identifier.text), value = identifier.text)
                     elif externalentity.getparent().get("type") == "2":
@@ -198,7 +197,7 @@ class AniDB(constants.Series):
                     elif externalentity.getparent().get("type") == "15":
                         SubElement(links, "Link", type = "Marumegane", url = constants.ANIDB_RESOURCES_MARUMEGANE % (identifier.text), value = identifier.text)
                 if externalentity.getparent().get("type") == "3":
-                    SubElement(links, "Link", type = "AnimeNfo", url = constants.ANIDB_RESOURCES_ANIMENFO % (value[0], value[1]), value = value)       
+                    SubElement(links, "Link", type = "AnimeNfo", url = constants.ANIDB_RESOURCES_ANIMENFO % (u"%s" % value[0], u"%s" % value[1]), value = u"%s" % value)       
             self.Links = links     
         
         ##--------------------------------EpisodeCount-------------------------##
@@ -225,7 +224,8 @@ class AniDB(constants.Series):
             
         #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpCount: '%s', EdCount: '%s', Posters: '%s'"
         #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, len(self.OpList), len(self.EdList), self.Posters) )
-           
+        logging.Log_Milestone("AniDB" + "_" + id)
+        
     class Episode(constants.Episode):
         def __init__(self, data, id):
             ##--------------------------------Title--------------------------------##
