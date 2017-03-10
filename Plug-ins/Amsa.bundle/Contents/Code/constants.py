@@ -2,8 +2,11 @@ import string
 from string import maketrans 
 
 #-------------------AMSA-------------------#
+BaseDirectory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems"))
 CacheDirectory = "Cache"
-CachePath = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems", CacheDirectory))
+CachePath = os.path.join(BaseDirectory, CacheDirectory)
+BundleExportDirectory = "Export"
+BundleExportPath = os.path.join(BaseDirectory, BundleExportDirectory)
 DefaultTimeout = 30
 DefaultCache = CACHE_1HOUR * 24
 ReplaceChars = maketrans("`", "'")
@@ -11,7 +14,8 @@ StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
 SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes", "Links"]
 EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Absolute_Index", "Writers", "Directors", "Producers", "Thumbs"]
 MilestoneFile = "Milestones.html"
-MilestoneLogging = "False"
+MilestoneLogging = True
+ExportBundles = True
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#

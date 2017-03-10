@@ -5,7 +5,7 @@ LoggingArray = []
 netLock = Thread.Lock()
 
 def Log_Milestone(milestone):
-    if constants.MilestoneLogging == "True":
+    if constants.MilestoneLogging:
         try:       
             now = datetime.datetime.now()
             netLock.acquire()
@@ -27,7 +27,7 @@ def Log_Milestone(milestone):
             netLock.release() 
         
 def New_Milestones():
-    if constants.MilestoneLogging == "True":
+    if constants.MilestoneLogging:
         try:
             netLock.acquire()
             global LoggingArray

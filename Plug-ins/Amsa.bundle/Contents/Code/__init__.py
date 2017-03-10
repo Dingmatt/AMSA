@@ -1,12 +1,5 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime
-import common
-import tvdb
-import anidb
-import urllib
-import string
-import functions
-import scudlee
-import logging
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, string, urllib
+import common, tvdb, anidb, scudlee, logging, functions, constants
 
 from functions import XMLFromURL
 #from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
@@ -116,10 +109,12 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         
         if mappingData != None:
             map = common.MapSeries(mappingData)
-            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            #functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             common.MapLocal(media, map, mappingData.AnidbId)
             common.MapMeta(map)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
+            if constants.ExportBundles:
+                common.ExportMap(map, mappingData.FirstSeries + ".bundle.xml")
             common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
         logging.Log_Milestone("WholeUpdate")    
 
