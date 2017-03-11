@@ -51,6 +51,8 @@ class AniDB(constants.Series):
         ##--------------------------------ID-----------------------------------##
         self.ID = id
         
+        self.Type = GetElementText(data, "type")
+        
         ##--------------------------------Title--------------------------------##
         if data.xpath("""./titles"""):
             self.Title = functions.GetPreferedTitle(data.xpath("""./titles/title""")).encode('utf-8').strip().translate(constants.ReplaceChars)

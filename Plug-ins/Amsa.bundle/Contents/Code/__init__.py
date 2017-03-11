@@ -59,12 +59,15 @@ class AmsaTVAgentTest(Agent.TV_Shows):
        
         maxi = {}
         elite = []
+        perfectScore = []
         @parallelize
         def searchTitles():
             for anime in common.GetAnimeTitleByName(orig_title, media.show):
                 @task
-                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb): 
+                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, perfectScore=perfectScore): 
+                    logging.Log_Milestone("Title")
                     anime = Titles(anime, orig_title)
+                    logging.Log_Milestone("Title")
                     if not anime.Id in maxi:                        
                         isValid = True
                         if anime.Id in maxi and maxi[anime.Id] <= anime.Score:
@@ -75,7 +78,8 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                         if(media.year and anime.Score >= 90 and isValid):
                             show = anidb.AniDB(anime.Id) 
                             if show: 
-                                try: startdate = dateParse(show.Startdate).year
+                                try: 
+                                    startdate = dateParse(show.Originally_Available_At).year
                                 except: pass
                                 if str(startdate) != str(media.year):
                                     isValid = False 
@@ -84,9 +88,17 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                         elif anime.Score >= 90 and isValid:
                             elite.append(isValid)
                         if isValid: 
+                            if anime.Score == 100: perfectScore.append(True)
                             Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
-            
+        
+        if len(perfectScore) > 1:
+            for result in results:
+                if result.score == 100:    
+                    show = anidb.AniDB(result.id.split("-")[1])
+                    if show.Type != "TV Series": 
+                        result.score = result.score - 1
+                         
         if len(elite) > 0 and not True in elite: del results[:]
         results.Sort("score", descending=True)
         logging.Log_Milestone("WholeSearch")
@@ -99,6 +111,13 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
+        
+        #filename = ""
+        #for media_item in media.seasons[1].episodes[1].items:
+        #    for item_part in media_item.parts:
+        #        filename = os.path.abspath(os.path.join(os.path.dirname(item_part.file.lower()), "..","Specials"))
+        #Log("FileName: %s" % (filename))
+        #functions.downloadfile("test.webm", "https://my.mixtape.moe/sovrtq.webm")
         
         mappingData = None
         if source == "anidb": 

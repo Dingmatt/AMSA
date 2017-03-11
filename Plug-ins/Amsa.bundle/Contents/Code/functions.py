@@ -1,14 +1,21 @@
-import constants, unicodedata, ast, datetime, re
+import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging
+from lxml import etree
 from unidecode import unidecode
 from time import sleep
 from datetime import timedelta  
-
+from string import maketrans 
 
 global netLock, AniDB_WaitUntil, queue
 AniDB_WaitUntil = datetime.datetime.now() 
 netLock = Thread.Lock()
 
-    
+ns = etree.FunctionNamespace(None)
+ns['upper-case'] = lambda context, s: str.upper(s)
+ns['lower-case'] = lambda context, s: str.lower(s)
+ns['clean-title'] = lambda context, s: CleanTitle(s)
+ns['clean-title-filter'] = lambda context, s: CleanTitle(s, True)
+ns['lower-case'] = lambda context, s: str.lower(s)  
+
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
@@ -100,9 +107,9 @@ def LoadFile(filename="", directory="", cache=constants.DefaultCache):
             result = Data.Load(filename) 
     return result                
 
-def SaveFile(file, filename="", directory=""):   
-    absoDirectory = os.path.join(constants.CachePath, directory)
-    directory = os.path.join(constants.CacheDirectory, directory)
+def SaveFile(file, filename="", directory="", export=False):   
+    absoDirectory = os.path.join(constants.CachePath if export == False else constants.BundleExportPath, directory)
+    directory = os.path.join(constants.CacheDirectory if export == False else constants.BundleExportDirectory, directory)
     filename = os.path.join(directory, filename) 
     if not os.path.exists(absoDirectory):
         Log.Debug("Functions - SaveFile() - dir: '%s'" % (absoDirectory))
@@ -113,22 +120,40 @@ def GetAnimeTitleByID(Tree, Id):
     return Tree.xpath("""/animetitles/anime[@aid="s"]/*""" % Id)
     
 def GetAnimeTitleByName(Tree, Name, OriginalName): 
-    Name = Name.lower().replace("'", "\'")
+    logging.Log_Milestone("GetAnimeTitleByName_" + Name)
+    Name = Name.lower()
+    OriginalName = OriginalName.lower()
+    Log("Name: %s, %s" % (OriginalName, Name))
+    result = [] 
+    
+    logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
     result = Tree.xpath(u"""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
-                [normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
-                or contains(normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (Name, Name))
-    if not result:
-        OriginalName = OriginalName.lower().replace("'", "\'")
-        match = re.search('^(.*)\s*\([0-9]+\)$', OriginalName)
+                [lower-case(string(clean-title(string(text()))))="%s"
+                or contains(lower-case(string(clean-title(string(text())))), "%s")]""" % (Name, Name))
+    logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
+    
+    if not result:    
+        match = re.search(r'^(.*)\s*\([0-9]+\)$', OriginalName)
+        Name = OriginalName
         if match:
             OriginalName = match.group(1)
             OriginalName = CleanTitle(OriginalName)
+            Log("Name: %s, %s" % (OriginalName, Name))
+            logging.Log_Milestone("GetAnimeTitleByName_Year_" + Name)
+            result = GetAnimeTitleByName(Tree, OriginalName, OriginalName) 
+            logging.Log_Milestone("GetAnimeTitleByName_Year_" + Name)
+        else:
+            logging.Log_Milestone("GetAnimeTitleByName_Xpath2_" + Name)
             result = Tree.xpath(u"""./anime/title
                     [@type='main' or @type='official' or @type='syn' or @type='short']
-                    [normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz"))="%s"
-                    or contains(normalize-space(translate(translate(text(),".`':;-&,.!~()?/", "                "),"ABCDEFGHJIKLMNOPQRSTUVWXYZ", "abcdefghjiklmnopqrstuvwxyz")),"%s")]""" % (OriginalName, OriginalName))
-    #Log("Name: %s, %s, %s" % (OriginalName, Name, match.group(1)))
+                    [lower-case(string(clean-title-filter(string(text()))))="%s"
+                    or contains(lower-case(string(clean-title-filter(string(text())))), "%s")
+                    or translate(lower-case(string(clean-title-filter(string(text())))), " ", "")="%s"
+                    or contains(translate(lower-case(string(clean-title-filter(string(text())))), " ", ""), "%s")
+                    or (string-length(translate(lower-case(string(clean-title-filter(string(text())))), " ", "")) >= 5 and contains("%s", translate(lower-case(string(clean-title-filter(string(text())))), " ", "")))]""" % (Name, Name, Name.replace(" ", ""), Name.replace(" ", ""), Name.replace(" ", "") ))
+            logging.Log_Milestone("GetAnimeTitleByName_Xpath2_" + Name)
+    logging.Log_Milestone("GetAnimeTitleByName_" + Name)  
     return result
     
 def GetPreferedTitle(titles):    
@@ -161,9 +186,9 @@ def GetPreferedTitleNoType(titles):
 
     return title
    
-def CleanTitle(title):
-
-    title = re.sub(r'[\'`":;\-&,.!~()?/]', ' ', title)
+def CleanTitle(title, filter = False):
+    if filter: title = re.sub(constants.Filter_Regex, "", title.lower())
+    title = re.sub(r'[^A-Za-z0-9 ]+', ' ', title)
     title = re.sub(r'[ ]+', ' ', title)
     title = unidecode(u"%s" % (title))
     return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
@@ -268,3 +293,10 @@ def safe_unicode(s, encoding='utf-8'):
             return s.decode(encoding)
     else:
         return str(s).decode(encoding)
+
+def downloadfile(name,url):
+    response=requests.get(url,stream=True)
+    absoDirectory = os.path.join(constants.CachePath, name)
+    with io.open(absoDirectory, 'wb') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+    del response

@@ -14,8 +14,13 @@ StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
 SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes", "Links"]
 EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Absolute_Index", "Writers", "Directors", "Producers", "Thumbs"]
 MilestoneFile = "Milestones.html"
-MilestoneLogging = True
-ExportBundles = True
+MilestoneLogging = False
+ExportBundles = False
+FILTER_SEARCH_WORDS  = ['to', 'wa', 'ga', 'no', 'age', 'da', 'chou', 'super', 'yo', 'de', 'chan', 'hime', 'ni', 'sekai',                                                                    # Jp
+                        'a',  'of', 'an', 'the', 'motion', 'picture', 'special', 'oav', 'ova', 'tv', 'special', 'eternal', 'final', 'last', 'one', 'movie', 'me',  'princess', 'theater',   # En Continued
+                        'le', 'la', 'un', 'les', 'nos', 'vos', 'des', 'ses',                                                                                                                # Fr
+                        'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi']                                                               # Roman digits
+Filter_Regex = r'\b' + r'\b|\b'.join(map(re.escape, FILTER_SEARCH_WORDS)) + r'\b'
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#

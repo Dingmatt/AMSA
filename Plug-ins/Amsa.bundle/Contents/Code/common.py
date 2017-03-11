@@ -36,13 +36,6 @@ class Titles():
             searchTitle = re.sub('^[Bb][Bb][Cc] ', '', searchTitle)
             foundTitle = re.sub('^[Bb][Bb][Cc] ', '', foundTitle)
 
-            # Adjust if both have 'the' prefix by adding a prefix that won't be stripped.
-            distTitle = searchTitle
-            distFoundTitle = foundTitle
-            if searchTitle.lower()[0:4] == 'the ' and foundTitle.lower()[0:4] == 'the ':
-                distTitle = 'xxx' + searchTitle
-                distFoundTitle = 'xxx' + foundTitle
-
             # Score adjustment for title distance.
             score = score - int(30 * (1 - functions.lev_ratio(searchTitle, foundTitle)))
     
@@ -336,7 +329,9 @@ def MapMedia(root, metadata, anidbId, tvdbID):
                 season = map.getparent().get('num')
                 episode = map.get('num')
                
+               
                 if (str(anidbId) + str(tvdbID)) not in seriesPopulated and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
+                    seriesPopulated.append(str(anidbId) + str(tvdbID))
                     logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
                     metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
                     metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
@@ -354,7 +349,6 @@ def MapMedia(root, metadata, anidbId, tvdbID):
                     functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
                     functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
                     functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
-                    seriesPopulated.append(str(anidbId) + str(tvdbID))
                     logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
                 
                 logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
@@ -368,7 +362,6 @@ def MapMedia(root, metadata, anidbId, tvdbID):
                 functions.PopulateMetadata(map.xpath("""./Directors/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_DIRECTORS_PRIORITY, metadata.seasons[season].episodes[episode].directors) 
                 functions.PopulateMetadata(map.xpath("""./Producers/*[node()]"""), Framework.modelling.attributes.SetObject, constants.EPISODE_PRODUCERS_PRIORITY, metadata.seasons[season].episodes[episode].producers) 
                 functions.PopulateMetadata(map.xpath("""./Thumbs//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.EPISODE_THUMBS_PRIORITY, metadata.seasons[season].episodes[episode].thumbs)
-
                 if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "eng")) > 0 and not "English Dubbed" in metadata.collections:
                     metadata.collections.add("English Dubbed")
                     streamTag.append("English Dubbed")
