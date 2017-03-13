@@ -39,27 +39,30 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         logging.New_Milestones()
         logging.Log_Milestone("WholeSearch")
         common.RefreshData()
-        orig_title = functions.CleanTitle(media.show)
+        orig_title = media.show
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
         Log.Info("Init - Search() - Show: '%s', Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (media.show, orig_title, media.name, urllib.unquote(media.filename) if media.filename else "", str(manual)))
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
+            Log("Match T")
             title = match.group("show")
             source = match.group("source").lower() 
-            if source in ["anidb", "tvdb"]:
+            if source in ["anidb", "anidb2", "tvdb", "tvdb2", "tvdb3", "tvdb4", "tvdb5"]:
                 id = match.group("id")
                 startdate = None
-                if source=="anidb":  
+                if source in ["anidb", "anidb2"]:  
                     title = functions.GetPreferedTitle(common.GetAnimeTitleByID(id))
                 Log.Debug("Init - Search() - force - id: '%s-%s', title from id: '%s' provided in foldername: '%s'" % (source, id, title, orig_title) )
                 results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=title, year=startdate, lang=Locale.Language.English, score=100))
                 return
             else: orig_title = functions.CleanTitle(title)
        
+       
         maxi = {}
         elite = []
         perfectScore = []
+        orig_title = functions.CleanTitle(orig_title)
         @parallelize
         def searchTitles():
             for anime in common.GetAnimeTitleByName(orig_title, media.show):
@@ -111,7 +114,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
-        
+        Log("Source: %s, ID: %s" % (source, id))
         #filename = ""
         #for media_item in media.seasons[1].episodes[1].items:
         #    for item_part in media_item.parts:
@@ -120,9 +123,9 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         #functions.downloadfile("test.webm", "https://my.mixtape.moe/sovrtq.webm")
         
         mappingData = None
-        if source == "anidb": 
+        if source in  ["anidb", "anidb2"]: 
             mappingData = scudlee.ScudLee(id)
-        if source == "tvdbid": 
+        if source in  ["tvdb", "tvdb2", "tvdb3", "tvdb4", "tvdb5"]: 
             mappingData = scudlee.ScudLee(None, id)
         Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, mappingData.AnidbId, mappingData.TvdbId))
         

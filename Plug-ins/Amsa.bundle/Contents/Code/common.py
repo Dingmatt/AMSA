@@ -103,8 +103,8 @@ def SearchMap(season, episode, filename, root, anidbid=None):
             match = re.search(r".*\B\[(?P<provider>\D+)(?P<id>\d+)\]\B.*", filename, re.IGNORECASE)
             if match:
                 provider = match.group('provider').lower()
-                data.append(["Anidb", match.group('id').lower(), anidb.ParseNoFromSeason(int(media_season), int(media_episode))])
-    elif re.search(r".*\b(?P<episode>E\d+)\b.*", filename, re.IGNORECASE):
+                data.append(["Anidb", match.group('id').lower(), anidb.ParseNoFromSeason(int(season), int(episode))])
+                
         mappedEpisode = root.xpath("""./Mapping/Series[@anidbid="%s"]/Episode[@anidb="%s"]""" % (anidbid, anidb.ParseNoFromSeason(int(season), int(episode))))
         if mappedEpisode: 
             data.append(["Anidb", mappedEpisode[0].getparent().get("anidbid"), mappedEpisode[0].get("anidb")])

@@ -117,7 +117,7 @@ def SaveFile(file, filename="", directory="", export=False):
     Data.Save(filename, file)
     
 def GetAnimeTitleByID(Tree, Id):    
-    return Tree.xpath("""/animetitles/anime[@aid="s"]/*""" % Id)
+    return Tree.xpath("""/animetitles/anime[@aid="%s"]/*""" % Id)
     
 def GetAnimeTitleByName(Tree, Name, OriginalName): 
     logging.Log_Milestone("GetAnimeTitleByName_" + Name)
@@ -188,8 +188,10 @@ def GetPreferedTitleNoType(titles):
    
 def CleanTitle(title, filter = False):
     if filter: title = re.sub(constants.Filter_Regex, "", title.lower())
+    title = re.sub(r'\[(tvdb\d?|anidb\d?).*\]', "", title.lower())
     title = re.sub(r'[^A-Za-z0-9 ]+', ' ', title)
     title = re.sub(r'[ ]+', ' ', title)
+    title = title.replace("&", "&amp;")
     title = unidecode(u"%s" % (title))
     return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
     
