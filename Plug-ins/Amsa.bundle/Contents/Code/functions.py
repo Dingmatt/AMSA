@@ -1,4 +1,4 @@
-import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging
+import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging, difflib, heapq
 from lxml import etree
 from unidecode import unidecode
 from time import sleep
@@ -15,7 +15,8 @@ ns['lower-case'] = lambda context, s: str.lower(s)
 ns['clean-title'] = lambda context, s: CleanTitle(s)
 ns['clean-title-filter'] = lambda context, s: CleanTitle(s, True)
 ns['lower-case'] = lambda context, s: str.lower(s)  
-
+ns['is-match'] = lambda context, x,y: SequenceMatch(x, y)
+    
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
@@ -28,7 +29,7 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
                 while AniDB_WaitUntil > datetime.datetime.now(): 
                     sleep(0.1)
                 Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
-                AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2) 
+                AniDB_WaitUntil = datetime.datetime.now() + timedelta(seconds=2.1) 
             result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
         except Exception as e: 
             result = None 
@@ -123,7 +124,8 @@ def GetAnimeTitleByName(Tree, Name, OriginalName):
     logging.Log_Milestone("GetAnimeTitleByName_" + Name)
     Name = Name.lower()
     OriginalName = OriginalName.lower()
-    Log("Name: %s, %s" % (OriginalName, Name))
+     
+    #Log("Name: %s, %s" % (OriginalName, Name))
     result = [] 
     
     logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
@@ -133,27 +135,24 @@ def GetAnimeTitleByName(Tree, Name, OriginalName):
                 or contains(lower-case(string(clean-title(string(text())))), "%s")]""" % (Name, Name))
     logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
     
-    if not result:    
-        match = re.search(r'^(.*)\s*\([0-9]+\)$', OriginalName)
-        Name = OriginalName
-        if match:
-            OriginalName = match.group(1)
-            OriginalName = CleanTitle(OriginalName)
-            Log("Name: %s, %s" % (OriginalName, Name))
-            logging.Log_Milestone("GetAnimeTitleByName_Year_" + Name)
-            result = GetAnimeTitleByName(Tree, OriginalName, OriginalName) 
-            logging.Log_Milestone("GetAnimeTitleByName_Year_" + Name)
-        else:
-            logging.Log_Milestone("GetAnimeTitleByName_Xpath2_" + Name)
-            result = Tree.xpath(u"""./anime/title
-                    [@type='main' or @type='official' or @type='syn' or @type='short']
-                    [lower-case(string(clean-title-filter(string(text()))))="%s"
-                    or contains(lower-case(string(clean-title-filter(string(text())))), "%s")
-                    or translate(lower-case(string(clean-title-filter(string(text())))), " ", "")="%s"
-                    or contains(translate(lower-case(string(clean-title-filter(string(text())))), " ", ""), "%s")
-                    or (string-length(translate(lower-case(string(clean-title-filter(string(text())))), " ", "")) >= 5 and contains("%s", translate(lower-case(string(clean-title-filter(string(text())))), " ", "")))]""" % (Name, Name, Name.replace(" ", ""), Name.replace(" ", ""), Name.replace(" ", "") ))
-            logging.Log_Milestone("GetAnimeTitleByName_Xpath2_" + Name)
+    if not result:
+        logging.Log_Milestone("GetAnimeTitleByName_DiffLib_" + Name)
+        result = Tree.xpath(u"""./anime/title
+                [@type='main' or @type='official' or @type='syn' or @type='short']
+                [is-match("%s", lower-case(string(clean-title(string(text())))))]""" % (Name))           
+        logging.Log_Milestone("GetAnimeTitleByName_DiffLib_" + Name)   
     logging.Log_Milestone("GetAnimeTitleByName_" + Name)  
+    return result
+
+def SequenceMatch(word, matcher, cutoff=0.6):
+    result = False
+    s = difflib.SequenceMatcher()
+    s.set_seq2(word)
+    s.set_seq1(matcher)
+    if s.real_quick_ratio() >= cutoff and \
+        s.quick_ratio() >= cutoff and \
+        s.ratio() >= cutoff:
+            result = True
     return result
     
 def GetPreferedTitle(titles):    
