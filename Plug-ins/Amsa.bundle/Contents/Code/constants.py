@@ -90,8 +90,13 @@ ANIDB_TVDB_MAPPING_CUSTOM                   = os.path.join(CacheDirectory, "anim
 ANIDB_TVDB_MAPPING_CORRECTIONS              = "http://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml"  
 #-------------------SCUDLEE----------------#
 
+#-------------------PLEX-------------------#
+THEME_URL                                   = 'http://tvthemes.plexapp.com/%s.mp3'        
+#-------------------PLEX-------------------#
+
 class Series():
     ID = None
+    MetaType = None
     Title = None
     Summary = None
     Originally_Available_At = None

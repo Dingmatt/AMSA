@@ -14,6 +14,9 @@ class TvDB(constants.Series):
     def __init__(self, id):
         logging.Log_Milestone("TvDB" + "_" + id)
         self.ID = id
+        
+        self.MetaType = "Tvdb"
+        
         data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", "TvDB\\" + id, CACHE_1HOUR * 24).xpath("""/Data""")[0]
         
         ##--------------------------------Title--------------------------------##

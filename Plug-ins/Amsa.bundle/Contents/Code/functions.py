@@ -120,12 +120,11 @@ def SaveFile(file, filename="", directory="", export=False):
 def GetAnimeTitleByID(Tree, Id):    
     return Tree.xpath("""/animetitles/anime[@aid="%s"]/*""" % Id)
     
-def GetAnimeTitleByName(Tree, Name, OriginalName): 
+def GetAnimeTitleByName(Tree, Name): 
     logging.Log_Milestone("GetAnimeTitleByName_" + Name)
     Name = Name.lower()
-    OriginalName = OriginalName.lower()
      
-    #Log("Name: %s, %s" % (OriginalName, Name))
+    #Log("Name: %s" % (Name))
     result = [] 
     
     logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)

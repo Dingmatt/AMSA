@@ -1,4 +1,4 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb, scudlee, functions, constants, copy, logging
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb, scudlee, plex, functions, constants, copy, logging
 
 from lxml import etree
 from lxml.builder import E
@@ -51,8 +51,8 @@ def GetAnimeTitleByID(Id):
     return functions.GetAnimeTitleByID(scudlee.TitleTree(), Id)
     
     
-def GetAnimeTitleByName(Name, OrignalName): 
-    return functions.GetAnimeTitleByName(scudlee.TitleTree(), Name, OrignalName)  
+def GetAnimeTitleByName(Name): 
+    return functions.GetAnimeTitleByName(scudlee.TitleTree(), Name)  
        
        
 def RefreshData():
@@ -114,18 +114,18 @@ def SearchMap(season, episode, filename, root, anidbid=None):
 
     
 def GenerateSeason(root, media_season):
-    season = root.find("""./Season[@num="%s"]""" % (media_season))
+    season = root.find("""./Season[@num="%s"]""" % (str(media_season)))
     if season == None:
-        season = SubElement(root, "Season", num=media_season)
+        season = SubElement(root, "Season", num=str(media_season))
         for attrib in constants.SeriesAttribs:
             SubElement(season, attrib)
     return season
 
     
 def GenerateEpisode(root, season, media_season, media_episode):
-    episode = root.find("""./Season[@num="%s"]/Episode[num="%s"]""" % (media_season, media_episode))
+    episode = root.find("""./Season[@num="%s"]/Episode[num="%s"]""" % (str(media_season), str(media_episode)))
     if episode == None:
-        episode = SubElement(season, "Episode", num=media_episode)
+        episode = SubElement(season, "Episode", num=str(media_episode))
         for attrib in constants.EpisodeAttribs:
             SubElement(episode, attrib)
     return episode
@@ -231,7 +231,27 @@ def MapSeries(mappingData):
     logging.Log_Milestone("MapSeries")
     return root
 
-    
+def MapLocal2(root, media):
+    for item in root.xpath("""./Mapping/Series/Episode"""):
+        match = re.search(r".*\bS(?P<season>\d+)E(?P<episode>\d+)\b.*", item.get("tvdb"), re.IGNORECASE)
+        if match:
+            seasonNo = int(match.group('season'))
+            episodeNo = int(match.group('episode'))
+            #Log("Local2: '%s', '%s'" %( seasonNo,episodeNo))
+            season = GenerateSeason(root, seasonNo)
+            episode = GenerateEpisode(root, season, seasonNo, episodeNo)
+            mapped = SubElement(episode, "Mapped") 
+            SubElement(mapped, "tvdb", series=item.getparent().get("tvdbid"), episode=item.get("tvdb")) 
+            SubElement(mapped, "anidb", series=item.getparent().get("anidbid"), episode=item.get("anidb")) 
+            streams = SubElement(episode, "Streams")
+            try:
+                for media_item in media.seasons[seasonNo].episodes[episodeNo].items:
+                    for item_part in media_item.parts:
+                        filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
+                        for stream in item_part.streams:
+                            SubElement(streams, "Stream", type=str(constants.StreamTypes.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
+            except: pass    
+            
 def MapLocal(media, root, anidbid):
     logging.Log_Milestone("MapLocal")
     @parallelize
@@ -273,67 +293,85 @@ def MapEpisode(media, root, media_season, media_episode, anidbid, season = None,
    
 def MapMeta(root):
     logging.Log_Milestone("MapMeta")
-    providers = ["Anidb", "Tvdb"]
+    providerList = [["Anidb"], ["Tvdb","Plex"]]
     @parallelize
-    def Provider_Par():
-        for provider in providers:
+    def Providers_Par():
+        for providers in providerList:
             @task
-            def Provider_Task(root=root, provider=provider):
-                data = None
-                for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (provider)), key=lambda x: int(x.get("series") if x.get("series") else 0)):
-                    if map.get("series"):
-                        for existing in map.getparent().getparent().xpath(""".//%s""" % (provider)):
-                            if not existing.getparent().tag == "Mapped":
-                                existing.getparent().remove(existing)
-                        if data == None or data.ID != map.get("series"):
-                            if provider == "Anidb":
-                                data = anidb.AniDB(map.get("series"))
-                            elif provider == "Tvdb":
-                                data = tvdb.TvDB(map.get("series")) 
-                                
-                        if not map.getparent().getparent().getparent().get("%s" % provider + "Id"):    
-                            map.getparent().getparent().getparent().attrib["%s" % provider + "Id"] = map.get("series")
-                            
-                        for episode in data.Episodes: 
-                            if (provider == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (provider == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
-                                for attrib in constants.SeriesAttribs:
-                                    if not map.getparent().getparent().getparent().xpath("""./%s/%s""" % (attrib, provider)):
-                                        if getattr(data, attrib):
-                                            if type(getattr(data, attrib)) is type(Element("None")):
-                                                elementList = copy.deepcopy(getattr(data, attrib))
-                                                SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList.getchildren())
-                                            else:
-                                                elementItem = copy.copy(getattr(data, attrib))
-                                                SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).text = (u'%s' % (elementItem))
-                                                
-                                         
-                                for attrib in constants.EpisodeAttribs:
-                                    if getattr(episode, attrib):
-                                        if type(getattr(episode, attrib)) is type(Element("None")):
-                                            elementList = copy.deepcopy(getattr(episode, attrib))
-                                            SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList)
-                                        else:
-                                            elementItem = copy.copy(getattr(episode, attrib))
-                                            SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
+            def Providers_Task(root=root, providers=providers):
+                @parallelize
+                def Provider_Par():
+                    for provider in providers:
+                        @task
+                        def Provider_Task(root=root, providers=providers, provider=provider):
+                            #Log("Provider: %s" %(providers))
+                            data = None
+                            for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (providers[0].lower())), key=lambda x: int(x.get("series") if x.get("series") else 0)):
+                                if map.get("series"):
+                                    for existing in map.getparent().getparent().xpath(""".//%s""" % (providers[0])):
+                                        if not existing.getparent().tag == "Mapped":
+                                            existing.getparent().remove(existing)
+                                    
+                                    #Log("Provider: %s" %(provider))
+                                    if data == None or data.ID != map.get("series") or data.MetaType != provider:
+                                        if provider == "Anidb":
+                                            data = anidb.AniDB(map.get("series"))
+                                        elif provider == "Tvdb":
+                                            data = tvdb.TvDB(map.get("series")) 
+                                        elif provider == "Plex":
+                                            data = plex.Plex(map.get("series"))    
+                                    if not map.getparent().getparent().getparent().get("%s" % provider + "Id"):    
+                                        map.getparent().getparent().getparent().attrib["%s" % provider + "Id"] = map.get("series")
+                                    
+                                    for attrib in constants.SeriesAttribs:
+                                        if not map.getparent().getparent().getparent().xpath("""./%s/%s""" % (attrib, provider)):
+                                            #Log("Provider: %s %s" %(provider, attrib))
+                                            if getattr(data, attrib):
+                                                if type(getattr(data, attrib)) is type(Element("None")):
+                                                    elementList = copy.deepcopy(getattr(data, attrib))
+                                                    SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList.getchildren())
+                                                else:
+                                                    elementItem = copy.copy(getattr(data, attrib))
+                                                    SubElement(map.getparent().getparent().getparent().find("""./%s""" % (attrib)), provider).text = (u'%s' % (elementItem)) 
+                                                    
+                                    for episode in data.Episodes: 
+                                        if (providers[0] == "Anidb" and "%s" % (episode.Number) == map.get("episode")) or (providers[0] == "Tvdb" and "S%sE%s" % (episode.Season, episode.Number) == map.get("episode")):
+                                            for attrib in constants.EpisodeAttribs:
+                                                #Log("Provider: %s %s" %(provider, attrib))
+                                                if getattr(episode, attrib):
+                                                    if type(getattr(episode, attrib)) is type(Element("None")):
+                                                        elementList = copy.deepcopy(getattr(episode, attrib))
+                                                        SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).extend(elementList)
+                                                    else:
+                                                        elementItem = copy.copy(getattr(episode, attrib))
+                                                        SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
     logging.Log_Milestone("MapMeta")                                            
 
     
-def MapMedia(root, metadata, anidbId, tvdbID):
+def MapMedia(root, metadata, anidbId, tvdbId):
     logging.Log_Milestone("MapMedia")
     seriesPopulated = []
     streamTag = []
+    seasonNo = int(root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))[0].get("num"))
+    if not seasonNo:
+        seasonNo = int(root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))[0].get("num"))
+    if not seasonNo:
+        seasonNo = 0
     @parallelize
     def Episode_Par():
-        for map in root.xpath("""./Season/Episode"""):
+        for map in root.xpath("""./Season[@num>=%s]/Episode""" % (seasonNo)):
+            
             @task
-            def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbID=tvdbID, seriesPopulated=seriesPopulated):
-                season = map.getparent().get('num')
+            def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbId=tvdbId, seriesPopulated=seriesPopulated, seasonNo=seasonNo):
+                season = str(int(map.getparent().get('num')) - seasonNo + 1)
+                #Log("SeasonNumber: %s, %s, %s" % (seasonNo, map.getparent().get('num'), str(int(map.getparent().get('num')) - seasonNo + 1)))
                 episode = map.get('num')
+                #Log("Episode: '%s', '%s', %s, %s" % (season, episode, anidbId, map.getparent().get('AnidbId')))
                
                
-                if (str(anidbId) + str(tvdbID)) not in seriesPopulated and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbID == map.getparent().get('TvdbId'))):
-                    seriesPopulated.append(str(anidbId) + str(tvdbID))
-                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
+                if (str(anidbId) + str(tvdbId)) not in seriesPopulated and (anidbId == map.getparent().get('AnidbId') or (anidbId == "" and tvdbId == map.getparent().get('TvdbId'))):
+                    seriesPopulated.append(str(anidbId) + str(tvdbId))
+                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbId))
                     metadata.title = functions.PopulateMetadata(map.getparent().xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
                     metadata.summary = functions.PopulateMetadata(map.getparent().xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
                     metadata.originally_available_at = functions.PopulateMetadata(map.getparent().xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
@@ -350,7 +388,7 @@ def MapMedia(root, metadata, anidbId, tvdbID):
                     functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
                     functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
                     functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
-                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbID))
+                    logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbId))
                 
                 logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
                 metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)

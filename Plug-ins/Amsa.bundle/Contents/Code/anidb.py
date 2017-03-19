@@ -51,6 +51,8 @@ class AniDB(constants.Series):
         ##--------------------------------ID-----------------------------------##
         self.ID = id
         
+        self.MetaType = "Anidb"
+        
         self.Type = GetElementText(data, "type")
         
         ##--------------------------------Title--------------------------------##

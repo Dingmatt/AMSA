@@ -65,7 +65,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         orig_title = functions.CleanTitle(orig_title)
         @parallelize
         def searchTitles():
-            for anime in common.GetAnimeTitleByName(orig_title, media.show):
+            for anime in common.GetAnimeTitleByName(orig_title):
                 @task
                 def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, perfectScore=perfectScore): 
                     logging.Log_Milestone("Title")
@@ -132,7 +132,8 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         if mappingData != None:
             map = common.MapSeries(mappingData)
             #functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
-            common.MapLocal(media, map, mappingData.AnidbId)
+            #common.MapLocal(media, map, mappingData.AnidbId)
+            common.MapLocal2(map, media)
             common.MapMeta(map)
             functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles\\")
             if constants.ExportBundles:
