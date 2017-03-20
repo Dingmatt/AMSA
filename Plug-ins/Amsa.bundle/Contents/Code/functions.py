@@ -211,11 +211,12 @@ def GetByPriority(metaList, priorityList, metaType):
     except: 
         return ""               
     
-def PopulateMetadata(map, metaType, priorityList, metaList=None):
+def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None):
     if map:
+        
         data = GetByPriority(map, priorityList, metaType)
         if data:
-            #Log("Data: %s, %s" % (data, metaList))
+            Log("Data: %s, %s" % (data, metaList))
             if metaType is datetime.date:
                 return datetime.datetime.strptime(data, "%Y-%m-%d").date()
             if metaType is list:
@@ -240,20 +241,29 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None):
                     #Log("Person: %s, %s, %s, %s," %(new_person_obj.name,  person.get('seiyuu_name', ''), person.get('character_name', ''), person.get('seiyuu_pic', '')))
                 return metaList
             if metaType is Framework.modelling.attributes.ProxyContainerObject:
-                @parallelize
-                def Image_Par():
-                    for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
-                        @task
-                        def Image_Task(image=image, metaList=metaList):
-                            #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
-                            if len(image.get("thumbUrl")) > 0:
-                                FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
-                            else:
-                                FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
-                            if image.getparent().getparent().tag == "Season":
-                                metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
-                            else:
-                                metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                if secondType == "Images":
+                    @parallelize
+                    def Image_Par():
+                        for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
+                            @task
+                            def Image_Task(image=image, metaList=metaList):
+                                #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
+                                if len(image.get("thumbUrl")) > 0:
+                                    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
+                                else:
+                                    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
+                                if image.getparent().getparent().tag == "Season":
+                                    metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                                else:
+                                    metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                elif secondType == "Themes":
+                    @parallelize
+                    def Theme_Par():
+                        for theme in sorted(data, key=lambda x: x.get("id"),  reverse=False):
+                            @task
+                            def Theme_Task(theme=theme, metaList=metaList):
+                                FileFromURL(theme.get("url"), os.path.basename(theme.get("localPath")), os.path.dirname(theme.get("localPath")), CACHE_1HOUR * 24)
+                                metaList[theme.get("url")] = Proxy.Media(Data.Load(theme.get("localPath")), sort_order=theme.get("id"))
                 return metaList
             else:
                 return (metaType)(data)   

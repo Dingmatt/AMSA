@@ -73,7 +73,7 @@ def CleanCache():
             directory = os.path.join(root, directory)
             for file in os.listdir(directory):
                 file = os.path.join(directory, file)
-                if os.path.isfile(file) and os.stat(file).st_mtime < time.time() - 3 * 86400:
+                if os.path.isfile(file) and os.stat(file).st_mtime < time.time() - 30 * 86400:
                     os.remove(file)   
                     Log.Debug("Common - CleanCache() - file: '%s'" % (file))
             try: 
@@ -384,10 +384,11 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                     functions.PopulateMetadata(map.getparent().xpath("""./Collections/*[node()]"""), list, constants.SERIES_COLLECTIONS_PRIORITY, metadata.collections)
                     metadata.content_rating = functions.PopulateMetadata(map.getparent().xpath("""./Content_Rating/*[node()]"""), str, constants.SERIES_CONTENTRATING_PRIORITY)
                     functions.PopulateMetadata(map.getparent().xpath("""./Roles/*[node()]"""), Framework.modelling.attributes.SetObject, constants.SERIES_ROLES_PRIORITY, metadata.roles)   
-                    functions.PopulateMetadata(map.getparent().xpath("""./Posters//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters)
-                    functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art)
-                    functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners)
-                    functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons)
+                    functions.PopulateMetadata(map.getparent().xpath("""./Posters//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.posters, "Images")
+                    functions.PopulateMetadata(map.getparent().xpath("""./Art//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.art, "Images")
+                    functions.PopulateMetadata(map.getparent().xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners, "Images")
+                    functions.PopulateMetadata(map.getparent().xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons, "Images")
+                    functions.PopulateMetadata(map.getparent().xpath("""./Themes//Theme"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_THEMES_PRIORITY, metadata.themes, "Themes")
                     logging.Log_Milestone("MapMedia_Season_" + str(anidbId) + str(tvdbId))
                 
                 logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
