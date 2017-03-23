@@ -2,7 +2,7 @@ import string
 from string import maketrans 
 
 #-------------------AMSA-------------------#
-BaseDirectory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support\Data\com.plexapp.agents.amsa_test\DataItems"))
+BaseDirectory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support", "Data", "com.plexapp.agents.amsa_test", "DataItems"))
 CacheDirectory = "Cache"
 CachePath = os.path.join(BaseDirectory, CacheDirectory)
 BundleExportDirectory = "Export"
@@ -93,6 +93,11 @@ ANIDB_TVDB_MAPPING_CORRECTIONS              = "http://raw.githubusercontent.com/
 #-------------------PLEX-------------------#
 THEME_URL                                   = 'http://tvthemes.plexapp.com/%s.mp3'        
 #-------------------PLEX-------------------#
+
+#-------------------MYANIMELIST------------#
+MAL_HTTP_API_URL                            = "http://fribbtastic-api.net/fribbtastic-api/services/anime?id="
+MAL_PREFIX                                  = "https://myanimelist.cdn-dena.com"      
+#-------------------MYANIMELIST------------#
 
 class Series():
     ID = None

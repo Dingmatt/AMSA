@@ -46,7 +46,7 @@ class AniDB(constants.Series):
     
     def __init__(self, id):
         logging.Log_Milestone("AniDB" + "_" + id)
-        data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", "AniDB\\" + id, CACHE_1HOUR * 24).xpath("""/anime""")[0]
+        data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", os.path.join("AniDB", id), CACHE_1HOUR * 24).xpath("""/anime""")[0]
         
         ##--------------------------------ID-----------------------------------##
         self.ID = id

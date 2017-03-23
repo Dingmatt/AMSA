@@ -17,7 +17,7 @@ class TvDB(constants.Series):
         
         self.MetaType = "Tvdb"
         
-        data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", "TvDB\\" + id, CACHE_1HOUR * 24).xpath("""/Data""")[0]
+        data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", os.path.join("TvDB", id), CACHE_1HOUR * 24).xpath("""/Data""")[0]
         
         ##--------------------------------Title--------------------------------##
         if GetElementText(data, "Series/SeriesName"):
@@ -66,7 +66,7 @@ class TvDB(constants.Series):
         
         ##--------------------------------Images-------------------------------##
         banners = []
-        bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", "TvDB\\" + id, CACHE_1HOUR * 24)
+        bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", os.path.join("TvDB", id), CACHE_1HOUR * 24)
         if bannersXml:
             art = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             art = XML.ElementFromString(art)
