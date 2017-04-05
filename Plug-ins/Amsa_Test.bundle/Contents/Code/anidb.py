@@ -161,7 +161,7 @@ class AniDB(constants.Series):
             season = XML.ElementFromString(season)
             bannerPath = GetElementText(data, "picture")
             mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.ANIDB_PIC_BASE_URL, os.path.join("AniDB", id, "season"))  
-            SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+            SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, season = "1")
             self.Season = season
             self.Posters = copy.deepcopy(season)
         ##--------------------------------Themes-------------------------------##

@@ -110,16 +110,22 @@ class AmsaTVAgentTest(Agent.TV_Shows):
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):       
         Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
+        if force:
+            HTTP.ClearCache()
         logging.New_Milestones()
         logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
         Log("Source: %s, ID: %s" % (source, id))
         #filename = ""
-        #for media_item in media.seasons[1].episodes[1].items:
-        #    for item_part in media_item.parts:
-        #        filename = os.path.abspath(os.path.join(os.path.dirname(item_part.file.lower()), "..","Specials"))
-        #Log("FileName: %s" % (filename))
+        #for sea_item in media.seasons:
+        #    Log("FileName1: %s" % (sea_item))
+        #    for eps_item in media.seasons[sea_item].episodes:
+        #        Log("FileName2: %s" % (eps_item))
+        #        for media_item in media.seasons[sea_item].episodes[eps_item].items:
+        #            for item_part in media_item.parts:
+        #                filename = item_part.file.lower()
+        #                Log("FileName: %s" % (filename))
         #functions.downloadfile("test.webm", "https://my.mixtape.moe/sovrtq.webm")
         
         mappingData = None

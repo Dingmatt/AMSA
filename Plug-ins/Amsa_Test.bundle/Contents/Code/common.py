@@ -240,7 +240,7 @@ def MapLocal(root, media):
         if match:
             seasonNo = int(match.group('season'))
             episodeNo = int(match.group('episode'))
-            Log("Local2: '%s', '%s'" %( seasonNo,episodeNo))
+            #Log("Local2: '%s', '%s'" %( seasonNo,episodeNo))
             season = GenerateSeason(root, seasonNo)
             episode = GenerateEpisode(root, season, seasonNo, episodeNo)
             mapped = SubElement(episode, "Mapped") 
@@ -350,6 +350,42 @@ def MapMeta(root):
                                                         SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
     logging.Log_Milestone("MapMeta")                                            
 
+def SearchMap(root, media, anidbId, tvdbId):
+    logging.Log_Milestone("SearchMap")
+    streamTag = []
+    seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))[0]
+    if not seasonMap:
+        seasonMap = root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))[0]  
+    seasonNo = int(seasonMap.get("num"))
+    if not seasonNo:
+        seasonNo = 0
+        
+    season = str(int(map.getparent().get('num')) - seasonNo + 1) 
+    
+    for seasonNo in media.seasons:
+        for episodeNo in media.seasons[seasonNo].episodes:
+            map = root.xpath("""./Season[@num>=%s]/Episode""" % (seasonNo))
+                
+    logging.Log_Milestone("SearchMap")
+    
+    # data = []
+    # if re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE) or re.search(r".*\b(?P<type>ncop|op|nced|ed)(?P<episode>\d+)\b.*", filename, re.IGNORECASE):
+        # mappedEpisode = root.xpath("""./Mapping/Series/Episode[@tvdb="S%sE%s"]""" % (str(season).zfill(2), str(episode).zfill(2)))  
+        # if mappedEpisode: 
+            # data.append(["Anidb", mappedEpisode[0].getparent().get("anidbid"), mappedEpisode[0].get("anidb")])
+            # data.append(["Tvdb", mappedEpisode[0].getparent().get("tvdbid"), mappedEpisode[0].get("tvdb")])
+        # else:
+            # match = re.search(r".*\B\[(?P<provider>\D+)(?P<id>\d+)\]\B.*", filename, re.IGNORECASE)
+            # if match:
+                # provider = match.group('provider').lower()
+                # data.append(["Anidb", match.group('id').lower(), anidb.ParseNoFromSeason(int(season), int(episode))])
+                
+    # elif re.search(r".*\B\-\s(?:E|A|Abs)?(?P<episode>\d+)\s\-\B.*", filename, re.IGNORECASE):
+        # mappedEpisode = root.xpath("""./Mapping/Series[@anidbid="%s"]/Episode[@anidb="%s"]""" % (anidbid, anidb.ParseNoFromSeason(int(season), int(episode))))
+        # if mappedEpisode: 
+            # data.append(["Anidb", mappedEpisode[0].getparent().get("anidbid"), mappedEpisode[0].get("anidb")])
+            # data.append(["Tvdb", mappedEpisode[0].getparent().get("tvdbid"), mappedEpisode[0].get("tvdb")])
+    # return data
     
 def MapMedia(root, metadata, anidbId, tvdbId):
     logging.Log_Milestone("MapMedia")
@@ -389,9 +425,9 @@ def MapMedia(root, metadata, anidbId, tvdbId):
             @task
             def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbId=tvdbId, seasonNo=seasonNo):
                 season = str(int(map.getparent().get('num')) - seasonNo + 1)
-                Log("SeasonNumber: %s, %s, %s" % (seasonNo, map.getparent().get('num'), str(int(map.getparent().get('num')) - seasonNo + 1)))
+                #Log("SeasonNumber: %s, %s, %s" % (seasonNo, map.getparent().get('num'), str(int(map.getparent().get('num')) - seasonNo + 1)))
                 episode = map.get('num')
-                Log("Episode: '%s', '%s', %s, %s" % (season, episode, anidbId, map.getparent().get('AnidbId')))                   
+                #Log("Episode: '%s', '%s', %s, %s" % (season, episode, anidbId, map.getparent().get('AnidbId')))                   
                 
                 logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
                 metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)

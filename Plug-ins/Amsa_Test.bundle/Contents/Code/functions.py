@@ -197,8 +197,8 @@ def CleanTitle(title, filter = False):
     title = unidecode(u"%s" % (title))
     return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
     
-def GetElementText(el, xp):
-    return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else "" 
+def GetElementText(el, xp, default=None):
+    return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ("" if default == None else default)  
     
 def GetByPriority(metaList, priorityList, metaType):
     try:
@@ -207,8 +207,15 @@ def GetByPriority(metaList, priorityList, metaType):
         if metaType is Framework.modelling.attributes.SetObject:
             return sorted(filter(lambda i: len(i.getchildren()) > 0, metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0]
         elif metaType is Framework.modelling.attributes.ProxyContainerObject:
-            dataList = sorted(metaList, key=lambda x: priorityList.index(x.getparent().tag.lower()),  reverse=False)
-            dataList[0].set('id', '0')
+            
+            dataList = sorted(metaList, key=lambda x: priorityList.index(x.getparent().tag.lower()) and x.get("id"),  reverse=False)
+            seasonCount = []
+            for image in dataList:
+                if image.getparent().getparent().tag == "Season":
+                    seasonCount.append(image.get("season"))
+                    image.set('id', str(seasonCount.count(image.get("season"))))
+                    #Log("Order: %s, %s, %s" % (image.getparent().tag.lower(), image.get("id"), image.get("season")))
+                
             return dataList
         else:
             return sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
@@ -229,7 +236,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                 return metaList    
             if metaType is Framework.modelling.attributes.SetObject:
                 metaList.clear()
-                for person in data:
+                for person in sorted(data, key=lambda x: x.get('seiyuu_name', ''),  reverse=False):
                     if isinstance(person, basestring):
                         if not len(person):
                             continue
@@ -247,16 +254,16 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                 if secondType == "Images":
                     @parallelize
                     def Image_Par():
-                        for image in sorted(data, key=lambda x: x.get("id"),  reverse=False):
+                        for image in sorted(data, key=lambda x: int(x.get("id")),  reverse=False):
                             @task
                             def Image_Task(image=image, metaList=metaList):
-                                #Log("Poster: %s, %s" % (image.get("id"), image.get("local")))
+                                #Log("Poster: %s, %s, %s" % (image.get("id"), image.get("mainLocalPath"), image.getparent().tag.lower()))
                                 if len(image.get("thumbUrl")) > 0:
                                     FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
                                 else:
                                     FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
                                 if image.getparent().getparent().tag == "Season":
-                                    metaList[image.get("id")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
+                                    metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
                                 else:
                                     metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=image.get("id")) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=image.get("id"))
                 elif secondType == "Themes":

@@ -79,8 +79,10 @@ class TvDB(constants.Series):
             bannersCount = 2
             season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
             season = XML.ElementFromString(season)
+            seasonCount = []
             
-            for banner in bannersXml.xpath("./Banner"):
+            for banner in sorted(bannersXml.xpath("./Banner"), key=lambda x: float(GetElementText(x, "Rating", 0)) ,  reverse=True):
+                
                 bannerType = GetElementText(banner, "BannerType")
                 bannerType2 = GetElementText(banner, "BannerType2")
                 bannerPath = GetElementText(banner, "BannerPath")
@@ -90,7 +92,7 @@ class TvDB(constants.Series):
                             "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
                             "season"    if bannerType == "season" and bannerType2=="season" else None)  
                 
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)               
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)                  
                 if metatype == "art":
                     SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
                     artCount = artCount + 1
@@ -101,8 +103,8 @@ class TvDB(constants.Series):
                     SubElement(banners, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
                     bannersCount = bannersCount + 1
                 if metatype == "season":
-                    SubElement(season, "Image", id = str(GetElementText(banner, "Season")), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
-                  
+                    seasonCount.append(GetElementText(banner, "Season"))
+                    SubElement(season, "Image", id = str(seasonCount.count(GetElementText(banner, "Season"))), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, season = str(GetElementText(banner, "Season")))
                     
             self.Art = art
             self.Posters = posters 
