@@ -209,12 +209,12 @@ def GetByPriority(metaList, priorityList, metaType):
         elif metaType is Framework.modelling.attributes.ProxyContainerObject:
             
             dataList = sorted(metaList, key=lambda x: priorityList.index(x.getparent().tag.lower()) and x.get("id"),  reverse=False)
-            seasonCount = []
+            indexArray = []
             for image in dataList:
-                if image.getparent().getparent().tag == "Season":
-                    seasonCount.append(image.get("season"))
-                    image.set('id', str(seasonCount.count(image.get("season"))))
-                    #Log("Order: %s, %s, %s" % (image.getparent().tag.lower(), image.get("id"), image.get("season")))
+                indexNum = image.get("season") if image.getparent().getparent().tag == "Season" else 1
+                indexArray.append(indexNum)
+                image.set('id', str(indexArray.count(indexNum)))
+                #Log("Order: %s, %s, %s" % (image.getparent().tag.lower(), image.get("id"), image.get("season")))
                 
             return dataList
         else:
