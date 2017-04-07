@@ -26,7 +26,8 @@ Filter_Regex = r'\b' + r'\b|\b'.join(map(re.escape, FILTER_SEARCH_WORDS)) + r'\b
 #-------------------ANIDB------------------#
 ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml.gz"   
 ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
-ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"                                                                
+ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
+ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              
 ANIDB_SERIE_URL                             = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           
 
 ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
@@ -79,7 +80,7 @@ SERIES_TYPE_PRIORITY                        = ["main", "official", "syn", "synon
 TVDB_HTTP_API_URL                           = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/all/en.xml"                                   
 TVDB_BANNERS_URL                            = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/banners.xml"                                 
 TVDB_SERIE_SEARCH                           = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 
-TVDB_IMAGES_URL                             = "http://thetvdb.com/banners/"                                                                      
+TVDB_IMAGES_URL                             = "http://thetvdb.com/banners/"                                                                    
 TVDB_SERIE_URL                              = "http://thetvdb.com/?tab=series&id=%s"  
 #-------------------TVDB-------------------#
 

@@ -87,6 +87,9 @@ class TvDB(constants.Series):
                 bannerType2 = GetElementText(banner, "BannerType2")
                 bannerPath = GetElementText(banner, "BannerPath")
                 bannerThumb = GetElementText(banner, "ThumbnailPath")
+                if bannerThumb == None or bannerThumb == "":
+                    bannerThumb = "_cache" + "/" + bannerPath 
+                    
                 metatype = ("art"       if bannerType == "fanart" else \
                             "posters"   if bannerType == "poster" else \
                             "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
