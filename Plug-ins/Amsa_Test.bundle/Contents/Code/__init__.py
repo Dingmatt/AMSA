@@ -45,7 +45,6 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
-            Log("Match T")
             title = match.group("show")
             source = match.group("source").lower() 
             if source in ["anidb", "anidb2", "tvdb", "tvdb2", "tvdb3", "tvdb4", "tvdb5"]:
@@ -71,14 +70,14 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                     logging.Log_Milestone("Title")
                     anime = Titles(anime, orig_title)
                     logging.Log_Milestone("Title")
-                    if not anime.Id in maxi:                        
-                        isValid = True
-                        if anime.Id in maxi and maxi[anime.Id] <= anime.Score:
-                            isValid = False
-                        else: 
-                            maxi[anime.Id] = anime.Score
+                    isValid = True
+                    if (anime.Id in maxi and maxi[anime.Id] <= anime.Score) or (not anime.Id in maxi):
+                        maxi[anime.Id] = anime.Score
+                    else: 
+                        isValid = False
+                    if isValid: 
                         startdate = None
-                        if(media.year and anime.Score >= 90 and isValid):
+                        if(media.year and anime.Score >= 90):
                             show = anidb.AniDB(anime.Id) 
                             if show: 
                                 try: 
@@ -88,9 +87,9 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                                     isValid = False 
                                 Log.Debug("Init - Search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
                             elite.append(isValid)
-                        elif anime.Score >= 90 and isValid:
+                        elif anime.Score >= 90:
                             elite.append(isValid)
-                        if isValid: 
+                        if isValid:
                             if anime.Score == 100: perfectScore.append(True)
                             Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
@@ -113,6 +112,7 @@ class AmsaTVAgentTest(Agent.TV_Shows):
         if force:
             HTTP.ClearCache()
         logging.New_Milestones()
+        logging.New_AniDB()
         logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
@@ -146,5 +146,5 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                 common.ExportMap(map, mappingData.FirstSeries + ".bundle.xml")
             common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
         logging.Log_Milestone("WholeUpdate")    
-
+        logging.Log_AniDB(None, True)
     

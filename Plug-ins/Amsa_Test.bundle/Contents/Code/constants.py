@@ -16,32 +16,13 @@ EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Abso
 MilestoneFile = "Milestones.html"
 MilestoneLogging = False
 ExportBundles = False
+AniDBFile = "AniDB.html"
+AniDBLogging = False
 FILTER_SEARCH_WORDS  = ['to', 'wa', 'ga', 'no', 'age', 'da', 'chou', 'super', 'yo', 'de', 'chan', 'hime', 'ni', 'sekai',                                                                    # Jp
                         'a',  'of', 'an', 'the', 'motion', 'picture', 'special', 'oav', 'ova', 'tv', 'special', 'eternal', 'final', 'last', 'one', 'movie', 'me',  'princess', 'theater',   # En Continued
                         'le', 'la', 'un', 'les', 'nos', 'vos', 'des', 'ses',                                                                                                                # Fr
                         'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi']                                                               # Roman digits
 Filter_Regex = r'\b' + r'\b|\b'.join(map(re.escape, FILTER_SEARCH_WORDS)) + r'\b'
-#-------------------AMSA-------------------#
-
-#-------------------ANIDB------------------#
-ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml.gz"   
-ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
-ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
-ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              
-ANIDB_SERIE_URL                             = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           
-
-ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
-ANIDB_RESOURCES_MAL                         = "http://myanimelist.net/anime/%s"
-ANIDB_RESOURCES_ANIMENFO                    = "http://www.animenfo.com/animetitle,%s,%s,a.html"
-ANIDB_RESOURCES_WIKIEN                      = "http://en.wikipedia.org/wiki/%s"
-ANIDB_RESOURCES_WIKIJP                      = "http://ja.wikipedia.org/wiki/%s"
-ANIDB_RESOURCES_SCHEDULE                    = "http://cal.syoboi.jp/tid/%s/time"
-ANIDB_RESOURCES_ALLCINEMA                   = "http://www.allcinema.net/prog/show_c.php?num_c=%s"
-ANIDB_RESOURCES_ANISON                      = "http://anison.info/data/program/%s.html"
-ANIDB_RESOURCES_LAIN                        = "http://lain.gr.jp/%s"
-ANIDB_RESOURCES_VNDB                        = "http://vndb.org/v%s"
-ANIDB_RESOURCES_MARUMEGANE                  = "http://www.anime.marumegane.com/%s.html"
-ANIDB_RESOURCES_HOMEAKI                     = "http://home-aki.cool.ne.jp/anime-list/%s.htm"
 
 SERIES_LANGUAGE_PRIORITY                    = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  
 EPISODE_LANGUAGE_PRIORITY                   = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                              
@@ -71,9 +52,32 @@ EPISODE_WRITERS_PRIORITY                    = [item.lower() for item in Prefs["E
 EPISODE_DIRECTORS_PRIORITY                  = [item.lower() for item in Prefs["EpisodeDirectors"].encode("utf-8").split(',')] 
 EPISODE_PRODUCERS_PRIORITY                  = [item.lower() for item in Prefs["EpisodeProducers"].encode("utf-8").split(',')] 
 EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["EpisodeThumbs"].encode("utf-8").split(',')]
+#-------------------AMSA-------------------#
+
+#-------------------ANIDB------------------#
+ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml.gz"   
+ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
+ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
+ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              
+ANIDB_SERIE_URL                             = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           
+
+ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
+ANIDB_RESOURCES_MAL                         = "http://myanimelist.net/anime/%s"
+ANIDB_RESOURCES_ANIMENFO                    = "http://www.animenfo.com/animetitle,%s,%s,a.html"
+ANIDB_RESOURCES_WIKIEN                      = "http://en.wikipedia.org/wiki/%s"
+ANIDB_RESOURCES_WIKIJP                      = "http://ja.wikipedia.org/wiki/%s"
+ANIDB_RESOURCES_SCHEDULE                    = "http://cal.syoboi.jp/tid/%s/time"
+ANIDB_RESOURCES_ALLCINEMA                   = "http://www.allcinema.net/prog/show_c.php?num_c=%s"
+ANIDB_RESOURCES_ANISON                      = "http://anison.info/data/program/%s.html"
+ANIDB_RESOURCES_LAIN                        = "http://lain.gr.jp/%s"
+ANIDB_RESOURCES_VNDB                        = "http://vndb.org/v%s"
+ANIDB_RESOURCES_MARUMEGANE                  = "http://www.anime.marumegane.com/%s.html"
+ANIDB_RESOURCES_HOMEAKI                     = "http://home-aki.cool.ne.jp/anime-list/%s.htm"
 
 MINIMUM_WEIGHT                              = Prefs["MinimumWeight"]
 SERIES_TYPE_PRIORITY                        = ["main", "official", "syn", "synonym", "short"]
+ANIDB_THROTTLE_THRESHOLD                    = 100
+ANIDB_ANTIBAN_WAIT                          = 2
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#

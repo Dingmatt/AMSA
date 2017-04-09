@@ -39,7 +39,7 @@ class Titles():
             # Score adjustment for title distance.
             score = score - int(30 * (1 - functions.lev_ratio(searchTitle, foundTitle)))
     
-        Log("Score: '%s', '%s', '%s', '%s', '%s'" % (score, functions.lev_ratio(orig_title, matchedTitle), orig_title, matchedTitle, entry.text))
+        #Log("Score: '%s', '%s', '%s', '%s', '%s'" % (score, functions.lev_ratio(orig_title, matchedTitle), orig_title, matchedTitle, entry.text))
         
         self.Entry = entry
         self.Id = id
@@ -132,7 +132,7 @@ def GenerateEpisode(root, season, media_season, media_episode):
    
    
 def MapSeries(mappingData):
-    logging.Log_Milestone("MapSeries")
+    #logging.Log_Milestone("MapSeries")
     root = None
     existing = None
     #existing = functions.LoadFile(mappingData.FirstSeries + ".bundle.xml", "Bundles")
@@ -228,7 +228,7 @@ def MapSeries(mappingData):
             unmapped = SubElement(mapping, "Unmapped")
             i = 1
             for episode in unmappedlist:
-                Log("Unmapped: '%s', '%s' , '%s'" % (episode.getparent().get("anidbid"), episode.get("anidb"), episode.get("missing")))
+                Log("Common - MapSeries() - Unmapped: '%s', '%s' , '%s'" % (episode.getparent().get("anidbid"), episode.get("anidb"), episode.get("missing")))
                 SubElement(unmapped, "Episode", anidbid = episode.getparent().get("anidbid"), anidb = episode.get("anidb"), missing = episode.get("missing"), id = str(i))
                 i = i + 1
     logging.Log_Milestone("MapSeries")
@@ -397,7 +397,7 @@ def MapMedia(root, metadata, anidbId, tvdbId):
     if not seasonNo:
         seasonNo = 0
         
-    Log("Populate Season")
+    #Log("Populate Season")
     logging.Log_Milestone("MapMedia_Season")
     metadata.title = functions.PopulateMetadata(seasonMap.xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
     metadata.summary = functions.PopulateMetadata(seasonMap.xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)

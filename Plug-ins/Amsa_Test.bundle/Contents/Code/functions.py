@@ -4,33 +4,58 @@ from unidecode import unidecode
 from time import sleep
 from datetime import timedelta, datetime as dt
 from string import maketrans 
+from http.requests.proxy.requestProxy import RequestProxy
 
-global netLock, AniDB_WaitUntil, queue
+global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
+req_proxy = RequestProxy(sustain=True)
 AniDB_WaitUntil = dt.now() 
-netLock = Thread.Lock()
+AniDB_RequestCount = 0
 
 ns = etree.FunctionNamespace(None)
 ns['upper-case'] = lambda context, s: str.upper(s)
 ns['lower-case'] = lambda context, s: str.lower(s)
 ns['clean-title'] = lambda context, s: CleanTitle(s)
 ns['clean-title-filter'] = lambda context, s: CleanTitle(s, True)
-ns['lower-case'] = lambda context, s: str.lower(s)  
 ns['is-match'] = lambda context, x,y: SequenceMatch(x, y)
     
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
-    global AniDB_WaitUntil
+    global AniDB_WaitUntil, req_proxy, AniDB_RequestCount
     #try:
     #    netLock.acquire()
     result = LoadFile(filename, directory, cache) 
     if not result:
         try: 
             if url.startswith(constants.ANIDB_HTTP_API_URL):
-                while AniDB_WaitUntil > dt.now(): 
+                runOnce = True
+                while AniDB_WaitUntil > dt.now():
+                    if runOnce:
+                        Log("Functions - XMLFromURL() - AniDB AntiBan Delay: %s" % (AniDB_RequestCount)) 
+                        AniDB_RequestCount += 1
+                        runOnce = False
                     sleep(0.1)
-                Log("Functions - XMLFromURL() - AniDB AntiBan Delay")    
-                AniDB_WaitUntil = dt.now() + timedelta(seconds=2.1) 
-            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
+                AniDB_WaitUntil = dt.now() + timedelta(seconds=constants.ANIDB_ANTIBAN_WAIT) 
+                if AniDB_RequestCount >= constants.ANIDB_THROTTLE_THRESHOLD:
+                    AniDB_RequestCount = 0
+                    req_proxy = RequestProxy(sustain=True)
+                result = None
+                while result is None:
+                    request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)
+                    if request is not None and request.status_code == 200:
+                        result = request.text
+            else:
+                result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
+            if str(result).startswith("<error>"): 
+                result = None
+                while result is None:
+                    req_proxy = RequestProxy(sustain=True)
+                    request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)  
+                    if request is not None and request.status_code == 200:
+                        result = request.text
+                        
+                Log("Functions - XMLFromURL() - AniDB AntiBan Proxy") 
+            logging.Log_AniDB(url)
+               
         except Exception as e: 
             result = None 
             Log.Debug("Functions - XMLFromURL() - XML issue loading url: '%s', Exception: '%s'" % (url, e))                                                    
@@ -73,11 +98,6 @@ def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, t
     result = LoadFile(filename, directory, cache) 
     if not result:
         try: 
-            if url.startswith(constants.ANIDB_HTTP_API_URL):
-                while AniDB_WaitUntil > dt.now(): 
-                    sleep(1)
-                Log("Functions - FileFromURL() - AniDB AntiBan Delay")    
-                AniDB_WaitUntil = dt.now() + timedelta(seconds=3) 
             result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
             result = result.content
         except Ex.HTTPError, e:

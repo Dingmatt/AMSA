@@ -182,7 +182,9 @@ class TvDB(constants.Series):
             if GetElementText(data, "filename"):
                 root = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
                 root = XML.ElementFromString(root)
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(GetElementText(data, "filename"), constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), "")  
+                bannerPath = GetElementText(data, "filename")
+                bannerThumb = "_cache" + "/" + bannerPath
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), bannerThumb)  
                 SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)                
                 self.Thumbs = root
             
