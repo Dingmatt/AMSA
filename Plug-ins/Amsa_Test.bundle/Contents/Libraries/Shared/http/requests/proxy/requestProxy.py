@@ -58,7 +58,10 @@ class RequestProxy:
 
     def get_proxy_list(self):
         return self.proxy_list
-
+    
+    def current_proxy_ip(self):
+        return str(self.current_proxy)
+    
     def generate_random_request_headers(self):
         headers = {
             "Connection": "close",  # another way to cover tracks

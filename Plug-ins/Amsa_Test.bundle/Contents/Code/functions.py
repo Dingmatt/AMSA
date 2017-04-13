@@ -20,7 +20,7 @@ ns['is-match'] = lambda context, x,y: SequenceMatch(x, y)
     
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
-    global AniDB_WaitUntil, req_proxy, AniDB_RequestCount
+    global AniDB_WaitUntil, req_proxy #, AniDB_RequestCount
     #try:
     #    netLock.acquire()
     result = LoadFile(filename, directory, cache) 
@@ -30,28 +30,53 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
                 runOnce = True
                 while AniDB_WaitUntil > dt.now():
                     if runOnce:
-                        Log("Functions - XMLFromURL() - AniDB AntiBan Delay: %s" % (AniDB_RequestCount)) 
-                        AniDB_RequestCount += 1
+                        Log("Functions - XMLFromURL() - AniDB AntiBan Delay: %s" % (AniDB_WaitUntil))#% (AniDB_RequestCount)) 
+                        #AniDB_RequestCount += 1
                         runOnce = False
                     sleep(0.1)
                 AniDB_WaitUntil = dt.now() + timedelta(seconds=constants.ANIDB_ANTIBAN_WAIT) 
-                if AniDB_RequestCount >= constants.ANIDB_THROTTLE_THRESHOLD:
-                    AniDB_RequestCount = 0
-                    req_proxy = RequestProxy(sustain=True)
+                # if AniDB_RequestCount >= constants.ANIDB_THROTTLE_THRESHOLD:
+                    # req_proxy.randomize_proxy()
+                    # AniDB_RequestCount = 0
+                # result = None
+                # attempts = 0
+                # while result is None:
+                    # if len(req_proxy.get_proxy_list()) == 0: RequestProxy(sustain=True)
+                    # current_proxy = req_proxy.current_proxy_ip()
+                    # request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)
+                    # if request is not None and request.status_code == 200 and len(request.text) > 1024:
+                        # result = request.text
+                    # #else:
+                        # #sleep(0.5)
+                        # #Log("Test: %s" % (proxy == req_proxy.current_proxy))
+                    # if current_proxy == req_proxy.current_proxy_ip():
+                        # req_proxy.randomize_proxy()
+                        # AniDB_RequestCount = 0
+                        # attempts = 0
+                    # Log("Attempt 1: %s, %s" % (attempts, len(req_proxy.get_proxy_list())))    
+                    # attempts +=1
+            # else:
+            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
+            if str(result).startswith("<error>"):
+                # req_proxy.randomize_proxy()
+                # AniDB_RequestCount = 0
                 result = None
+                attempts = 0
                 while result is None:
-                    request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)
-                    if request is not None and request.status_code == 200:
-                        result = request.text
-            else:
-                result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
-            if str(result).startswith("<error>"): 
-                result = None
-                while result is None:
-                    req_proxy = RequestProxy(sustain=True)
+                    if len(req_proxy.get_proxy_list()) == 0: req_proxy = RequestProxy(sustain=True)
+                    current_proxy = req_proxy.current_proxy_ip()
                     request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)  
-                    if request is not None and request.status_code == 200:
+                    if request is not None and request.status_code == 200 and len(request.text) > 1024:
                         result = request.text
+                    #else:
+                        #sleep(0.5)
+                        #Log("Test: %s" % (proxy == req_proxy.current_proxy))
+                    if current_proxy == req_proxy.current_proxy_ip():
+                        req_proxy.randomize_proxy()
+                        # AniDB_RequestCount = 0
+                        attempts = 0
+                    Log("Attempt 2: %s, %s" % (attempts, len(req_proxy.get_proxy_list())))  
+                    attempts +=1
                         
                 Log("Functions - XMLFromURL() - AniDB AntiBan Proxy") 
             logging.Log_AniDB(url)
@@ -220,7 +245,7 @@ def CleanTitle(title, filter = False):
 def GetElementText(el, xp, default=None):
     return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ("" if default == None else default)  
     
-def GetByPriority(metaList, priorityList, metaType):
+def GetByPriority(metaList, priorityList, metaType, secondType=None):
     try:
         if metaType is list:
             return ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
@@ -238,13 +263,19 @@ def GetByPriority(metaList, priorityList, metaType):
                 
             return dataList
         else:
-            return sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
+            result = sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text
+            if secondType == "EpisodeTitle":
+                for pattern in constants.ANIDB_BADTITLES:
+                    if re.search(r"%s" % (pattern), result, re.IGNORECASE) and priorityList.count > 1:
+                        result = sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[1].text
+            return result
+                                
     except: 
         return ""               
     
 def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None):
     if map:
-        data = GetByPriority(map, priorityList, metaType)
+        data = GetByPriority(map, priorityList, metaType, secondType)
         if data:
             #Log("Data: %s, %s" % (data, metaList))
             if metaType is datetime.date:

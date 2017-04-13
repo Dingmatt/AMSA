@@ -78,6 +78,7 @@ MINIMUM_WEIGHT                              = Prefs["MinimumWeight"]
 SERIES_TYPE_PRIORITY                        = ["main", "official", "syn", "synonym", "short"]
 ANIDB_THROTTLE_THRESHOLD                    = 100
 ANIDB_ANTIBAN_WAIT                          = 2
+ANIDB_BADTITLES                             = ["^TV Special$", "^Part . of .$", "^Episode .$"]
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#

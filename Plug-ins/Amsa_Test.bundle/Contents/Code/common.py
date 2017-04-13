@@ -193,7 +193,8 @@ def MapSeries(mappingData):
                             status = ""
                             tvdbParse = "S%sE%s" % (str(ScudLee.DefaultTvdbSeason).zfill(2), str(i + ScudLee.EpisodeOffset).zfill(2))
                         SubElement(seriesMap, "Episode", anidb="%s" % (anidb.ParseNoFromSeason(1, i)), tvdb=tvdbParse, status=status)                                                               
-                
+                        Log("Common - MapSeries() - Season - AniDB: '%s', TvDB: '%s'" % (anidb.ParseNoFromSeason(1, i), tvdbParse))
+                        
                 for i in range(1, AniDB.SpecialCount+1):
                     status = "scudlee missing"
                     tvdbParse = "S00E00"
@@ -202,7 +203,8 @@ def MapSeries(mappingData):
                             status = ""
                             tvdbParse = "S%sE%s" % ("00", str(i + ScudLee.EpisodeOffset).zfill(2))
                         SubElement(seriesMap, "Episode", anidb="%s" % (anidb.ParseNoFromType(2, i)), tvdb=tvdbParse, status=status)                       
-                
+                        Log("Common - MapSeries() - Season - AniDB: '%s', TvDB: '%s'" % (anidb.ParseNoFromType(2, i), tvdbParse))
+                        
                 for opening in AniDB.OpList:                          
                     if not seriesMap.xpath("""./Episode[@anidb="%s"]""" % (opening)):
                         SubElement(seriesMap, "Episode", anidb="%s" % (opening), tvdb="%s" % (anidb.ParseLocalNoFromType(3, openingEpsNo, "op")), status="")
@@ -220,7 +222,8 @@ def MapSeries(mappingData):
                             SubElement(seriesMap, "Episode", anidb="%s" % (anidb.ParseNoFromSeason(1, episode.Absolute_Index - ScudLee.EpisodeOffset))
                                                            , tvdb="S%sE%s" % (episode.Season, episode.Number)
                                                            , status="")        
-            
+                        Log("Common - MapSeries() - Season - AniDB: '%s', TvDB: 'S%sE%s'" % (anidb.ParseNoFromSeason(1, episode.Absolute_Index - ScudLee.EpisodeOffset), episode.Season, episode.Number))
+                        
             seriesMap[:] = sorted(seriesMap, key=lambda x: (0 if re.sub('[^A-Z]','', x.get("anidb")) else 1, int(re.sub('[^0-9]','', x.get("anidb")))))  
         
         unmappedlist = sorted(mapping.xpath("""./Series/Episode[@tvdb="S00E00" and @missing!=""]"""), key=lambda x: x.getparent().get("anidbid"))  
@@ -309,7 +312,7 @@ def MapMeta(root):
                         def Provider_Task(root=root, providers=providers, provider=provider):
                             #Log("Provider: %s" %(providers))
                             data = None
-                            for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (providers[0].lower())), key=lambda x: int(x.get("series") if x.get("series") else 0)):
+                            for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (providers[0].lower())), key=lambda x: int(x.get("series") if x.get("series") and x.get("series") != "None" else 0)):
                                 if map.get("series"):
                                     for existing in map.getparent().getparent().xpath(""".//%s""" % (providers[0])):
                                         if not existing.getparent().tag == "Mapped":
@@ -353,12 +356,13 @@ def MapMeta(root):
 def SearchMap(root, media, anidbId, tvdbId):
     logging.Log_Milestone("SearchMap")
     streamTag = []
-    seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))[0]
+    seasonNo = 0
+    seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))
     if not seasonMap:
-        seasonMap = root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))[0]  
-    seasonNo = int(seasonMap.get("num"))
-    if not seasonNo:
-        seasonNo = 0
+        seasonMap = root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))
+    if seasonMap:
+        seasonMap = seasonMap [0]
+        seasonNo = int(seasonMap.get("num"))
         
     season = str(int(map.getparent().get('num')) - seasonNo + 1) 
     
@@ -390,12 +394,13 @@ def SearchMap(root, media, anidbId, tvdbId):
 def MapMedia(root, metadata, anidbId, tvdbId):
     logging.Log_Milestone("MapMedia")
     streamTag = []
-    seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))[0]
+    seasonNo = 0
+    seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))
     if not seasonMap:
-        seasonMap = root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))[0]  
-    seasonNo = int(seasonMap.get("num"))
-    if not seasonNo:
-        seasonNo = 0
+        seasonMap = root.xpath("""./Season[@TvdbId="%s" and @num!="0"]""" % (tvdbId))
+    if seasonMap:
+        seasonMap = seasonMap [0]
+        seasonNo = int(seasonMap.get("num"))   
         
     #Log("Populate Season")
     logging.Log_Milestone("MapMedia_Season")
@@ -420,7 +425,7 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                     
     @parallelize
     def Episode_Par():
-        for map in sorted(root.xpath("""./Season[@num>=%s]/Episode""" % (seasonNo)), key=lambda x: x.getparent().get("num"),  reverse=False) :
+        for map in sorted(root.xpath("""./Season[@num>=%s or @num=0]/Episode""" % (seasonNo)), key=lambda x: x.getparent().get("num"),  reverse=False) :
             
             @task
             def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbId=tvdbId, seasonNo=seasonNo):
@@ -430,7 +435,7 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                 #Log("Episode: '%s', '%s', %s, %s" % (season, episode, anidbId, map.getparent().get('AnidbId')))                   
                 
                 logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
-                metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY)
+                metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY, None, "EpisodeTitle")
                 metadata.seasons[season].episodes[episode].summary = functions.PopulateMetadata(map.xpath("""./Summary/*[node()]"""), str, constants.EPISODE_SUMMARY_PRIORITY)
                 metadata.seasons[season].episodes[episode].originally_available_at = functions.PopulateMetadata(map.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY)
                 metadata.seasons[season].episodes[episode].rating = functions.PopulateMetadata(map.xpath("""./Rating/*[node()]"""), float, constants.EPISODE_RATING_PRIORITY)

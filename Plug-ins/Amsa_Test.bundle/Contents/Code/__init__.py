@@ -90,11 +90,12 @@ class AmsaTVAgentTest(Agent.TV_Shows):
                         elif anime.Score >= 90:
                             elite.append(isValid)
                         if isValid:
-                            if anime.Score == 100: perfectScore.append(True)
+                            if anime.Score == 100: perfectScore.append(anime.Id)
                             Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
         
-        if len(perfectScore) > 1:
+        
+        if len(list(set(perfectScore))) > 1:
             for result in results:
                 if result.score == 100:    
                     show = anidb.AniDB(result.id.split("-")[1])
