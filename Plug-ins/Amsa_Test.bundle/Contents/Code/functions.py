@@ -10,6 +10,7 @@ global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
 req_proxy = RequestProxy(sustain=True)
 AniDB_WaitUntil = dt.now() 
 AniDB_RequestCount = 0
+strptime = dt.strptime
 
 ns = etree.FunctionNamespace(None)
 ns['upper-case'] = lambda context, s: str.upper(s)
@@ -200,6 +201,7 @@ def SequenceMatch(word, matcher, cutoff=0.6):
     if s.real_quick_ratio() >= cutoff and \
         s.quick_ratio() >= cutoff and \
         s.ratio() >= cutoff:
+            Log("SQ: %s, %s" % (word, s.ratio()))
             result = True
     return result
     
