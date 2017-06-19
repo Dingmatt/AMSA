@@ -4,7 +4,7 @@ from unidecode import unidecode
 from time import sleep
 from datetime import timedelta, datetime as dt
 from string import maketrans 
-from http.requests.proxy.requestProxy import RequestProxy
+from http_request_randomizer.requests.proxy.requestProxy import RequestProxy
 
 global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
 req_proxy = RequestProxy(sustain=True)
