@@ -81,4 +81,7 @@
             <mapping anidbseason="0" tvdbseason="0">;1-0;2-0;3-0;4-0;5-0;6-0;7-0;8-0;9-0;10-0;</mapping>
         </mapping-list>
     </anime>
+    <anime anidbid="11672" tvdbid="310718" defaulttvdbseason="1" episodeoffset="" tmdbid="" imdbid="">
+        <name>Magi: Sinbad no Bouken (2016)</name>
+    </anime>
 </anime-list>
