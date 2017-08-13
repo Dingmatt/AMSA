@@ -15,12 +15,13 @@ class ProxyForEuParser(UrlParser):
 
     def parse_proxyList(self):
         curr_proxy_list = []
-        response = requests.get(self.get_URl(), timeout=self.timeout)
-
-        if not response.ok:
-            logger.warn("Proxy Provider url failed: {}".format(self.get_URl()))
-            return []
         try:
+            response = requests.get(self.get_URl(), timeout=self.timeout)
+
+            if not response.ok:
+                logger.warn("Proxy Provider url failed: {}".format(self.get_URl()))
+                return []
+
             content = response.content
             soup = BeautifulSoup(content, "html.parser")
             table = soup.find("table", attrs={"class": "proxy_list"})
