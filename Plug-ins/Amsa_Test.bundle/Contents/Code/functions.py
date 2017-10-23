@@ -1,10 +1,11 @@
-import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging, difflib, heapq
+import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging, difflib, heapq, plexproxy.plexrequest as plexrequest
 from lxml import etree
 from unidecode import unidecode
 from time import sleep
 from datetime import timedelta, datetime as dt
 from string import maketrans 
-from http_request_randomizer.requests.proxy.requestProxy import RequestProxy
+from http_request_randomizer.requests.proxy.requestProxy import RequestProxy 
+from plexproxy.plexresponse import plexResponse
 
 global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
 req_proxy = RequestProxy(sustain=True)
@@ -373,3 +374,80 @@ def downloadfile(name,url):
     with io.open(absoDirectory, 'wb') as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
+
+def GetStreamInfo(key, part_id=None):
+    try:
+        item_id = int(key)
+    except ValueError:
+        return
+    
+    plex_item = list(plexrequest.Get(item_id, plexRequestObject))[0]
+    d = {"stream": {}}
+    data = d["stream"]
+
+    # find current part
+    current_part = None
+    current_media = None
+    for media in plex_item.media:
+        for part in media.parts:
+            if not part_id or str(part.id) == part_id:
+                current_part = part
+                current_media = media
+                break
+        if current_part:
+            break
+
+    if not current_part:
+        return d
+    
+    data["video_codec"] = current_media.video_codec
+    if current_media.audio_codec:
+        data["audio_codec"] = current_media.audio_codec.upper()
+
+        if data["audio_codec"] == "DCA":
+            data["audio_codec"] = "DTS"
+
+    if current_media.audio_channels == 8:
+        data["audio_channels"] = "7.1"
+
+    elif current_media.audio_channels == 6:
+        data["audio_channels"] = "5.1"
+    else:
+        data["audio_channels"] = "%s.0" % str(current_media.audio_channels)
+
+    # iter streams
+    audio_language = []
+    subtitle_language = []
+    for stream in current_part.streams:
+        if stream.stream_type == 1:
+            # video stream
+            data["resolution"] = "%s%s" % (current_media.video_resolution,
+                                           "i" if stream.scan_type != "progressive" else "p")                       
+        if stream.stream_type == 2: 
+            audio_language.append(stream.language_code)
+            
+        if stream.stream_type == 3: 
+            subtitle_language.append(stream.language_code)
+            
+    data["audio_language"] = audio_language
+    data["subtitle_language"] = subtitle_language
+    return d
+    
+class plexRequestObject(object):
+    url = None
+    data = None
+    headers = None
+    method = None
+
+    def prepare(self):
+        return self
+
+    def send(self):
+        data = None
+        status_code = 200
+        try:
+            data = HTTP.Request(self.url, headers=self.headers, immediate=True, method=self.method,
+                                timeout=constants.DefaultTimeout)
+        except Ex.HTTPError as e:
+            status_code = e.code
+        return plexResponse(data, status_code, self)

@@ -1,11 +1,11 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, tvdb, anidb, scudlee, plex, functions, constants, copy, logging
-
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, scudlee, functions, constants, copy, logging, plex, tvdb, anidb
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 from functions import XMLFromURL
 from string import maketrans 
 from datetime import timedelta  
+
 
 global CleanCache_WaitUntil
 CleanCache_WaitUntil = datetime.datetime.now()
@@ -250,13 +250,15 @@ def MapLocal(root, media):
             SubElement(mapped, "tvdb", series=item.getparent().get("tvdbid"), episode=item.get("tvdb")) 
             SubElement(mapped, "anidb", series=item.getparent().get("anidbid"), episode=item.get("anidb")) 
             streams = SubElement(episode, "Streams")
-            try:
-                for media_item in media.seasons[seasonNo].episodes[episodeNo].items:
-                    for item_part in media_item.parts:
-                        filename = os.path.splitext(os.path.basename(item_part.file.lower()))[0]
-                        for stream in item_part.streams:
-                            SubElement(streams, "Stream", type=str(constants.StreamTypes.get(stream.type, "und")), lang=str(getattr(stream, "language", getattr(stream, "language", "und"))))
-            except: pass    
+            
+            
+            plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo].id)
+            for audio in plex_episode["stream"]["audio_language"]:
+                 SubElement(streams, "Stream", type="audio", lang=audio)
+            for subtitle in plex_episode["stream"]["subtitle_language"]:
+                 SubElement(streams, "Stream", type="subtitle", lang=subtitle)
+            
+               
             
 # def MapLocal(media, root, anidbid):
     # logging.Log_Milestone("MapLocal")
