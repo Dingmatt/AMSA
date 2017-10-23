@@ -251,12 +251,13 @@ def MapLocal(root, media):
             SubElement(mapped, "anidb", series=item.getparent().get("anidbid"), episode=item.get("anidb")) 
             streams = SubElement(episode, "Streams")
             
-            
-            plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo].id)
-            for audio in plex_episode["stream"]["audio_language"]:
-                 SubElement(streams, "Stream", type="audio", lang=audio)
-            for subtitle in plex_episode["stream"]["subtitle_language"]:
-                 SubElement(streams, "Stream", type="subtitle", lang=subtitle)
+            try:
+                plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo].id)
+                for audio in plex_episode["stream"]["audio_language"]:
+                     SubElement(streams, "Stream", type="audio", lang=audio)
+                for subtitle in plex_episode["stream"]["subtitle_language"]:
+                     SubElement(streams, "Stream", type="subtitle", lang=subtitle)
+            except: pass 
             
                
             
