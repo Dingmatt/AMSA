@@ -2,7 +2,7 @@ import string
 from string import maketrans 
 
 #-------------------AMSA-------------------#
-BaseDirectory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support", "Data", "com.plexapp.agents.amsa_test", "DataItems"))
+BaseDirectory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), "..", "..", "..", "..", "Plug-in Support", "Data", "com.plexapp.agents.amsa", "DataItems"))
 CacheDirectory = "Cache"
 CachePath = os.path.join(BaseDirectory, CacheDirectory)
 BundleExportDirectory = "Export"

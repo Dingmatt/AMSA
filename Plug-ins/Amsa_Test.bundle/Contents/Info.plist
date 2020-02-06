@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
         <key>CFBundleIdentifier</key>
-        <string>com.plexapp.agents.amsa_test</string>
+        <string>com.plexapp.agents.amsa</string>
         <key>PlexAgentAttributionText</key>
         <string>Anime Multi Source Agent (AMSA) created by Dingmatt and uses the different databases and software below:&lt;br/&gt;
         

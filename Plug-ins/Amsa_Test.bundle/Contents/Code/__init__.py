@@ -12,7 +12,7 @@ from common import Titles
  
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
-    Log.Debug("--- AmsaTVAgentTest Start -------------------------------------------------------------------------------------------")
+    Log.Debug("--- AmsaTVAgent Start -------------------------------------------------------------------------------------------")
 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
@@ -26,8 +26,8 @@ def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
   
   
 ### Agent declaration ###############################################################################################################################################
-class AmsaTVAgentTest(Agent.TV_Shows):    
-    name = "Anime Multi Source Agent (Test)"
+class AmsaTVAgent(Agent.TV_Shows):    
+    name = "Anime Multi Source Agent"
     primary_provider = True
     fallback_agent = False
     contributes_to = None

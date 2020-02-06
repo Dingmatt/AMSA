@@ -1,4 +1,4 @@
-import constants, unicodedata, ast, datetime, re, requests, StringIO, io, shutil, string, lxml, logging, difflib, heapq, plexproxy.plexrequest as plexrequest
+import constants, unicodedata, ast, datetime, re, requests, StringIO, gzip, io, shutil, string, lxml, logging, difflib, heapq, plexproxy.plexrequest as plexrequest
 from lxml import etree
 from unidecode import unidecode
 from time import sleep
@@ -58,7 +58,8 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
                     # Log("Attempt 1: %s, %s" % (attempts, len(req_proxy.get_proxy_list())))    
                     # attempts +=1
             # else:
-            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout))
+            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8", "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"}, cacheTime=cache, timeout=timeout))
+            if url.endswith(".gz"):  result = Decompress(result)
             if str(result).startswith("<error>"):
                 # req_proxy.randomize_proxy()
                 # AniDB_RequestCount = 0
@@ -116,6 +117,16 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
     #    netLock.release()
         
     return None
+
+def Decompress(file):
+    times = 0
+    try:
+      while True:
+        file = gzip.GzipFile(fileobj=StringIO.StringIO(file)).read()
+        times += 1
+    except:  pass
+    if times > 0:  Log.Debug("Decompression times: {}".format(times))
+    return file
 
 def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
