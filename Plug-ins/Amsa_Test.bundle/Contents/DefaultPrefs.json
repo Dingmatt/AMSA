@@ -1,0 +1,241 @@
+[
+  {
+    "id"      : "GetTvdbFanart",
+    "label"   : "Fetch Fanart images from TVDB",
+    "type"    : "bool",
+    "default" : "true"
+  },
+  {
+    "id"      : "GetTvdbPosters",
+    "label"   : "Fetch Poster images from TVDB",
+    "type"    : "bool",
+    "default" : "true"
+  },
+  {
+    "id"      : "GetTvdbBanners",
+    "label"   : "Fetch series Banner images from TVDB",
+    "type"    : "bool",
+    "default" : "false"
+  },
+  {
+    "id"      : "GetAnidbPoster",
+    "label"   : "Fetch AniDB's poster",
+    "type"    : "bool",
+    "default" : "false"
+  },
+  {
+    "id"      : "localart",
+    "label"   : "Prefer artwork based on section language",
+    "type"    : "bool",
+    "default" : "true"
+  },
+  {
+    "id"      : "adult",
+    "label"   : "Include adult content",
+    "type"    : "bool",
+    "default" : "false"
+  },
+  {
+    "id"      : "GetPlexThemes",
+    "label"   : "Download Themes from PLEX",
+    "type"    : "bool",
+    "default" : "false"
+  },
+  {
+    "id"      : "MinimumWeight",
+    "label"   : "Map categories at or above the minimum weight selected",
+    "type"    : "text",
+    "default" : "400"
+  },
+  {
+    "id"      : "SeriesTitle",
+    "label"   : "Series Title",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesSummary",
+    "label"   : "Series Summary",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesOriginally_Available_At",
+    "label"   : "Series Originally AirDate",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesRating",
+    "label"   : "Series Rating",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesStudio",
+    "label"   : "Series Studio",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesCountries",
+    "label"   : "Series Countries",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesDuration",
+    "label"   : "Series Duration",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesGenres",
+    "label"   : "Series Genres",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesTags",
+    "label"   : "Series Tags",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesCollections",
+    "label"   : "Series Collections",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesContent_Rating",
+    "label"   : "Series Content Rating",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesWriters",
+    "label"   : "Series Writers",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesDirectors",
+    "label"   : "Series Directors",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesProducers",
+    "label"   : "Series Producers",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesRoles",
+    "label"   : "Series Roles",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesImages",
+    "label"   : "Series Images",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "SeriesThemes",
+    "label"   : "Series Themes",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeTitle",
+    "label"   : "Episode Title",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeSummary",
+    "label"   : "Episode Summary",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeOriginally_Available_At",
+    "label"   : "Episode Originally AirDate",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeRating",
+    "label"   : "Episode Rating",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeAbsolute_Index",
+    "label"   : "Episode Absolute_Index",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeWriters",
+    "label"   : "Episode Writers",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+    {
+    "id"      : "EpisodeDirectors",
+    "label"   : "Episode Directors",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeProducers",
+    "label"   : "Episode Producers",
+    "type"    : "text",
+    "default"  : "AniDB,TVDB,Plex",
+  },
+  {
+    "id"      : "EpisodeThumbs",
+    "label"   : "Episode Thumbs",
+    "type"    : "text",
+    "default"  : "TVDB",
+  },
+  {
+    "id"      : "SerieLanguage1",
+    "label"   : "First Language preference for the Series title",
+    "type"    : "enum",
+    "values"  : ["main","x-jat","ja","en","ar","bg","ca","cs","da","de","el","es","et","fa","fi","fr","he","hr","hu","it","ko","x-kot","lv","mn","pl","pt","ro","ru","sr","sk","sl","sv","th","tr","uk","zh","zh-Hans","zh-x-nan"],
+    "default" : "main"
+  },
+  {
+    "id"      : "SerieLanguage2",
+    "label"   : "Second Language preference for the Series title",
+    "type"    : "enum",
+    "values"  : ["main","x-jat","ja","en","ar","bg","ca","cs","da","de","el","es","et","fa","fi","fr","he","hr","hu","it","ko","x-kot","lv","mn","pl","pt","ro","ru","sr","sk","sl","sv","th","tr","uk","zh","zh-Hans","zh-x-nan"],
+    "default" : "x-jat"
+  },
+  {
+    "id"      : "SerieLanguage3",
+    "label"   : "Third Language preference for the Series title",
+    "type"    : "enum",
+    "values"  : ["main","x-jat","ja","en","ar","bg","ca","cs","da","de","el","es","et","fa","fi","fr","he","hr","hu","it","ko","x-kot","lv","mn","pl","pt","ro","ru","sr","sk","sl","sv","th","tr","uk","zh","zh-Hans","zh-x-nan"],
+    "default" : "en"
+  },
+  {
+    "id"      : "EpisodeLanguage1",
+    "label"   : "First Language preference for the Episode title",
+    "type"    : "enum",
+    "values"  : ["x-jat","ja","en","ar","bg","ca","cs","da","de","el","es","et","fa","fi","fr","he","hr","hu","it","ko","x-kot","lv","mn","pl","pt","ro","ru","sr","sk","sl","sv","th","tr","uk","zh","zh-Hans","zh-x-nan"],
+    "default" : "en"
+  },
+  {
+    "id"      : "EpisodeLanguage2",
+    "label"   : "Second Language preference for the Episode title",
+    "type"    : "enum",
+    "values"  : ["x-jat","ja","en","ar","bg","ca","cs","da","de","el","es","et","fa","fi","fr","he","hr","hu","it","ko","x-kot","lv","mn","pl","pt","ro","ru","sr","sk","sl","sv","th","tr","uk","zh","zh-Hans","zh-x-nan"],
+    "default" : "x-jat"
+  }
+]
