@@ -24,7 +24,7 @@ TVDB_MODE_ID_OFFSET       = ".*? ?\[(?P<source>(tvdb|tvdb2|tvdb3|tvdb4|tvdb5))-(
 ANIDB2_MODE               = ".*? ?\[anidb2-(?P<guid>[0-9]{1,7})\]"
 SEASON_RX = [                                                                                                                                                           ### Seasons Folders 
  'Specials',                                                                                                                                                            # Specials (season 0)
- '(Season|Series|Book|Saison|Livre|S)[ _\-]*(?P<season>[0-9]{1,2}).*',                                                                                                  # Season ##, Series #Book ## Saison ##, Livre ##, S##, S ##
+ '(Season|Series|Book|Saison|Livre|S|Stagione)[ _\-]*(?P<season>[0-9]{1,2}).*',                                                                                                  # Season ##, Series #Book ## Saison ##, Livre ##, Stagione ##, S##, S ##
  '(?P<season>[0-9]{1,2})a? Stagione.*',                                                                                                                                 # ##a Stagione
  '(([Ss]tory )?[Aa]r[kc]|[Vv]ideo).*' ]                                                                                                                                 # Last entry in array, folder name droped but files kept: Story, Arc, Ark, Video                                                                          #
 SERIES_RX = [                                                                                                                                                           ######### Series regex - "serie - xxx - title" ###
