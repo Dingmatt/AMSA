@@ -93,8 +93,10 @@ class TvDB(constants.Series):
                 metatype = ("art"       if bannerType == "fanart" else \
                             "posters"   if bannerType == "poster" else \
                             "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
+                            "season"    if bannerType == "season" and bannerType2=="680x1000" else \
                             "season"    if bannerType == "season" and bannerType2=="season" else None)  
                 
+                #Log("Images: %s, %s, %s, %s, %s" % (bannerPath, constants.TVDB_IMAGES_URL, id, metatype, bannerThumb))
                 mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)                  
                 if metatype == "art":
                     SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
