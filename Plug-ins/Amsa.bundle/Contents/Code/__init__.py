@@ -31,7 +31,7 @@ class AmsaTVAgent(Agent.TV_Shows):
     primary_provider = True
     fallback_agent = False
     contributes_to = None
-    languages = [Locale.Language.English]
+    languages = [Locale.Language.English, 'fr', 'zh', 'sv', 'no', 'da', 'fi', 'nl', 'de', 'it', 'es', 'pl', 'hu', 'el', 'tr', 'ru', 'he', 'ja', 'pt', 'cs', 'ko', 'sl', 'hr']
     accepts_from = ["com.plexapp.agents.localmedia"] 
     
     def search(self, results, media, lang, manual=False):
