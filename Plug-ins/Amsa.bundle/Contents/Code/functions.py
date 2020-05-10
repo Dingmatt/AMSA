@@ -4,11 +4,9 @@ from unidecode import unidecode
 from time import sleep
 from datetime import timedelta, datetime as dt
 from string import maketrans 
-from http_request_randomizer.requests.proxy.requestProxy import RequestProxy 
 from plexproxy.plexresponse import plexResponse
 
 global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
-req_proxy = RequestProxy(sustain=True)
 AniDB_WaitUntil = dt.now() 
 AniDB_RequestCount = 0
 strptime = dt.strptime
