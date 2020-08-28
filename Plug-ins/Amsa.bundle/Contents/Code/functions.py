@@ -106,7 +106,8 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         #SaveFile(result, "Test.xml")
 
     if result:
-        result = XML.ElementFromString(result)
+        result = etree.fromstring(result)
+        #result = XML.ElementFromString(result)
         if str(result).startswith("<Element error at "):  
             Log.Debug("Functions - XMLFromURL() - Not an XML file, AniDB banned possibly, result: '%s'" % result)
         else:       
