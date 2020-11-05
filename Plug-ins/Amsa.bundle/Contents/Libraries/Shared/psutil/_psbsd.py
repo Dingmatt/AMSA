@@ -248,6 +248,11 @@ def cpu_count_logical():
 
 if OPENBSD or NETBSD:
     def cpu_count_physical():
+        """
+        Returns the number of cpu count.
+
+        Args:
+        """
         # OpenBSD and NetBSD do not implement this.
         return 1 if cpu_count_logical() == 1 else None
 else:
@@ -449,6 +454,11 @@ def users():
 
 @memoize
 def _pid_0_exists():
+    """
+    Determines if pid already running.
+
+    Args:
+    """
     try:
         Process(0).name()
     except NoSuchProcess:
@@ -489,6 +499,12 @@ def wrap_exceptions(fun):
     """
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
+        """
+        Decor for : meth : exit.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except OSError as err:
@@ -533,6 +549,13 @@ class Process(object):
     __slots__ = ["pid", "_name", "_ppid"]
 
     def __init__(self, pid):
+        """
+        Initialize a new pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self.pid = pid
         self._name = None
         self._ppid = None
@@ -545,18 +568,42 @@ class Process(object):
         return ret
 
     def oneshot_enter(self):
+        """
+        Enter the cache.
+
+        Args:
+            self: (todo): write your description
+        """
         self.oneshot.cache_activate()
 
     def oneshot_exit(self):
+        """
+        Cache the cache.
+
+        Args:
+            self: (todo): write your description
+        """
         self.oneshot.cache_deactivate()
 
     @wrap_exceptions
     def name(self):
+        """
+        The name of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         name = self.oneshot()[kinfo_proc_map['name']]
         return name if name is not None else cext.proc_name(self.pid)
 
     @wrap_exceptions
     def exe(self):
+        """
+        Get the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         if FREEBSD:
             return cext.proc_exe(self.pid)
         elif NETBSD:
@@ -579,6 +626,12 @@ class Process(object):
 
     @wrap_exceptions
     def cmdline(self):
+        """
+        Return the pid of a pid.
+
+        Args:
+            self: (todo): write your description
+        """
         if OPENBSD and self.pid == 0:
             return []  # ...else it crashes
         elif NETBSD:
@@ -601,6 +654,12 @@ class Process(object):
 
     @wrap_exceptions
     def terminal(self):
+        """
+        The terminal height.
+
+        Args:
+            self: (todo): write your description
+        """
         tty_nr = self.oneshot()[kinfo_proc_map['ttynr']]
         tmap = _psposix.get_terminal_map()
         try:
@@ -610,11 +669,23 @@ class Process(object):
 
     @wrap_exceptions
     def ppid(self):
+        """
+        The id of the zone.
+
+        Args:
+            self: (todo): write your description
+        """
         self._ppid = self.oneshot()[kinfo_proc_map['ppid']]
         return self._ppid
 
     @wrap_exceptions
     def uids(self):
+        """
+        A tuple containing raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw raw
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return _common.puids(
             rawtuple[kinfo_proc_map['real_uid']],
@@ -623,6 +694,12 @@ class Process(object):
 
     @wrap_exceptions
     def gids(self):
+        """
+        The raw gids representing raw gids.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return _common.pgids(
             rawtuple[kinfo_proc_map['real_gid']],
@@ -631,6 +708,12 @@ class Process(object):
 
     @wrap_exceptions
     def cpu_times(self):
+        """
+        A tuple of cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return _common.pcputimes(
             rawtuple[kinfo_proc_map['user_time']],
@@ -641,10 +724,22 @@ class Process(object):
     if FREEBSD:
         @wrap_exceptions
         def cpu_num(self):
+            """
+            The number of cpu number.
+
+            Args:
+                self: (todo): write your description
+            """
             return self.oneshot()[kinfo_proc_map['cpunum']]
 
     @wrap_exceptions
     def memory_info(self):
+        """
+        Return raw memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return pmem(
             rawtuple[kinfo_proc_map['rss']],
@@ -657,10 +752,22 @@ class Process(object):
 
     @wrap_exceptions
     def create_time(self):
+        """
+        Creates a new time.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.oneshot()[kinfo_proc_map['create_time']]
 
     @wrap_exceptions
     def num_threads(self):
+        """
+        Return the number of threads in the queue.
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(cext, "proc_num_threads"):
             # FreeBSD
             return cext.proc_num_threads(self.pid)
@@ -669,6 +776,12 @@ class Process(object):
 
     @wrap_exceptions
     def num_ctx_switches(self):
+        """
+        Return the number of raw_ctx.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return _common.pctxsw(
             rawtuple[kinfo_proc_map['ctx_switches_vol']],
@@ -676,6 +789,12 @@ class Process(object):
 
     @wrap_exceptions
     def threads(self):
+        """
+        Return a list of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: on OpenSBD this (/dev/mem) requires root access.
         rawlist = cext.proc_threads(self.pid)
         retlist = []
@@ -691,6 +810,13 @@ class Process(object):
 
     @wrap_exceptions
     def connections(self, kind='inet'):
+        """
+        Connect connections to the network.
+
+        Args:
+            self: (todo): write your description
+            kind: (str): write your description
+        """
         if kind not in conn_tmap:
             raise ValueError("invalid %r kind argument; choose between %s"
                              % (kind, ', '.join([repr(x) for x in conn_tmap])))
@@ -736,6 +862,13 @@ class Process(object):
 
     @wrap_exceptions
     def wait(self, timeout=None):
+        """
+        Wait for the specified consumer to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         try:
             return _psposix.wait_pid(self.pid, timeout)
         except _psposix.TimeoutExpired:
@@ -743,20 +876,45 @@ class Process(object):
 
     @wrap_exceptions
     def nice_get(self):
+        """
+        Return the position of pid.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext_posix.getpriority(self.pid)
 
     @wrap_exceptions
     def nice_set(self, value):
+        """
+        Nicely set of pid pid pids.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         return cext_posix.setpriority(self.pid, value)
 
     @wrap_exceptions
     def status(self):
+        """
+        Return the status code.
+
+        Args:
+            self: (todo): write your description
+        """
         code = self.oneshot()[kinfo_proc_map['status']]
         # XXX is '?' legit? (we're not supposed to return it anyway)
         return PROC_STATUSES.get(code, '?')
 
     @wrap_exceptions
     def io_counters(self):
+        """
+        The raw raw raw raw processor.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self.oneshot()
         return _common.pio(
             rawtuple[kinfo_proc_map['read_io_count']],
@@ -789,6 +947,12 @@ class Process(object):
         'mmap', 'addr, perms path rss, private, ref_count, shadow_count')
 
     def _not_implemented(self):
+        """
+        Check if the implements.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError
 
     # FreeBSD < 8 does not support functions based on kinfo_getfile()
@@ -823,10 +987,23 @@ class Process(object):
 
         @wrap_exceptions
         def cpu_affinity_get(self):
+            """
+            Returns the number of the cpu.
+
+            Args:
+                self: (todo): write your description
+            """
             return cext.proc_cpu_affinity_get(self.pid)
 
         @wrap_exceptions
         def cpu_affinity_set(self, cpus):
+            """
+            Set the cpu cpu cpu.
+
+            Args:
+                self: (todo): write your description
+                cpus: (todo): write your description
+            """
             # Pre-emptively check if CPUs are valid because the C
             # function has a weird behavior in case of invalid CPUs,
             # see: https://github.com/giampaolo/psutil/issues/586
@@ -852,4 +1029,10 @@ class Process(object):
 
         @wrap_exceptions
         def memory_maps(self):
+            """
+            Return memory maps.
+
+            Args:
+                self: (todo): write your description
+            """
             return cext.proc_memory_maps(self.pid)

@@ -19,6 +19,12 @@ from psutil.tests import unittest
 class SunOSSpecificTestCase(unittest.TestCase):
 
     def test_swap_memory(self):
+        """
+        Swap memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh('env PATH=/usr/sbin:/sbin:%s swap -l' % os.environ['PATH'])
         lines = out.strip().split('\n')[1:]
         if not lines:
@@ -37,6 +43,12 @@ class SunOSSpecificTestCase(unittest.TestCase):
         self.assertEqual(psutil_swap.free, free)
 
     def test_cpu_count(self):
+        """
+        Returns the number of cpu results.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh("/usr/sbin/psrinfo")
         self.assertEqual(psutil.cpu_count(), len(out.split('\n')))
 

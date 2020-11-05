@@ -50,6 +50,13 @@ class _timelex(object):
     _split_decimal = re.compile("([\.,])")
 
     def __init__(self, instream):
+        """
+        Initialize the token stream.
+
+        Args:
+            self: (todo): write your description
+            instream: (str): write your description
+        """
         if isinstance(instream, binary_type):
             instream = instream.decode()
 
@@ -175,9 +182,21 @@ class _timelex(object):
         return token
 
     def __iter__(self):
+        """
+        Returns an iterator over the iterable.
+
+        Args:
+            self: (todo): write your description
+        """
         return self
 
     def __next__(self):
+        """
+        Returns the next token.
+
+        Args:
+            self: (todo): write your description
+        """
         token = self.get_token()
         if token is None:
             raise StopIteration
@@ -185,10 +204,23 @@ class _timelex(object):
         return token
 
     def next(self):
+        """
+        Returns the next item
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__next__()  # Python 2.x support
 
     @classmethod
     def split(cls, s):
+        """
+        Split a string into a list.
+
+        Args:
+            cls: (todo): write your description
+            s: (array): write your description
+        """
         return list(cls(s))
 
     @classmethod
@@ -210,10 +242,23 @@ class _timelex(object):
 class _resultbase(object):
 
     def __init__(self):
+        """
+        Initialize this class s attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         for attr in self.__slots__:
             setattr(self, attr, None)
 
     def _repr(self, classname):
+        """
+        Return a human - readable representation of this class.
+
+        Args:
+            self: (todo): write your description
+            classname: (str): write your description
+        """
         l = []
         for attr in self.__slots__:
             value = getattr(self, attr)
@@ -222,10 +267,22 @@ class _resultbase(object):
         return "%s(%s)" % (classname, ", ".join(l))
 
     def __len__(self):
+        """
+        Return the total number of attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         return (sum(getattr(self, attr) is not None
                     for attr in self.__slots__))
 
     def __repr__(self):
+        """
+        Return the __repr__ method.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._repr(self.__class__.__name__)
 
 
@@ -281,6 +338,14 @@ class parserinfo(object):
     TZOFFSET = {}
 
     def __init__(self, dayfirst=False, yearfirst=False):
+        """
+        Initialize day.
+
+        Args:
+            self: (todo): write your description
+            dayfirst: (todo): write your description
+            yearfirst: (str): write your description
+        """
         self._jump = self._convert(self.JUMP)
         self._weekdays = self._convert(self.WEEKDAYS)
         self._months = self._convert(self.MONTHS)
@@ -296,6 +361,13 @@ class parserinfo(object):
         self._century = self._year // 100 * 100
 
     def _convert(self, lst):
+        """
+        Convert lst to dicts dict.
+
+        Args:
+            self: (todo): write your description
+            lst: (str): write your description
+        """
         dct = {}
         for i, v in enumerate(lst):
             if isinstance(v, tuple):
@@ -306,9 +378,23 @@ class parserinfo(object):
         return dct
 
     def jump(self, name):
+        """
+        Returns the jump with the given name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return name.lower() in self._jump
 
     def weekday(self, name):
+        """
+        Return the day by name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if len(name) >= 3:
             try:
                 return self._weekdays[name.lower()]
@@ -317,6 +403,13 @@ class parserinfo(object):
         return None
 
     def month(self, name):
+        """
+        Return the month object for the given month name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if len(name) >= 3:
             try:
                 return self._months[name.lower()] + 1
@@ -325,30 +418,73 @@ class parserinfo(object):
         return None
 
     def hms(self, name):
+        """
+        Returns the hms value for a name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         try:
             return self._hms[name.lower()]
         except KeyError:
             return None
 
     def ampm(self, name):
+        """
+        Return a vtmamp object.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         try:
             return self._ampm[name.lower()]
         except KeyError:
             return None
 
     def pertain(self, name):
+        """
+        Returns a new permission by name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return name.lower() in self._pertain
 
     def utczone(self, name):
+        """
+        Return the zone object for the given name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return name.lower() in self._utczone
 
     def tzoffset(self, name):
+        """
+        Return the timezone object representing the given name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if name in self._utczone:
             return 0
 
         return self.TZOFFSET.get(name)
 
     def convertyear(self, year, century_specified=False):
+        """
+        Converty of the year to the year.
+
+        Args:
+            self: (todo): write your description
+            year: (todo): write your description
+            century_specified: (str): write your description
+        """
         if year < 100 and not century_specified:
             year += self._century
             if abs(year - self._year) >= 50:
@@ -359,6 +495,13 @@ class parserinfo(object):
         return year
 
     def validate(self, res):
+        """
+        Return true if res is a valid timezone.
+
+        Args:
+            self: (todo): write your description
+            res: (todo): write your description
+        """
         # move to info
         if res.year is not None:
             res.year = self.convertyear(res.year, res.century_specified)
@@ -373,12 +516,26 @@ class parserinfo(object):
 
 class _ymd(list):
     def __init__(self, tzstr, *args, **kwargs):
+        """
+        Initialize a timezone.
+
+        Args:
+            self: (todo): write your description
+            tzstr: (str): write your description
+        """
         super(self.__class__, self).__init__(*args, **kwargs)
         self.century_specified = False
         self.tzstr = tzstr
 
     @staticmethod
     def token_could_be_year(token, year):
+        """
+        Return true if the token has a valid year
+
+        Args:
+            token: (str): write your description
+            year: (str): write your description
+        """
         try:
             return int(token) == year
         except ValueError:
@@ -386,6 +543,13 @@ class _ymd(list):
 
     @staticmethod
     def find_potential_year_tokens(year, tokens):
+        """
+        Return a list of tokens for a year.
+
+        Args:
+            year: (todo): write your description
+            tokens: (str): write your description
+        """
         return [token for token in tokens if _ymd.token_could_be_year(token, year)]
 
     def find_probable_year_index(self, tokens):
@@ -399,6 +563,13 @@ class _ymd(list):
                 return index
 
     def append(self, val):
+        """
+        Append val to the end of the field.
+
+        Args:
+            self: (todo): write your description
+            val: (todo): write your description
+        """
         if hasattr(val, '__len__'):
             if val.isdigit() and len(val) > 2:
                 self.century_specified = True
@@ -408,6 +579,15 @@ class _ymd(list):
         super(self.__class__, self).append(int(val))
 
     def resolve_ymd(self, mstridx, yearfirst, dayfirst):
+        """
+        Resolve the day of the month.
+
+        Args:
+            self: (todo): write your description
+            mstridx: (int): write your description
+            yearfirst: (str): write your description
+            dayfirst: (todo): write your description
+        """
         len_ymd = len(self)
         year, month, day = (None, None, None)
 
@@ -484,6 +664,13 @@ class _ymd(list):
 
 class parser(object):
     def __init__(self, info=None):
+        """
+        Initialize the parser.
+
+        Args:
+            self: (todo): write your description
+            info: (bool): write your description
+        """
         self.info = info or parserinfo()
 
     def parse(self, timestr, default=None, ignoretz=False, tzinfos=None, **kwargs):
@@ -1180,14 +1367,33 @@ class _tzparser(object):
                          "yday", "jyday", "day", "time"]
 
         def __repr__(self):
+            """
+            Return a representation of __reprpror.
+
+            Args:
+                self: (todo): write your description
+            """
             return self._repr("")
 
         def __init__(self):
+            """
+            Initialize the attribute.
+
+            Args:
+                self: (todo): write your description
+            """
             _resultbase.__init__(self)
             self.start = self._attr()
             self.end = self._attr()
 
     def parse(self, tzstr):
+        """
+        Parse a timezone string into a datetime.
+
+        Args:
+            self: (todo): write your description
+            tzstr: (str): write your description
+        """
         res = self._result()
         l = _timelex.split(tzstr)
         try:
@@ -1345,6 +1551,12 @@ DEFAULTTZPARSER = _tzparser()
 
 
 def _parsetz(tzstr):
+    """
+    Parse a string of - like object.
+
+    Args:
+        tzstr: (str): write your description
+    """
     return DEFAULTTZPARSER.parse(tzstr)
 
 

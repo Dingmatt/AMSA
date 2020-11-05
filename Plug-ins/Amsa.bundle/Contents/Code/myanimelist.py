@@ -5,6 +5,13 @@ from lxml.etree import Element, SubElement, Comment
 
 class MyAnimeList(constants.Series):
     def __init__(self, id):
+        """
+        Initialize a torrent.
+
+        Args:
+            self: (todo): write your description
+            id: (str): write your description
+        """
         logging.Log_Milestone("MyAnimeList" + "_" + id)
         data = XMLFromURL(constants.MAL_HTTP_API_URL + id, id + ".xml", os.path.join("MyAnimeList", id), CACHE_1HOUR * 24).xpath("""/anime""")[0]
         

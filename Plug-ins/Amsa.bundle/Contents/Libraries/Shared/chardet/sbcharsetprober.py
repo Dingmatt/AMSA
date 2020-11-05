@@ -37,6 +37,15 @@ class SingleByteCharSetProber(CharSetProber):
     NEGATIVE_SHORTCUT_THRESHOLD = 0.05
 
     def __init__(self, model, reversed=False, name_prober=None):
+        """
+        Initialize the internal state.
+
+        Args:
+            self: (todo): write your description
+            model: (todo): write your description
+            reversed: (bool): write your description
+            name_prober: (str): write your description
+        """
         super(SingleByteCharSetProber, self).__init__()
         self._model = model
         # TRUE if we need to reverse every pair in the model lookup
@@ -51,6 +60,12 @@ class SingleByteCharSetProber(CharSetProber):
         self.reset()
 
     def reset(self):
+        """
+        Reset the iterator.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SingleByteCharSetProber, self).reset()
         # char order of last character
         self._last_order = 255
@@ -62,6 +77,12 @@ class SingleByteCharSetProber(CharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Returns the name of the variable.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._name_prober:
             return self._name_prober.charset_name
         else:
@@ -69,12 +90,25 @@ class SingleByteCharSetProber(CharSetProber):
 
     @property
     def language(self):
+        """
+        Returns the language of the language.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._name_prober:
             return self._name_prober.language
         else:
             return self._model.get('language')
 
     def feed(self, byte_str):
+        """
+        Feed the byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         if not self._model['keep_english_letter']:
             byte_str = self.filter_international_words(byte_str)
         if not byte_str:
@@ -122,6 +156,12 @@ class SingleByteCharSetProber(CharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Get confidence confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         r = 0.01
         if self._total_seqs > 0:
             r = ((1.0 * self._seq_counters[SequenceLikelihood.POSITIVE]) /

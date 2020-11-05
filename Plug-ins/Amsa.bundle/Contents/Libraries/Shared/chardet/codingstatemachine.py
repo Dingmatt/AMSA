@@ -53,6 +53,13 @@ class CodingStateMachine(object):
                  encoding from consideration from here on.
     """
     def __init__(self, sm):
+        """
+        Initialize the model.
+
+        Args:
+            self: (todo): write your description
+            sm: (int): write your description
+        """
         self._model = sm
         self._curr_byte_pos = 0
         self._curr_char_len = 0
@@ -61,9 +68,22 @@ class CodingStateMachine(object):
         self.reset()
 
     def reset(self):
+        """
+        Reset the state.
+
+        Args:
+            self: (todo): write your description
+        """
         self._curr_state = MachineState.START
 
     def next_state(self, c):
+        """
+        Return next state of next character
+
+        Args:
+            self: (todo): write your description
+            c: (int): write your description
+        """
         # for each byte we get its class
         # if it is first byte, we also get byte length
         byte_class = self._model['class_table'][c]
@@ -78,11 +98,29 @@ class CodingStateMachine(object):
         return self._curr_state
 
     def get_current_charlen(self):
+        """
+        Gets the current character.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._curr_char_len
 
     def get_coding_state_machine(self):
+        """
+        Get the state machine machine
+
+        Args:
+            self: (todo): write your description
+        """
         return self._model['name']
 
     @property
     def language(self):
+        """
+        The language of the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._model['language']

@@ -34,19 +34,50 @@ class InvalidCodepointContext(IDNAError):
 
 
 def _combining_class(cp):
+    """
+    Combines : class :.
+
+    Args:
+        cp: (array): write your description
+    """
     return unicodedata.combining(unichr(cp))
 
 def _is_script(cp, script):
+    """
+    Returns true if script is a script.
+
+    Args:
+        cp: (array): write your description
+        script: (str): write your description
+    """
     return intranges_contain(ord(cp), idnadata.scripts[script])
 
 def _punycode(s):
+    """
+    Punycode.
+
+    Args:
+        s: (str): write your description
+    """
     return s.encode('punycode')
 
 def _unot(s):
+    """
+    Unotce a string
+
+    Args:
+        s: (todo): write your description
+    """
     return 'U+{0:04X}'.format(s)
 
 
 def valid_label_length(label):
+    """
+    Validate label length.
+
+    Args:
+        label: (str): write your description
+    """
 
     if len(label) > 63:
         return False
@@ -54,6 +85,13 @@ def valid_label_length(label):
 
 
 def valid_string_length(label, trailing_dot):
+    """
+    Validate a string length.
+
+    Args:
+        label: (str): write your description
+        trailing_dot: (todo): write your description
+    """
 
     if len(label) > (254 if trailing_dot else 253):
         return False
@@ -61,6 +99,13 @@ def valid_string_length(label, trailing_dot):
 
 
 def check_bidi(label, check_ltr=False):
+    """
+    Check if the validity of the label.
+
+    Args:
+        label: (str): write your description
+        check_ltr: (bool): write your description
+    """
 
     # Bidi rules should only be applied if string contains RTL characters
     bidi_label = False
@@ -122,6 +167,12 @@ def check_bidi(label, check_ltr=False):
 
 
 def check_initial_combiner(label):
+    """
+    Check that the initial category.
+
+    Args:
+        label: (str): write your description
+    """
 
     if unicodedata.category(label[0])[0] == 'M':
         raise IDNAError('Label begins with an illegal combining character')
@@ -129,6 +180,12 @@ def check_initial_combiner(label):
 
 
 def check_hyphen_ok(label):
+    """
+    Returns true if label is valid.
+
+    Args:
+        label: (str): write your description
+    """
 
     if label[2:4] == '--':
         raise IDNAError('Label has disallowed hyphens in 3rd and 4th position')
@@ -138,12 +195,25 @@ def check_hyphen_ok(label):
 
 
 def check_nfc(label):
+    """
+    Check that the label is a valid.
+
+    Args:
+        label: (str): write your description
+    """
 
     if unicodedata.normalize('NFC', label) != label:
         raise IDNAError('Label must be in Normalization Form C')
 
 
 def valid_contextj(label, pos):
+    """
+    Returns true if the label is a valid context.
+
+    Args:
+        label: (str): write your description
+        pos: (int): write your description
+    """
 
     cp_value = ord(label[pos])
 
@@ -188,6 +258,14 @@ def valid_contextj(label, pos):
 
 
 def valid_contexto(label, pos, exception=False):
+    """
+    Return true if the label.
+
+    Args:
+        label: (str): write your description
+        pos: (int): write your description
+        exception: (todo): write your description
+    """
 
     cp_value = ord(label[pos])
 
@@ -229,6 +307,12 @@ def valid_contexto(label, pos, exception=False):
 
 
 def check_label(label):
+    """
+    Check label. label.
+
+    Args:
+        label: (str): write your description
+    """
 
     if isinstance(label, (bytes, bytearray)):
         label = label.decode('utf-8')
@@ -256,6 +340,12 @@ def check_label(label):
 
 
 def alabel(label):
+    """
+    Returns a unique label.
+
+    Args:
+        label: (str): write your description
+    """
 
     try:
         label = label.encode('ascii')
@@ -284,6 +374,12 @@ def alabel(label):
 
 
 def ulabel(label):
+    """
+    Convert a label to a label string.
+
+    Args:
+        label: (todo): write your description
+    """
 
     if not isinstance(label, (bytes, bytearray)):
         try:
@@ -333,6 +429,16 @@ def uts46_remap(domain, std3_rules=True, transitional=False):
 
 
 def encode(s, strict=False, uts46=False, std3_rules=False, transitional=False):
+    """
+    Encode string into a string.
+
+    Args:
+        s: (str): write your description
+        strict: (bool): write your description
+        uts46: (list): write your description
+        std3_rules: (todo): write your description
+        transitional: (todo): write your description
+    """
 
     if isinstance(s, (bytes, bytearray)):
         s = s.decode("ascii")
@@ -362,6 +468,15 @@ def encode(s, strict=False, uts46=False, std3_rules=False, transitional=False):
 
 
 def decode(s, strict=False, uts46=False, std3_rules=False):
+    """
+    Decode a string into a string.
+
+    Args:
+        s: (str): write your description
+        strict: (bool): write your description
+        uts46: (array): write your description
+        std3_rules: (str): write your description
+    """
 
     if isinstance(s, (bytes, bytearray)):
         s = s.decode("ascii")

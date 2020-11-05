@@ -4,6 +4,12 @@ import re
 import unicodedata
 
 def flatten(text):
+    """
+    Flatten a string.
+
+    Args:
+        text: (str): write your description
+    """
     if text is None:
         return None
 
@@ -20,6 +26,12 @@ def flatten(text):
     return text.lower()
 
 def normalize(text):
+    """
+    Normalize text.
+
+    Args:
+        text: (str): write your description
+    """
     if text is None:
         return None
 
@@ -34,6 +46,12 @@ def normalize(text):
     return text.decode('ascii')
 
 def to_iterable(value):
+    """
+    Convert value to iterable.
+
+    Args:
+        value: (todo): write your description
+    """
     if value is None:
         return None
 
@@ -44,7 +62,21 @@ def to_iterable(value):
 
 
 def synchronized(func):
+    """
+    Decorator for a function. task.
+
+    Args:
+        func: (todo): write your description
+    """
     def wrapper(self, *__args, **__kw):
+        """
+        Decorator for the wrapped call.
+
+        Args:
+            self: (todo): write your description
+            __args: (tuple): write your description
+            __kw: (todo): write your description
+        """
         self._lock.acquire()
 
         try:

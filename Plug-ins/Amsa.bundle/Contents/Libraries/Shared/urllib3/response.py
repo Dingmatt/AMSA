@@ -22,14 +22,34 @@ log = logging.getLogger(__name__)
 class DeflateDecoder(object):
 
     def __init__(self):
+        """
+        Initialize the data.
+
+        Args:
+            self: (todo): write your description
+        """
         self._first_try = True
         self._data = binary_type()
         self._obj = zlib.decompressobj()
 
     def __getattr__(self, name):
+        """
+        Get the attribute from the attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return getattr(self._obj, name)
 
     def decompress(self, data):
+        """
+        Decompress the data.
+
+        Args:
+            self: (todo): write your description
+            data: (array): write your description
+        """
         if not data:
             return data
 
@@ -55,18 +75,44 @@ class DeflateDecoder(object):
 class GzipDecoder(object):
 
     def __init__(self):
+        """
+        Initialize the session.
+
+        Args:
+            self: (todo): write your description
+        """
         self._obj = zlib.decompressobj(16 + zlib.MAX_WBITS)
 
     def __getattr__(self, name):
+        """
+        Get the attribute from the attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return getattr(self._obj, name)
 
     def decompress(self, data):
+        """
+        Decompress the given data.
+
+        Args:
+            self: (todo): write your description
+            data: (array): write your description
+        """
         if not data:
             return data
         return self._obj.decompress(data)
 
 
 def _get_decoder(mode):
+    """
+    Return the decoder.
+
+    Args:
+        mode: (str): write your description
+    """
     if mode == 'gzip':
         return GzipDecoder()
 
@@ -114,6 +160,26 @@ class HTTPResponse(io.IOBase):
                  strict=0, preload_content=True, decode_content=True,
                  original_response=None, pool=None, connection=None,
                  retries=None, enforce_content_length=False, request_method=None):
+        """
+        Initialize the response.
+
+        Args:
+            self: (todo): write your description
+            body: (str): write your description
+            headers: (list): write your description
+            status: (str): write your description
+            version: (todo): write your description
+            reason: (str): write your description
+            strict: (bool): write your description
+            preload_content: (todo): write your description
+            decode_content: (str): write your description
+            original_response: (todo): write your description
+            pool: (todo): write your description
+            connection: (todo): write your description
+            retries: (todo): write your description
+            enforce_content_length: (todo): write your description
+            request_method: (str): write your description
+        """
 
         if isinstance(headers, HTTPHeaderDict):
             self.headers = headers
@@ -172,6 +238,12 @@ class HTTPResponse(io.IOBase):
         return False
 
     def release_conn(self):
+        """
+        Releases a connection back to the pool.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self._pool or not self._connection:
             return
 
@@ -180,6 +252,12 @@ class HTTPResponse(io.IOBase):
 
     @property
     def data(self):
+        """
+        Reads the data.
+
+        Args:
+            self: (todo): write your description
+        """
         # For backwords-compat with earlier urllib3 0.4 and earlier.
         if self._body:
             return self._body
@@ -189,6 +267,12 @@ class HTTPResponse(io.IOBase):
 
     @property
     def connection(self):
+        """
+        Get a connection object.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._connection
 
     def tell(self):
@@ -469,13 +553,33 @@ class HTTPResponse(io.IOBase):
 
     # Backwards-compatibility methods for httplib.HTTPResponse
     def getheaders(self):
+        """
+        Get the headers.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.headers
 
     def getheader(self, name, default=None):
+        """
+        Gets a response header.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            default: (todo): write your description
+        """
         return self.headers.get(name, default)
 
     # Overrides from io.IOBase
     def close(self):
+        """
+        Close the connection.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.closed:
             self._fp.close()
 
@@ -484,6 +588,12 @@ class HTTPResponse(io.IOBase):
 
     @property
     def closed(self):
+        """
+        Return true if the file is closed.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._fp is None:
             return True
         elif hasattr(self._fp, 'isclosed'):
@@ -494,6 +604,12 @@ class HTTPResponse(io.IOBase):
             return True
 
     def fileno(self):
+        """
+        The file - like object.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._fp is None:
             raise IOError("HTTPResponse has no file to get a fileno from")
         elif hasattr(self._fp, "fileno"):
@@ -503,14 +619,33 @@ class HTTPResponse(io.IOBase):
                           "around has no file descriptor")
 
     def flush(self):
+        """
+        Flush the stream.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._fp is not None and hasattr(self._fp, 'flush'):
             return self._fp.flush()
 
     def readable(self):
+        """
+        Returns true if the file is readable.
+
+        Args:
+            self: (todo): write your description
+        """
         # This method is required for `io` module compatibility.
         return True
 
     def readinto(self, b):
+        """
+        Reads the number of bytes.
+
+        Args:
+            self: (todo): write your description
+            b: (todo): write your description
+        """
         # This method is required for `io` module compatibility.
         temp = self.read(len(b))
         if len(temp) == 0:
@@ -529,6 +664,12 @@ class HTTPResponse(io.IOBase):
         return hasattr(self._fp, 'fp')
 
     def _update_chunk_length(self):
+        """
+        Update the length of the chunk.
+
+        Args:
+            self: (todo): write your description
+        """
         # First, we'll figure out length of a chunk and then
         # we'll try to read it from socket.
         if self.chunk_left is not None:
@@ -543,6 +684,13 @@ class HTTPResponse(io.IOBase):
             raise httplib.IncompleteRead(line)
 
     def _handle_chunk(self, amt):
+        """
+        Handle a chunk from the chunk.
+
+        Args:
+            self: (todo): write your description
+            amt: (todo): write your description
+        """
         returned_chunk = None
         if amt is None:
             chunk = self._fp._safe_read(self.chunk_left)

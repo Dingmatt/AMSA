@@ -65,6 +65,12 @@ def wait_pid(pid, timeout=None):
     Raise TimeoutExpired on timeout expired.
     """
     def check_timeout(delay):
+        """
+        Check if the given number of seconds is valid.
+
+        Args:
+            delay: (int): write your description
+        """
         if timeout is not None:
             if timer() >= stop_at:
                 raise TimeoutExpired()
@@ -74,10 +80,20 @@ def wait_pid(pid, timeout=None):
     timer = getattr(time, 'monotonic', time.time)
     if timeout is not None:
         def waitcall():
+            """
+            Waits for a process to complete.
+
+            Args:
+            """
             return os.waitpid(pid, os.WNOHANG)
         stop_at = timer() + timeout
     else:
         def waitcall():
+            """
+            Wait for a process to complete.
+
+            Args:
+            """
             return os.waitpid(pid, 0)
 
     delay = 0.0001

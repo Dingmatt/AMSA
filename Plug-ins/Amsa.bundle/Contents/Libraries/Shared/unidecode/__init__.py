@@ -21,6 +21,12 @@ Cache = {}
 
 
 def _warn_if_not_unicode(string):
+    """
+    Check if the string is a unicode string.
+
+    Args:
+        string: (str): write your description
+    """
     if version_info[0] < 3 and not isinstance(string, unicode):
         warnings.warn(  "Argument %r is not an unicode object. "
                         "Passing an encoded string will likely have "
@@ -66,6 +72,12 @@ def unidecode_expect_nonascii(string):
 unidecode = unidecode_expect_ascii
 
 def _unidecode(string):
+    """
+    Unidecode a string.
+
+    Args:
+        string: (str): write your description
+    """
     retval = []
 
     for char in string:

@@ -43,6 +43,12 @@ if platform.system() == 'Windows':
     # provide a proxy_bypass version on Windows without DNS lookups
 
     def proxy_bypass_registry(host):
+        """
+        Determine if the given host matches the given proxy
+
+        Args:
+            host: (str): write your description
+        """
         if is_py3:
             import winreg
         else:
@@ -97,6 +103,12 @@ def dict_to_sequence(d):
 
 
 def super_len(o):
+    """
+    Calculate length of o.
+
+    Args:
+        o: (todo): write your description
+    """
     total_length = None
     current_position = 0
 

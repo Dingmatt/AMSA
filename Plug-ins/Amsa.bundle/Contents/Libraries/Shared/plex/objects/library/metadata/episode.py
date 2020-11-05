@@ -22,6 +22,13 @@ class Episode(Video, Metadata, RateMixin, ScrobbleMixin):
 
     @staticmethod
     def construct_show(client, node):
+        """
+        Returns a node
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'key':          'grandparentKey',
             'ratingKey':    'grandparentRatingKey',
@@ -37,6 +44,13 @@ class Episode(Video, Metadata, RateMixin, ScrobbleMixin):
 
     @staticmethod
     def construct_season(client, node):
+        """
+        Construct a globs
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index':        'parentIndex',
             'key':          'parentKey',

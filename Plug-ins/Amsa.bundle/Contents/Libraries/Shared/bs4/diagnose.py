@@ -95,33 +95,104 @@ class AnnouncingParser(HTMLParser):
     """Announces HTMLParser parse events, without doing anything else."""
 
     def _p(self, s):
+        """
+        Print the string s
+
+        Args:
+            self: (todo): write your description
+            s: (int): write your description
+        """
         print(s)
 
     def handle_starttag(self, name, attrs):
+        """
+        Handle start tag.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+        """
         self._p("%s START" % name)
 
     def handle_endtag(self, name):
+        """
+        Handle endtag.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self._p("%s END" % name)
 
     def handle_data(self, data):
+        """
+        Handle incoming data.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self._p("%s DATA" % data)
 
     def handle_charref(self, name):
+        """
+        Handle a refref.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self._p("%s CHARREF" % name)
 
     def handle_entityref(self, name):
+        """
+        Handle a refref.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self._p("%s ENTITYREF" % name)
 
     def handle_comment(self, data):
+        """
+        Handle a comment.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self._p("%s COMMENT" % data)
 
     def handle_decl(self, data):
+        """
+        Handle declaration declaration
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self._p("%s DECL" % data)
 
     def unknown_decl(self, data):
+        """
+        Add declaration declaration.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self._p("%s UNKNOWN-DECL" % data)
 
     def handle_pi(self, data):
+        """
+        Æľ´¢åįķ.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self._p("%s PI" % data)
 
 def htmlparser_trace(data):
@@ -202,6 +273,13 @@ def benchmark_parsers(num_elements=100000):
     print "Raw html5lib parsed the markup in %.2fs." % (b-a)
 
 def profile(num_elements=100000, parser="lxml"):
+    """
+    Print profile information.
+
+    Args:
+        num_elements: (int): write your description
+        parser: (todo): write your description
+    """
 
     filehandle = tempfile.NamedTemporaryFile()
     filename = filehandle.name

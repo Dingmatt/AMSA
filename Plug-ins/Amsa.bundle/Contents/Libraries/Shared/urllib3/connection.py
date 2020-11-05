@@ -104,6 +104,13 @@ class HTTPConnection(_HTTPConnection, object):
     is_verified = False
 
     def __init__(self, *args, **kw):
+        """
+        Initialize the socket.
+
+        Args:
+            self: (todo): write your description
+            kw: (todo): write your description
+        """
         if six.PY3:  # Python 3
             kw.pop('strict', None)
 
@@ -152,6 +159,13 @@ class HTTPConnection(_HTTPConnection, object):
         return conn
 
     def _prepare_conn(self, conn):
+        """
+        Prepare a connection.
+
+        Args:
+            self: (todo): write your description
+            conn: (todo): write your description
+        """
         self.sock = conn
         # the _tunnel_host attribute was added in python 2.6.3 (via
         # http://hg.python.org/cpython/rev/0f57b30a152f) so pythons 2.6(0-2) do
@@ -163,6 +177,12 @@ class HTTPConnection(_HTTPConnection, object):
             self.auto_open = 0
 
     def connect(self):
+        """
+        Establish a connection pool.
+
+        Args:
+            self: (todo): write your description
+        """
         conn = self._new_conn()
         self._prepare_conn(conn)
 
@@ -213,6 +233,22 @@ class HTTPSConnection(HTTPConnection):
     def __init__(self, host, port=None, key_file=None, cert_file=None,
                  strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
                  ssl_context=None, **kw):
+        """
+        Initialize the connection to the given host.
+
+        Args:
+            self: (todo): write your description
+            host: (str): write your description
+            port: (int): write your description
+            key_file: (str): write your description
+            cert_file: (str): write your description
+            strict: (bool): write your description
+            timeout: (int): write your description
+            socket: (todo): write your description
+            _GLOBAL_DEFAULT_TIMEOUT: (int): write your description
+            ssl_context: (todo): write your description
+            kw: (todo): write your description
+        """
 
         HTTPConnection.__init__(self, host, port, strict=strict,
                                 timeout=timeout, **kw)
@@ -226,6 +262,12 @@ class HTTPSConnection(HTTPConnection):
         self._protocol = 'https'
 
     def connect(self):
+        """
+        Connect to the tls connection object.
+
+        Args:
+            self: (todo): write your description
+        """
         conn = self._new_conn()
         self._prepare_conn(conn)
 
@@ -280,6 +322,12 @@ class VerifiedHTTPSConnection(HTTPSConnection):
         self.ca_cert_dir = ca_cert_dir and os.path.expanduser(ca_cert_dir)
 
     def connect(self):
+        """
+        Establish a connection pool.
+
+        Args:
+            self: (todo): write your description
+        """
         # Add certificate verification
         conn = self._new_conn()
 
@@ -352,6 +400,13 @@ class VerifiedHTTPSConnection(HTTPSConnection):
 
 
 def _match_hostname(cert, asserted_hostname):
+    """
+    Match the hostname.
+
+    Args:
+        cert: (str): write your description
+        asserted_hostname: (str): write your description
+    """
     try:
         match_hostname(cert, asserted_hostname)
     except CertificateError as e:

@@ -4,6 +4,23 @@ import random
 
 class UserAgentManager:
     def __init__(self, agent_file=os.path.abspath(os.path.join(os.path.dirname(__file__), '../data/user_agents.txt'))):
+        """
+        Initialize a user agent.
+
+        Args:
+            self: (todo): write your description
+            agent_file: (str): write your description
+            os: (int): write your description
+            path: (str): write your description
+            abspath: (str): write your description
+            os: (int): write your description
+            path: (str): write your description
+            join: (todo): write your description
+            os: (int): write your description
+            path: (str): write your description
+            dirname: (str): write your description
+            __file__: (str): write your description
+        """
         self.agent_file = agent_file
         self.useragents = self.load_user_agents(self.agent_file)
 
@@ -29,12 +46,30 @@ class UserAgentManager:
         return user_agent
 
     def get_first_user_agent(self):
+        """
+        Gets the user agent user agent.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.useragents[0]
 
     def get_last_user_agent(self):
+        """
+        Gets the user - agent.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.useragents[-1]
 
     def get_len_user_agent(self):
+        """
+        Gets the number of the user agent.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self.useragents)
 
 

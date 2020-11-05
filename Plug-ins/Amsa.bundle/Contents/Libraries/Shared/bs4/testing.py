@@ -26,6 +26,12 @@ class SoupTest(unittest.TestCase):
 
     @property
     def default_builder(self):
+        """
+        Return a default builder.
+
+        Args:
+            self: (todo): write your description
+        """
         return default_builder()
 
     def soup(self, markup, **kwargs):
@@ -41,6 +47,14 @@ class SoupTest(unittest.TestCase):
         return self.default_builder.test_fragment_to_document(markup)
 
     def assertSoupEquals(self, to_parse, compare_parsed_to=None):
+        """
+        Asserts the element - elementtree.
+
+        Args:
+            self: (todo): write your description
+            to_parse: (todo): write your description
+            compare_parsed_to: (todo): write your description
+        """
         builder = self.default_builder
         obj = BeautifulSoup(to_parse, builder=builder)
         if compare_parsed_to is None:
@@ -82,6 +96,12 @@ class HTMLTreeBuilderSmokeTest(object):
             self.assertEqual(True, new_tag.is_empty_element)
     
     def test_pickle_and_unpickle_identity(self):
+        """
+        Parses the pickleates an element.
+
+        Args:
+            self: (todo): write your description
+        """
         # Pickling a tree, then unpickling it, yields a tree identical
         # to the original.
         tree = self.soup("<a><b>foo</a>")
@@ -118,22 +138,52 @@ class HTMLTreeBuilderSmokeTest(object):
             'html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"')
 
     def test_empty_doctype(self):
+        """
+        Test if empty empty empty empty empty empty string.
+
+        Args:
+            self: (todo): write your description
+        """
         soup = self.soup("<!DOCTYPE>")
         doctype = soup.contents[0]
         self.assertEqual("", doctype.strip())
 
     def test_public_doctype_with_url(self):
+        """
+        Sets the public type.
+
+        Args:
+            self: (todo): write your description
+        """
         doctype = 'html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"'
         self.assertDoctypeHandled(doctype)
 
     def test_system_doctype(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertDoctypeHandled('foo SYSTEM "http://www.example.com/"')
 
     def test_namespaced_system_doctype(self):
+        """
+        Test if the test type of the test.
+
+        Args:
+            self: (todo): write your description
+        """
         # We can handle a namespaced doctype with a system ID.
         self.assertDoctypeHandled('xsl:stylesheet SYSTEM "htmlent.dtd"')
 
     def test_namespaced_public_doctype(self):
+        """
+        Test if the test type.
+
+        Args:
+            self: (todo): write your description
+        """
         # Test a namespaced doctype with a public id.
         self.assertDoctypeHandled('xsl:stylesheet PUBLIC "htmlent.dtd"')
 
@@ -151,6 +201,12 @@ class HTMLTreeBuilderSmokeTest(object):
             markup.replace(b"\n", b""))
 
     def test_processing_instruction(self):
+        """
+        Test if the game ascii.
+
+        Args:
+            self: (todo): write your description
+        """
         # We test both Unicode and bytestring to verify that
         # process_markup correctly sets processing_instruction_class
         # even when the markup is already Unicode and there is no
@@ -202,9 +258,21 @@ class HTMLTreeBuilderSmokeTest(object):
         self.assertEqual(str(soup.br), "<br/>")
 
     def test_nested_formatting_elements(self):
+        """
+        Test if the element is a nested.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals("<em><em></em></em>")
 
     def test_double_head(self):
+        """
+        Print html content.
+
+        Args:
+            self: (todo): write your description
+        """
         html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -222,6 +290,12 @@ Hello, world!
         self.assertEqual("text/javascript", soup.find('script')['type'])
 
     def test_comment(self):
+        """
+        Evaluate the comment.
+
+        Args:
+            self: (todo): write your description
+        """
         # Comments are represented as Comment objects.
         markup = "<p>foo<!--foobar-->baz</p>"
         self.assertSoupEquals(markup)
@@ -293,6 +367,12 @@ Hello, world!
             "<tfoot><tr><td>Baz</td></tr></tfoot></table>")
 
     def test_deeply_nested_multivalued_attribute(self):
+        """
+        Test for markdown contains markdown.
+
+        Args:
+            self: (todo): write your description
+        """
         # html5lib can set the attributes of the same tag many times
         # as it rearranges the tree. This has caused problems with
         # multivalued attributes.
@@ -301,6 +381,12 @@ Hello, world!
         self.assertEqual(["css"], soup.div.div['class'])
 
     def test_multivalued_attribute_on_html(self):
+        """
+        Called when an html. html.
+
+        Args:
+            self: (todo): write your description
+        """
         # html5lib uses a different API to set the attributes ot the
         # <html> tag. This has caused problems with multivalued
         # attributes.
@@ -309,9 +395,21 @@ Hello, world!
         self.assertEqual(["a", "b"], soup.html['class'])
 
     def test_angle_brackets_in_attribute_values_are_escaped(self):
+        """
+        Èi̇¥è¯¢æį®¢åį¡£
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals('<a b="<a>"></a>', '<a b="&lt;a&gt;"></a>')
 
     def test_entities_in_attributes_converted_to_unicode(self):
+        """
+        : return : none
+
+        Args:
+            self: (todo): write your description
+        """
         expect = u'<p id="pi\N{LATIN SMALL LETTER N WITH TILDE}ata"></p>'
         self.assertSoupEquals('<p id="pi&#241;ata"></p>', expect)
         self.assertSoupEquals('<p id="pi&#xf1;ata"></p>', expect)
@@ -319,6 +417,12 @@ Hello, world!
         self.assertSoupEquals('<p id="pi&ntilde;ata"></p>', expect)
 
     def test_entities_in_text_converted_to_unicode(self):
+        """
+        Test if the text to html.
+
+        Args:
+            self: (todo): write your description
+        """
         expect = u'<p>pi\N{LATIN SMALL LETTER N WITH TILDE}ata</p>'
         self.assertSoupEquals("<p>pi&#241;ata</p>", expect)
         self.assertSoupEquals("<p>pi&#xf1;ata</p>", expect)
@@ -326,10 +430,22 @@ Hello, world!
         self.assertSoupEquals("<p>pi&ntilde;ata</p>", expect)
 
     def test_quot_entity_converted_to_quotation_mark(self):
+        """
+        Setter for quotals_entity.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals("<p>I said &quot;good day!&quot;</p>",
                               '<p>I said "good day!"</p>')
 
     def test_out_of_range_entity(self):
+        """
+        Test if the range of the range of the given.
+
+        Args:
+            self: (todo): write your description
+        """
         expect = u"\N{REPLACEMENT CHARACTER}"
         self.assertSoupEquals("&#10000000000000;", expect)
         self.assertSoupEquals("&#x10000000000000;", expect)
@@ -393,6 +509,12 @@ Hello, world!
             'http://www.w3.org/2000/svg', soup.html['xmlns:svg'])
 
     def test_multivalued_attribute_value_becomes_list(self):
+        """
+        The value is_multomes attribute.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b'<a class="foo bar">'
         soup = self.soup(markup)
         self.assertEqual(['foo', 'bar'], soup.a['class'])
@@ -405,6 +527,12 @@ Hello, world!
     #
 
     def test_can_parse_unicode_document(self):
+        """
+        Check if the document contains html.
+
+        Args:
+            self: (todo): write your description
+        """
         # A seemingly innocuous document... but it's in Unicode! And
         # it contains characters that can't be represented in the
         # encoding found in the  declaration! The horror!
@@ -420,14 +548,32 @@ Hello, world!
         self.assertEqual(soup.decode(), "<b>bold</b>")
 
     def test_single_quote_attribute_values_become_double_quotes(self):
+        """
+        Evaluate quotes are quoted.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals("<foo attr='bar'></foo>",
                               '<foo attr="bar"></foo>')
 
     def test_attribute_values_with_nested_quotes_are_left_alone(self):
+        """
+        Test if the value of the text is_quotes.
+
+        Args:
+            self: (todo): write your description
+        """
         text = """<foo attr='bar "brawls" happen'>a</foo>"""
         self.assertSoupEquals(text)
 
     def test_attribute_values_with_double_nested_quotes_get_quoted(self):
+        """
+        Test if the value is_quotes_values.
+
+        Args:
+            self: (todo): write your description
+        """
         text = """<foo attr='bar "brawls" happen'>a</foo>"""
         soup = self.soup(text)
         soup.foo['attr'] = 'Brawls happen at "Bob\'s Bar"'
@@ -436,6 +582,12 @@ Hello, world!
             """<foo attr="Brawls happen at &quot;Bob\'s Bar&quot;">a</foo>""")
 
     def test_ampersand_in_attribute_value_gets_escaped(self):
+        """
+        Asserts that the test is enabled.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals('<this is="really messed up & stuff"></this>',
                               '<this is="really messed up &amp; stuff"></this>')
 
@@ -444,9 +596,21 @@ Hello, world!
             '<a href="http://example.org?a=1&amp;b=2;3">foo</a>')
 
     def test_escaped_ampersand_in_attribute_value_is_left_alone(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals('<a href="http://example.org?a=1&amp;b=2;3"></a>')
 
     def test_entities_in_strings_converted_during_parsing(self):
+        """
+        Test if the test text.
+
+        Args:
+            self: (todo): write your description
+        """
         # Both XML and HTML entities are converted to Unicode characters
         # during parsing.
         text = "<p>&lt;&lt;sacr&eacute;&#32;bleu!&gt;&gt;</p>"
@@ -454,6 +618,12 @@ Hello, world!
         self.assertSoupEquals(text, expected)
 
     def test_smart_quotes_converted_on_the_way_in(self):
+        """
+        Test whether the quotes have a quotes.
+
+        Args:
+            self: (todo): write your description
+        """
         # Microsoft smart quotes are converted to Unicode characters during
         # parsing.
         quote = b"<p>\x91Foo\x92</p>"
@@ -463,16 +633,34 @@ Hello, world!
             u"\N{LEFT SINGLE QUOTATION MARK}Foo\N{RIGHT SINGLE QUOTATION MARK}")
 
     def test_non_breaking_spaces_converted_on_the_way_in(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         soup = self.soup("<a>&nbsp;&nbsp;</a>")
         self.assertEqual(soup.a.string, u"\N{NO-BREAK SPACE}" * 2)
 
     def test_entities_converted_on_the_way_out(self):
+        """
+        Test for entities on entities.
+
+        Args:
+            self: (todo): write your description
+        """
         text = "<p>&lt;&lt;sacr&eacute;&#32;bleu!&gt;&gt;</p>"
         expected = u"<p>&lt;&lt;sacr\N{LATIN SMALL LETTER E WITH ACUTE} bleu!&gt;&gt;</p>".encode("utf-8")
         soup = self.soup(text)
         self.assertEqual(soup.p.encode("utf-8"), expected)
 
     def test_real_iso_latin_document(self):
+        """
+        Test for an html document.
+
+        Args:
+            self: (todo): write your description
+        """
         # Smoke test of interrelated functionality, using an
         # easy-to-understand document.
 
@@ -500,6 +688,12 @@ Hello, world!
         self.assertEqual(result, expected)
 
     def test_real_shift_jis_document(self):
+        """
+        Test the jis jis html.
+
+        Args:
+            self: (todo): write your description
+        """
         # Smoke test to make sure the parser can handle a document in
         # Shift-JIS encoding, without choking.
         shift_jis_html = (
@@ -517,6 +711,12 @@ Hello, world!
         self.assertEqual(soup.encode("euc_jp"), unicode_html.encode("euc_jp"))
 
     def test_real_hebrew_document(self):
+        """
+        Parse the hebrew html.
+
+        Args:
+            self: (todo): write your description
+        """
         # A real-world test to make sure we can convert ISO-8859-9 (a
         # Hebrew encoding) to UTF-8.
         hebrew_document = b'<html><head><title>Hebrew (ISO 8859-8) in Visual Directionality</title></head><body><h1>Hebrew (ISO 8859-8) in Visual Directionality</h1>\xed\xe5\xec\xf9</body></html>'
@@ -530,6 +730,12 @@ Hello, world!
             hebrew_document.decode("iso8859-8").encode("utf-8"))
 
     def test_meta_tag_reflects_current_encoding(self):
+        """
+        Test if the meta tags.
+
+        Args:
+            self: (todo): write your description
+        """
         # Here's the <meta> tag saying that a document is
         # encoded in Shift-JIS.
         meta_tag = ('<meta content="text/html; charset=x-sjis" '
@@ -558,6 +764,12 @@ Hello, world!
         # test_tree.py.
 
     def test_html5_style_meta_tag_reflects_current_encoding(self):
+        """
+        Test if the meta tag meta meta taget.
+
+        Args:
+            self: (todo): write your description
+        """
         # Here's the <meta> tag saying that a document is
         # encoded in Shift-JIS.
         meta_tag = ('<meta id="encoding" charset="x-sjis" />')
@@ -582,6 +794,12 @@ Hello, world!
         self.assertEqual('utf8', charset.encode("utf8"))
 
     def test_tag_with_no_attributes_can_have_attributes_added(self):
+        """
+        Check if the content_tag.
+
+        Args:
+            self: (todo): write your description
+        """
         data = self.soup("<a>text</a>")
         data.a['foo'] = 'bar'
         self.assertEqual('<a foo="bar">text</a>', data.a.decode())
@@ -589,6 +807,12 @@ Hello, world!
 class XMLTreeBuilderSmokeTest(object):
 
     def test_pickle_and_unpickle_identity(self):
+        """
+        Parses the pickleates an element.
+
+        Args:
+            self: (todo): write your description
+        """
         # Pickling a tree, then unpickling it, yields a tree identical
         # to the original.
         tree = self.soup("<a><b>foo</a>")
@@ -598,16 +822,34 @@ class XMLTreeBuilderSmokeTest(object):
         self.assertEqual(loaded.decode(), tree.decode())
 
     def test_docstring_generated(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         soup = self.soup("<root/>")
         self.assertEqual(
             soup.encode(), b'<?xml version="1.0" encoding="utf-8"?>\n<root/>')
 
     def test_xml_declaration(self):
+        """
+        Declare the xml element.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"""<?xml version="1.0" encoding="utf8"?>\n<foo/>"""
         soup = self.soup(markup)
         self.assertEqual(markup, soup.encode("utf8"))
 
     def test_processing_instruction(self):
+        """
+        Test if the soup of the instruction.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"""<?xml version="1.0" encoding="utf8"?>\n<?PITarget PIContent?>"""
         soup = self.soup(markup)
         self.assertEqual(markup, soup.encode("utf8"))
@@ -625,6 +867,12 @@ class XMLTreeBuilderSmokeTest(object):
             soup.encode("utf-8"), markup)
 
     def test_formatter_processes_script_tag_for_xml_documents(self):
+        """
+        Generate the formatter
+
+        Args:
+            self: (todo): write your description
+        """
         doc = """
   <script type="text/javascript">
   </script>
@@ -637,17 +885,35 @@ class XMLTreeBuilderSmokeTest(object):
         self.assertTrue(b"&lt; &lt; hey &gt; &gt;" in encoded)
 
     def test_can_parse_unicode_document(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         markup = u'<?xml version="1.0" encoding="euc-jp"><root>Sacr\N{LATIN SMALL LETTER E WITH ACUTE} bleu!</root>'
         soup = self.soup(markup)
         self.assertEqual(u'Sacr\xe9 bleu!', soup.root.string)
 
     def test_popping_namespaced_tag(self):
+        """
+        Test for markdown tags.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<rss xmlns:dc="foo"><dc:creator>b</dc:creator><dc:date>2012-07-02T20:33:42Z</dc:date><dc:rights>c</dc:rights><image>d</image></rss>'
         soup = self.soup(markup)
         self.assertEqual(
             unicode(soup.rss), markup)
 
     def test_docstring_includes_correct_encoding(self):
+        """
+        Check if the test docstring contains the test docstring.
+
+        Args:
+            self: (todo): write your description
+        """
         soup = self.soup("<root/>")
         self.assertEqual(
             soup.encode("latin1"),
@@ -663,10 +929,22 @@ class XMLTreeBuilderSmokeTest(object):
 
 
     def test_tags_are_empty_element_if_and_only_if_they_are_empty(self):
+        """
+        The only empty tags are not empty.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals("<p>", "<p/>")
         self.assertSoupEquals("<p>foo</p>")
 
     def test_namespaces_are_preserved(self):
+        """
+        Ensure all the namespaces in the namespaces
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<root xmlns:a="http://example.com/" xmlns:b="http://example.net/"><a:foo>This tag is in the a namespace</a:foo><b:foo>This tag is in the b namespace</b:foo></root>'
         soup = self.soup(markup)
         root = soup.root
@@ -674,21 +952,45 @@ class XMLTreeBuilderSmokeTest(object):
         self.assertEqual("http://example.net/", root['xmlns:b'])
 
     def test_closing_namespaced_tag(self):
+        """
+        Test for markdown tags.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<p xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:date>20010504</dc:date></p>'
         soup = self.soup(markup)
         self.assertEqual(unicode(soup.p), markup)
 
     def test_namespaced_attributes(self):
+        """
+        Parses the contents.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<foo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><bar xsi:schemaLocation="http://www.example.com"/></foo>'
         soup = self.soup(markup)
         self.assertEqual(unicode(soup.foo), markup)
 
     def test_namespaced_attributes_xml_namespace(self):
+        """
+        Parses the xml element.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<foo xml:lang="fr">bar</foo>'
         soup = self.soup(markup)
         self.assertEqual(unicode(soup.foo), markup)
 
     def test_find_by_prefixed_name(self):
+        """
+        Finds for a human - tag
+
+        Args:
+            self: (todo): write your description
+        """
         doc = """<?xml version="1.0" encoding="utf-8"?>
 <Document xmlns="http://example.com/ns0"
     xmlns:ns1="http://example.com/ns1"
@@ -711,6 +1013,12 @@ class XMLTreeBuilderSmokeTest(object):
         self.assertEqual(3, len(soup.find_all(['ns1:tag', 'ns2:tag'])))
         
     def test_copy_tag_preserves_namespace(self):
+        """
+        Copy the presence tag to the organization tag.
+
+        Args:
+            self: (todo): write your description
+        """
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://example.com/ns0"/>"""
     
@@ -726,16 +1034,34 @@ class HTML5TreeBuilderSmokeTest(HTMLTreeBuilderSmokeTest):
     """Smoke test for a tree builder that supports HTML5."""
 
     def test_real_xhtml_document(self):
+        """
+        Test if xhtml document.
+
+        Args:
+            self: (todo): write your description
+        """
         # Since XHTML is not HTML5, HTML5 parsers are not tested to handle
         # XHTML documents in any particular way.
         pass
 
     def test_html_tags_have_namespace(self):
+        """
+        Generate html tags.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = "<a>"
         soup = self.soup(markup)
         self.assertEqual("http://www.w3.org/1999/xhtml", soup.a.namespace)
 
     def test_svg_tags_have_namespace(self):
+        """
+        Test for all tags in the set of tags.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<svg><circle/></svg>'
         soup = self.soup(markup)
         namespace = "http://www.w3.org/2000/svg"
@@ -744,6 +1070,12 @@ class HTML5TreeBuilderSmokeTest(HTMLTreeBuilderSmokeTest):
 
 
     def test_mathml_tags_have_namespace(self):
+        """
+        Test for html tags
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<math><msqrt>5</msqrt></math>'
         soup = self.soup(markup)
         namespace = 'http://www.w3.org/1998/Math/MathML'
@@ -751,6 +1083,12 @@ class HTML5TreeBuilderSmokeTest(HTMLTreeBuilderSmokeTest):
         self.assertEqual(namespace, soup.msqrt.namespace)
 
     def test_xml_declaration_becomes_comment(self):
+        """
+        Test for any <declaration.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = '<?xml version="1.0" encoding="utf-8"?><html></html>'
         soup = self.soup(markup)
         self.assertTrue(isinstance(soup.contents[0], Comment))
@@ -758,10 +1096,29 @@ class HTML5TreeBuilderSmokeTest(HTMLTreeBuilderSmokeTest):
         self.assertEqual("html", soup.contents[0].next_element.name)
 
 def skipIf(condition, reason):
+    """
+    Decorator for the given condition.
+
+    Args:
+        condition: (todo): write your description
+        reason: (str): write your description
+    """
    def nothing(test, *args, **kwargs):
+       """
+       Run a function that test.
+
+       Args:
+           test: (bool): write your description
+       """
        return None
 
    def decorator(test_item):
+       """
+       Decorator to wrap_item function.
+
+       Args:
+           test_item: (todo): write your description
+       """
        if condition:
            return nothing
        else:

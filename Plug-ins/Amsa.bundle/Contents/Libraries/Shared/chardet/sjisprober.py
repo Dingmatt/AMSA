@@ -35,6 +35,12 @@ from .enums import ProbingState, MachineState
 
 class SJISProber(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize analysis
+
+        Args:
+            self: (todo): write your description
+        """
         super(SJISProber, self).__init__()
         self.coding_sm = CodingStateMachine(SJIS_SM_MODEL)
         self.distribution_analyzer = SJISDistributionAnalysis()
@@ -42,18 +48,43 @@ class SJISProber(MultiByteCharSetProber):
         self.reset()
 
     def reset(self):
+        """
+        Reset the context.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SJISProber, self).reset()
         self.context_analyzer.reset()
 
     @property
     def charset_name(self):
+        """
+        Returns the name of the context.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.context_analyzer.charset_name
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Japanese"
 
     def feed(self, byte_str):
+        """
+        Feeds the input.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for i in range(len(byte_str)):
             coding_state = self.coding_sm.next_state(byte_str[i])
             if coding_state == MachineState.ERROR:
@@ -87,6 +118,12 @@ class SJISProber(MultiByteCharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Returns the confidence intervals.
+
+        Args:
+            self: (todo): write your description
+        """
         context_conf = self.context_analyzer.get_confidence()
         distrib_conf = self.distribution_analyzer.get_confidence()
         return max(context_conf, distrib_conf)

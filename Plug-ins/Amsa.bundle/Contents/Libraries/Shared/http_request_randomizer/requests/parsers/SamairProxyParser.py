@@ -11,9 +11,23 @@ __author__ = 'pgaref'
 
 class SamairProxyParser(UrlParser):
     def __init__(self, web_url, timeout=None):
+        """
+        Initialize web_url.
+
+        Args:
+            self: (todo): write your description
+            web_url: (str): write your description
+            timeout: (int): write your description
+        """
         UrlParser.__init__(self, web_url, timeout)
 
     def parse_proxyList(self):
+        """
+        Parse the proxy.
+
+        Args:
+            self: (todo): write your description
+        """
         curr_proxy_list = []
         try:
             response = requests.get(self.get_URl(), timeout=self.timeout)
@@ -54,5 +68,11 @@ class SamairProxyParser(UrlParser):
         return curr_proxy_list
 
     def __str__(self):
+        """
+        The minimum bandwidth.
+
+        Args:
+            self: (todo): write your description
+        """
         return "SemairProxy Parser of '{0}' with required bandwidth: '{1}' KBs" \
             .format(self.url, self.minimum_bandwidth_in_KBs)

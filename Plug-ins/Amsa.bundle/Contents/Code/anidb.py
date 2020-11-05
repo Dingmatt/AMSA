@@ -6,12 +6,26 @@ from lxml.etree import Element, SubElement, Comment
 
 
 def ParseNoFromSeason(season, episode):
+    """
+    Convert a episode to an episode.
+
+    Args:
+        season: (todo): write your description
+        episode: (todo): write your description
+    """
     if season >= 1:
         return str(episode)
     elif season == 0:
         return "S" + str(episode)
         
 def ParseNoFromType(type, episode):
+    """
+    Convert a episode type into a episode.
+
+    Args:
+        type: (str): write your description
+        episode: (todo): write your description
+    """
     if type == 1:
         return str(episode)
     elif type == 2:
@@ -26,6 +40,14 @@ def ParseNoFromType(type, episode):
         return "O" + str(episode) 
  
 def ParseLocalNoFromType(type, episode, prefix = ""):
+    """
+    Converts a episode type from a episode type.
+
+    Args:
+        type: (str): write your description
+        episode: (todo): write your description
+        prefix: (str): write your description
+    """
     if type == 1:
         return "S01E" + str(episode).zfill(2)
     elif type == 2:
@@ -45,6 +67,13 @@ def ParseLocalNoFromType(type, episode, prefix = ""):
 class AniDB(constants.Series):
     
     def __init__(self, id):
+        """
+        Initialize a new xpath.
+
+        Args:
+            self: (todo): write your description
+            id: (str): write your description
+        """
         logging.Log_Milestone("AniDB" + "_" + id)
         data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", os.path.join("AniDB", id), CACHE_1HOUR * 24).xpath("""/anime""")[0]
         
@@ -232,6 +261,14 @@ class AniDB(constants.Series):
         
     class Episode(constants.Episode):
         def __init__(self, data, id):
+            """
+            Initialize data
+
+            Args:
+                self: (todo): write your description
+                data: (todo): write your description
+                id: (str): write your description
+            """
             ##--------------------------------Title--------------------------------##
             if data.xpath("""./title"""):
                 self.Title = functions.GetPreferedTitleNoType(data.xpath("""./title""")).encode('utf-8').strip().translate(constants.ReplaceChars)

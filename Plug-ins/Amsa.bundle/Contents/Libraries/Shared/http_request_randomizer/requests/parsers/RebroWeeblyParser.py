@@ -11,11 +11,26 @@ __author__ = 'pgaref'
 
 class RebroWeeblyParser(UrlParser):
     def __init__(self, web_url, timeout=None):
+        """
+        Initialize web proxy
+
+        Args:
+            self: (todo): write your description
+            web_url: (str): write your description
+            timeout: (int): write your description
+        """
         self.top_proxy_path = "proxy-list.html"
         self.txt_proxy_path = "txt-lists.html"
         UrlParser.__init__(self, web_url, timeout)
 
     def parse_proxyList(self, use_top15k=False):
+        """
+        Parse proxy proxy.
+
+        Args:
+            self: (todo): write your description
+            use_top15k: (bool): write your description
+        """
         curr_proxy_list = []
         try:
             response = requests.get(self.get_URl()+"/"+self.top_proxy_path, timeout=self.timeout)
@@ -55,5 +70,11 @@ class RebroWeeblyParser(UrlParser):
         return curr_proxy_list
 
     def __str__(self):
+        """
+        The minimum bandwidth.
+
+        Args:
+            self: (todo): write your description
+        """
         return "RebroWeebly Parser of '{0}' with required bandwidth: '{1}' KBs" \
             .format(self.url, self.minimum_bandwidth_in_KBs)

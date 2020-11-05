@@ -37,12 +37,25 @@ class MultiByteCharSetProber(CharSetProber):
     """
 
     def __init__(self, lang_filter=None):
+        """
+        Set the language
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+        """
         super(MultiByteCharSetProber, self).__init__(lang_filter=lang_filter)
         self.distribution_analyzer = None
         self.coding_sm = None
         self._last_char = [0, 0]
 
     def reset(self):
+        """
+        Reset the internal state.
+
+        Args:
+            self: (todo): write your description
+        """
         super(MultiByteCharSetProber, self).reset()
         if self.coding_sm:
             self.coding_sm.reset()
@@ -52,13 +65,32 @@ class MultiByteCharSetProber(CharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Returns the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError
 
     @property
     def language(self):
+        """
+        Returns the language of the language.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError
 
     def feed(self, byte_str):
+        """
+        Feed the next byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for i in range(len(byte_str)):
             coding_state = self.coding_sm.next_state(byte_str[i])
             if coding_state == MachineState.ERROR:
@@ -88,4 +120,10 @@ class MultiByteCharSetProber(CharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Get confidence confidence confidence intervals.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.distribution_analyzer.get_confidence()

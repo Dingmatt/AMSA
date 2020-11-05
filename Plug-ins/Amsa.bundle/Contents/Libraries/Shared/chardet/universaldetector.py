@@ -79,6 +79,15 @@ class UniversalDetector(object):
                    'iso-8859-13': 'Windows-1257'}
 
     def __init__(self, lang_filter=LanguageFilter.ALL):
+        """
+        Initialize the language.
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+            LanguageFilter: (str): write your description
+            ALL: (todo): write your description
+        """
         self._esc_charset_prober = None
         self._charset_probers = []
         self.result = None

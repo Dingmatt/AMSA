@@ -32,6 +32,12 @@ from .mbcssm import EUCTW_SM_MODEL
 
 class EUCTWProber(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCTWProber, self).__init__()
         self.coding_sm = CodingStateMachine(EUCTW_SM_MODEL)
         self.distribution_analyzer = EUCTWDistributionAnalysis()
@@ -39,8 +45,20 @@ class EUCTWProber(MultiByteCharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "EUC-TW"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Taiwan"

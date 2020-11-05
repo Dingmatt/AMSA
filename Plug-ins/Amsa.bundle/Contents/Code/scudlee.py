@@ -8,24 +8,44 @@ pCollectionTree = None
 pCorrectionsTree = None
     
 def TitleTree():
+    """
+    Returns the tree from the root element.
+
+    Args:
+    """
     global pTitleTree
     if pTitleTree == None:
         pTitleTree = XMLFromURL(constants.ANIDB_TITLES, os.path.splitext(os.path.basename(constants.ANIDB_TITLES))[0], "", CACHE_1HOUR * 24 * 2, 60)
     return pTitleTree
     
 def MappingTree():
+    """
+    Returns a mapping of the root element tree.
+
+    Args:
+    """
     global pMappingTree
     if pMappingTree == None:
         pMappingTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING, os.path.basename(constants.ANIDB_TVDB_MAPPING), "", CACHE_1HOUR * 24 * 2, 60)
     return pMappingTree
     
 def CollectionTree():
+    """
+    Creates the root tree for the tree.
+
+    Args:
+    """
     global pCollectionTree
     if pCollectionTree == None:
         pCollectionTree = XMLFromURL(constants.ANIDB_COLLECTION, os.path.basename(constants.ANIDB_COLLECTION), "", CACHE_1HOUR * 24 * 2, 60)
     return pCollectionTree
 
 def CorrectionsTree():
+    """
+    Returns a list of trees that have a tree.
+
+    Args:
+    """
     global pCorrectionsTree
     if pCorrectionsTree == None:
         pCorrectionsTree = XMLFromURL(constants.ANIDB_TVDB_MAPPING_CORRECTIONS, os.path.basename(constants.ANIDB_TVDB_MAPPING_CORRECTIONS), "", CACHE_1HOUR * 24 * 2, 60)
@@ -41,6 +61,14 @@ class ScudLee():
     FirstSeries = None
     
     def __init__(self, anidbid = None, tvdbid = None):
+        """
+        Initialize series.
+
+        Args:
+            self: (todo): write your description
+            anidbid: (int): write your description
+            tvdbid: (int): write your description
+        """
         if anidbid != None or tvdbid != None:
             if anidbid != None: 
                 data = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (anidbid))[0]
@@ -74,6 +102,13 @@ class ScudLee():
                 self.FirstSeries = anidbid
     
     def Load(self, data):
+        """
+        Updates the data from the database.
+
+        Args:
+            self: (todo): write your description
+            data: (dict): write your description
+        """
         if data.get("anidbid"):
             self.AnidbId = data.get("anidbid")
             if not (u"%s" % (self.AnidbId)).isnumeric(): 
@@ -105,6 +140,13 @@ class ScudLee():
         TvdbSeason = None
         
         def __init__(self, data):
+            """
+            Initialize data.
+
+            Args:
+                self: (todo): write your description
+                data: (dict): write your description
+            """
             if data.text:
                 self.Text = data.text
             if data.get("offset"):

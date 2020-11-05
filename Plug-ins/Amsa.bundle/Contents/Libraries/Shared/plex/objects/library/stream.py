@@ -46,6 +46,14 @@ class Stream(Descriptor):
 
     @classmethod
     def from_node(cls, client, node):
+        """
+        Create a list from a node.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         items = []
 
         for genre in cls.helpers.findall(node, 'Stream'):

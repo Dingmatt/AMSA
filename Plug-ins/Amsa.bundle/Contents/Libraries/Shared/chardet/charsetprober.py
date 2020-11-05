@@ -37,29 +37,73 @@ class CharSetProber(object):
     SHORTCUT_THRESHOLD = 0.95
 
     def __init__(self, lang_filter=None):
+        """
+        Sets the language
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+        """
         self._state = None
         self.lang_filter = lang_filter
         self.logger = logging.getLogger(__name__)
 
     def reset(self):
+        """
+        Reset the state.
+
+        Args:
+            self: (todo): write your description
+        """
         self._state = ProbingState.DETECTING
 
     @property
     def charset_name(self):
+        """
+        The name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def feed(self, buf):
+        """
+        Feed the given buffer.
+
+        Args:
+            self: (todo): write your description
+            buf: (todo): write your description
+        """
         pass
 
     @property
     def state(self):
+        """
+        : return : class : ~.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._state
 
     def get_confidence(self):
+        """
+        Get the confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         return 0.0
 
     @staticmethod
     def filter_high_byte_only(buf):
+        """
+        Filter out out - pass filter filter.
+
+        Args:
+            buf: (todo): write your description
+        """
         buf = re.sub(b'([\x00-\x7F])+', b' ', buf)
         return buf
 

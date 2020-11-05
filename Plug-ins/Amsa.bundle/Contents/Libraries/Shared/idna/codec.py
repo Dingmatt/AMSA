@@ -7,6 +7,14 @@ _unicode_dots_re = re.compile(u'[\u002e\u3002\uff0e\uff61]')
 class Codec(codecs.Codec):
 
     def encode(self, data, errors='strict'):
+        """
+        Encode data.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+            errors: (todo): write your description
+        """
 
         if errors != 'strict':
             raise IDNAError("Unsupported error handling \"{0}\"".format(errors))
@@ -17,6 +25,14 @@ class Codec(codecs.Codec):
         return encode(data), len(data)
 
     def decode(self, data, errors='strict'):
+        """
+        Decode a string.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+            errors: (todo): write your description
+        """
 
         if errors != 'strict':
             raise IDNAError("Unsupported error handling \"{0}\"".format(errors))
@@ -28,6 +44,15 @@ class Codec(codecs.Codec):
 
 class IncrementalEncoder(codecs.BufferedIncrementalEncoder):
     def _buffer_encode(self, data, errors, final):
+        """
+        Encode the given buffer.
+
+        Args:
+            self: (todo): write your description
+            data: (array): write your description
+            errors: (todo): write your description
+            final: (bool): write your description
+        """
         if errors != 'strict':
             raise IDNAError("Unsupported error handling \"{0}\"".format(errors))
 
@@ -61,6 +86,15 @@ class IncrementalEncoder(codecs.BufferedIncrementalEncoder):
 
 class IncrementalDecoder(codecs.BufferedIncrementalDecoder):
     def _buffer_decode(self, data, errors, final):
+        """
+        Decode a buffer into a list of integers.
+
+        Args:
+            self: (todo): write your description
+            data: (str): write your description
+            errors: (todo): write your description
+            final: (bool): write your description
+        """
         if errors != 'strict':
             raise IDNAError("Unsupported error handling \"{0}\"".format(errors))
 
@@ -107,6 +141,11 @@ class StreamReader(Codec, codecs.StreamReader):
     pass
 
 def getregentry():
+    """
+    Get a list of utf - stream.
+
+    Args:
+    """
     return codecs.CodecInfo(
         name='idna',
         encode=Codec().encode,

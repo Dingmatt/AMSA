@@ -16,6 +16,11 @@ def tzname_in_python2(namefunc):
     to unicode strings
     """
     def adjust_encoding(*args, **kwargs):
+        """
+        Adjust encoding for encoding. encoding.
+
+        Args:
+        """
         name = namefunc(*args, **kwargs)
         if name is not None and not PY3:
             name = name.encode()
@@ -62,6 +67,12 @@ else:
 
         @property
         def fold(self):
+            """
+            Return a list of the list of elements.
+
+            Args:
+                self: (todo): write your description
+            """
             return 1
 
     def enfold(dt, fold=1):
@@ -150,6 +161,13 @@ class _tzinfo(tzinfo):
         return _fold
 
     def _fold(self, dt):
+        """
+        Determine value of dt for the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (int): write your description
+        """
         return getattr(dt, 'fold', 0)
 
     def _fromutc(self, dt):
@@ -239,9 +257,22 @@ class tzrangebase(_tzinfo):
     ..versionadded:: 2.6.0
     """
     def __init__(self):
+        """
+        Initialize the class.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError('tzrangebase is an abstract base class')
 
     def utcoffset(self, dt):
+        """
+        Return utc offset from utc offset.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         isdst = self._isdst(dt)
 
         if isdst is None:
@@ -252,6 +283,13 @@ class tzrangebase(_tzinfo):
             return self._std_offset
 
     def dst(self, dt):
+        """
+        Return the dst offset of a dst.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         isdst = self._isdst(dt)
 
         if isdst is None:
@@ -263,6 +301,13 @@ class tzrangebase(_tzinfo):
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        The tzname of the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if self._isdst(dt):
             return self._dst_abbr
         else:
@@ -325,6 +370,13 @@ class tzrangebase(_tzinfo):
         return (end <= dt < end + self._dst_base_offset)
 
     def _isdst(self, dt):
+        """
+        Determine if dt is contained in - place.
+
+        Args:
+            self: (todo): write your description
+            dt: (str): write your description
+        """
         if not self.hasdst:
             return False
         elif dt is None:
@@ -346,6 +398,14 @@ class tzrangebase(_tzinfo):
             return isdst
 
     def _naive_isdst(self, dt, transitions):
+        """
+        Returns a new dt with the given dston.
+
+        Args:
+            self: (todo): write your description
+            dt: (str): write your description
+            transitions: (todo): write your description
+        """
         dston, dstoff = transitions
 
         dt = dt.replace(tzinfo=None)
@@ -359,20 +419,45 @@ class tzrangebase(_tzinfo):
 
     @property
     def _dst_base_offset(self):
+        """
+        The relative offset of the dst.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._dst_offset - self._std_offset
     
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s(...)" % self.__class__.__name__
 
     __reduce__ = object.__reduce__
 
 
 def _total_seconds(td):
+    """
+    Return total number of seconds.
+
+    Args:
+        td: (todo): write your description
+    """
     # Python 2.6 doesn't have a total_seconds() method on timedelta objects
     return ((td.seconds + td.days * 86400) * 1000000 +
             td.microseconds) // 1000000

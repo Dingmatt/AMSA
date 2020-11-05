@@ -6,6 +6,13 @@ import json
 
 class PlexRequest(object):
     def __init__(self, client, **kwargs):
+        """
+        Make a new request.
+
+        Args:
+            self: (todo): write your description
+            client: (todo): write your description
+        """
         self.client = client
         self.kwargs = kwargs
 
@@ -20,6 +27,12 @@ class PlexRequest(object):
         self.method = None
 
     def prepare(self):
+        """
+        Prepare the request.
+
+        Args:
+            self: (todo): write your description
+        """
         self.request = Request()
 
         self.transform_parameters()
@@ -56,6 +69,12 @@ class PlexRequest(object):
         return url
 
     def transform_parameters(self):
+        """
+        Transform parameters to a dicts dict.
+
+        Args:
+            self: (todo): write your description
+        """
         # Transform `path`
         self.path = self.kwargs.get('path')
 
@@ -72,6 +91,12 @@ class PlexRequest(object):
             self.params = [self.params]
 
     def transform_data(self):
+        """
+        Transform the data to json.
+
+        Args:
+            self: (array): write your description
+        """
         self.data = self.kwargs.get('data')
 
         if self.data is None:
@@ -80,6 +105,12 @@ class PlexRequest(object):
         return json.dumps(self.data)
 
     def transform_headers(self):
+        """
+        Returns the request header.
+
+        Args:
+            self: (todo): write your description
+        """
         self.headers = self.kwargs.get('headers') or {}
 
         # Authentication
@@ -112,6 +143,12 @@ class PlexRequest(object):
         ])
 
     def transform_method(self):
+        """
+        Return the method to a new method.
+
+        Args:
+            self: (todo): write your description
+        """
         self.method = self.kwargs.get('method')
 
         # Pick `method` (if not provided)

@@ -19,4 +19,10 @@ class Video(Directory, SessionMixin):
 
     @property
     def seen(self):
+        """
+        Return the number of items in the view.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.view_count and self.view_count >= 1

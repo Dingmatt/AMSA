@@ -47,6 +47,13 @@ class LXMLTreeBuilderForXML(TreeBuilder):
     DEFAULT_NSMAPS = {'http://www.w3.org/XML/1998/namespace' : "xml"}
 
     def default_parser(self, encoding):
+        """
+        Returns the default parser.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+        """
         # This can either return a parser object or a class, which
         # will be instantiated with default arguments.
         if self._default_parser is not None:
@@ -55,6 +62,13 @@ class LXMLTreeBuilderForXML(TreeBuilder):
             target=self, strip_cdata=False, recover=True, encoding=encoding)
 
     def parser_for(self, encoding):
+        """
+        Returns the parser for the given encoding.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+        """
         # Use the default parser.
         parser = self.default_parser(encoding)
 
@@ -64,6 +78,14 @@ class LXMLTreeBuilderForXML(TreeBuilder):
         return parser
 
     def __init__(self, parser=None, empty_element_tags=None):
+        """
+        Initialize the parser.
+
+        Args:
+            self: (todo): write your description
+            parser: (todo): write your description
+            empty_element_tags: (todo): write your description
+        """
         # TODO: Issue a warning if parser is present but not a
         # callable, since that means there's no way to create new
         # parsers for different encodings.
@@ -74,6 +96,13 @@ class LXMLTreeBuilderForXML(TreeBuilder):
         self.nsmaps = [self.DEFAULT_NSMAPS]
 
     def _getNsTag(self, tag):
+        """
+        Return a tuple of ( tag tag ) for the given tag.
+
+        Args:
+            self: (todo): write your description
+            tag: (str): write your description
+        """
         # Split the namespace URL out of a fully-qualified lxml tag
         # name. Copied from lxml's src/lxml/sax.py.
         if tag[0] == '{':
@@ -119,6 +148,13 @@ class LXMLTreeBuilderForXML(TreeBuilder):
             yield (detector.markup, encoding, document_declared_encoding, False)
 
     def feed(self, markup):
+        """
+        Parse data.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+        """
         if isinstance(markup, bytes):
             markup = BytesIO(markup)
         elif isinstance(markup, unicode):
@@ -140,9 +176,24 @@ class LXMLTreeBuilderForXML(TreeBuilder):
             raise ParserRejectedMarkup(str(e))
 
     def close(self):
+        """
+        Closes the underlying nsm.
+
+        Args:
+            self: (todo): write your description
+        """
         self.nsmaps = [self.DEFAULT_NSMAPS]
 
     def start(self, name, attrs, nsmap={}):
+        """
+        Start a new tag
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+            nsmap: (dict): write your description
+        """
         # Make sure attrs is a mutable dict--lxml may send an immutable dictproxy.
         attrs = dict(attrs)
         nsprefix = None
@@ -192,6 +243,13 @@ class LXMLTreeBuilderForXML(TreeBuilder):
         return None
 
     def end(self, name):
+        """
+        Process end of tag
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self.soup.endData()
         completed_tag = self.soup.tagStack[-1]
         namespace, name = self._getNsTag(name)
@@ -208,14 +266,38 @@ class LXMLTreeBuilderForXML(TreeBuilder):
             self.nsmaps.pop()
 
     def pi(self, target, data):
+        """
+        Set the data.
+
+        Args:
+            self: (todo): write your description
+            target: (str): write your description
+            data: (array): write your description
+        """
         self.soup.endData()
         self.soup.handle_data(target + ' ' + data)
         self.soup.endData(self.processing_instruction_class)
 
     def data(self, content):
+        """
+        Parses the html.
+
+        Args:
+            self: (todo): write your description
+            content: (str): write your description
+        """
         self.soup.handle_data(content)
 
     def doctype(self, name, pubid, system):
+        """
+        This method isctype.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            pubid: (int): write your description
+            system: (todo): write your description
+        """
         self.soup.endData()
         doctype = Doctype.for_name_and_ids(name, pubid, system)
         self.soup.object_was_parsed(doctype)
@@ -241,9 +323,23 @@ class LXMLTreeBuilder(HTMLTreeBuilder, LXMLTreeBuilderForXML):
     processing_instruction_class = ProcessingInstruction
 
     def default_parser(self, encoding):
+        """
+        Return the default parser.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+        """
         return etree.HTMLParser
 
     def feed(self, markup):
+        """
+        Feed the parser.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+        """
         encoding = self.soup.original_encoding
         try:
             self.parser = self.parser_for(encoding)

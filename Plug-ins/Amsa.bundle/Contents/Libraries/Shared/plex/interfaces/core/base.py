@@ -20,6 +20,13 @@ log = logging.getLogger(__name__)
 class Helpers(object):
     @staticmethod
     def get(node, attr):
+        """
+        Returns the attribute
+
+        Args:
+            node: (todo): write your description
+            attr: (str): write your description
+        """
         if PARSER == 'etree.HTMLParser':
             return node.get(attr.lower())
 
@@ -27,6 +34,13 @@ class Helpers(object):
 
     @staticmethod
     def find(node, tag):
+        """
+        Find the first matching tag.
+
+        Args:
+            node: (todo): write your description
+            tag: (str): write your description
+        """
         if PARSER == 'etree.HTMLParser':
             return node.find(tag.lower())
 
@@ -34,6 +48,13 @@ class Helpers(object):
 
     @staticmethod
     def findall(node, tag):
+        """
+        Find all nodes in - place
+
+        Args:
+            node: (todo): write your description
+            tag: (str): write your description
+        """
         if PARSER == 'etree.HTMLParser':
             return node.findall(tag.lower())
 
@@ -47,9 +68,23 @@ class Interface(object):
     object_map = {}
 
     def __init__(self, client):
+        """
+        Initialize the client.
+
+        Args:
+            self: (todo): write your description
+            client: (todo): write your description
+        """
         self.client = client
 
     def __getitem__(self, name):
+        """
+        Returns the value of an attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if hasattr(self, name):
             return getattr(self, name)
 
@@ -57,12 +92,26 @@ class Interface(object):
 
     @property
     def http(self):
+        """
+        Return the http request.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.client:
             return None
 
         return self.client.http.configure(self.path)
 
     def parse(self, response, schema):
+        """
+        Parse xml response.
+
+        Args:
+            self: (todo): write your description
+            response: (todo): write your description
+            schema: (str): write your description
+        """
         if response.status_code < 200 or response.status_code >= 300:
             return None
 
@@ -88,6 +137,12 @@ class Interface(object):
 
     @staticmethod
     def __parse_xml(content):
+        """
+        Parse an xml document.
+
+        Args:
+            content: (str): write your description
+        """
         if PARSER == 'etree.HTMLParser':
             html = etree.fromstring(content, parser=etree.HTMLParser())
             assert html.tag == 'html'
@@ -104,6 +159,13 @@ class Interface(object):
 
     @staticmethod
     def __error_snippet(response, ex):
+        """
+        Return the snippet snippet of a snippet snippet.
+
+        Args:
+            response: (todo): write your description
+            ex: (todo): write your description
+        """
         # Retrieve the error line
         position = getattr(ex, 'position', None)
 
@@ -144,6 +206,16 @@ class Interface(object):
 
     @classmethod
     def __construct(cls, client, path, node, schema):
+        """
+        Constructs an object from the given schema.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            path: (str): write your description
+            node: (todo): write your description
+            schema: (dict): write your description
+        """
         if not schema:
             return None
 
@@ -185,6 +257,11 @@ class Interface(object):
 
         # Lazy-construct children
         def iter_children():
+            """
+            Iterate over all children.
+
+            Args:
+            """
             for child_node in node:
                 item = cls.__construct(client, path, child_node, child_schema)
 
@@ -198,10 +275,24 @@ class Interface(object):
 
 class InterfaceProxy(object):
     def __init__(self, interface, args):
+        """
+        Initialize an interface.
+
+        Args:
+            self: (todo): write your description
+            interface: (str): write your description
+        """
         self.interface = interface
         self.args = list(args)
 
     def __getattr__(self, name):
+        """
+        Returns the value of the given attribute
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         value = getattr(self.interface, name)
 
         if not hasattr(value, '__call__'):
@@ -209,6 +300,11 @@ class InterfaceProxy(object):
 
         @wraps(value)
         def wrap(*args, **kwargs):
+            """
+            Wrap a list or list and kwargs.
+
+            Args:
+            """
             args = self.args + list(args)
 
             return value(*args, **kwargs)

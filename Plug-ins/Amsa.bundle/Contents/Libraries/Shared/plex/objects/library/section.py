@@ -19,9 +19,21 @@ class Section(Directory):
     created_at = Property('createdAt', int)
 
     def __transform__(self):
+        """
+        Transform the transform
+
+        Args:
+            self: (array): write your description
+        """
         self.path = '/library/sections/%s' % self.key
 
     def all(self):
+        """
+        Returns all the list of all the jobs.
+
+        Args:
+            self: (todo): write your description
+        """
         response = self.http.get('all')
 
         return self.parse(response, idict({

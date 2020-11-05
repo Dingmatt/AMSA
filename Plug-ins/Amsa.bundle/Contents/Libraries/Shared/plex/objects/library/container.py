@@ -31,6 +31,13 @@ class MediaContainer(Container):
 
     @staticmethod
     def construct_section(client, node):
+        """
+        Construct a section for a node.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'key': 'librarySectionID',
             'uuid': 'librarySectionUUID',
@@ -40,6 +47,12 @@ class MediaContainer(Container):
         return Section.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over all media in this section.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(MediaContainer, self).__iter__():
             item.section = self.section
 
@@ -58,6 +71,15 @@ class SectionContainer(MediaContainer):
     filter_passes = lambda _, allowed, value: allowed is None or value in allowed
 
     def filter(self, types=None, keys=None, titles=None):
+        """
+        Return a generator.
+
+        Args:
+            self: (todo): write your description
+            types: (todo): write your description
+            keys: (list): write your description
+            titles: (str): write your description
+        """
         types = to_iterable(types)
         keys = to_iterable(keys)
 

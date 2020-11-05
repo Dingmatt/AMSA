@@ -5,6 +5,13 @@ from lxml.etree import Element, SubElement, Comment
 
 class Plex(constants.Series):
     def __init__(self, id):
+        """
+        Initialize an element.
+
+        Args:
+            self: (todo): write your description
+            id: (str): write your description
+        """
     
         self.ID = id
         

@@ -12,6 +12,14 @@ CleanCache_WaitUntil = datetime.datetime.now()
     
 class Titles():   
     def __init__(self, entry, orig_title):
+        """
+        Initialize a new title.
+
+        Args:
+            self: (todo): write your description
+            entry: (todo): write your description
+            orig_title: (str): write your description
+        """
         element = entry.getparent()
         id = element.get("aid")
         
@@ -48,14 +56,31 @@ class Titles():
 
         
 def GetAnimeTitleByID(Id):
+    """
+    Return a string representing a string representing the child tree.
+
+    Args:
+        Id: (str): write your description
+    """
     return functions.GetAnimeTitleByID(scudlee.TitleTree(), Id)
     
     
 def GetAnimeTitleByName(Name): 
+    """
+    Returns a list of all available tree names of the given name.
+
+    Args:
+        Name: (str): write your description
+    """
     return functions.GetAnimeTitleByName(scudlee.TitleTree(), Name)  
        
        
 def RefreshData():
+    """
+    Updates the data of the tree.
+
+    Args:
+    """
     global CleanCache_WaitUntil
     if CleanCache_WaitUntil + timedelta(days=3) < datetime.datetime.now(): 
         CleanCache()
@@ -66,6 +91,11 @@ def RefreshData():
     
     
 def CleanCache():
+    """
+    Remove all files in the directory.
+
+    Args:
+    """
     global CleanCache_WaitUntil
     CleanCache_WaitUntil = datetime.datetime.now()
     for root, dirs, _  in os.walk(constants.CachePath, topdown=False):
@@ -84,6 +114,13 @@ def CleanCache():
 
             
 def ExportMap(map, filename):
+    """
+    Creates a map from a map
+
+    Args:
+        map: (todo): write your description
+        filename: (str): write your description
+    """
     data = copy.deepcopy(map)
     for item in data.xpath("""./Season/Episode/Filename"""):
         item.getparent().remove(item)
@@ -114,6 +151,13 @@ def ExportMap(map, filename):
 
     
 def GenerateSeason(root, media_season):
+    """
+    Generate a media.
+
+    Args:
+        root: (todo): write your description
+        media_season: (todo): write your description
+    """
     season = root.find("""./Season[@num="%s"]""" % (str(media_season)))
     if season == None:
         season = SubElement(root, "Season", num=str(media_season))
@@ -123,6 +167,15 @@ def GenerateSeason(root, media_season):
 
     
 def GenerateEpisode(root, season, media_season, media_episode):
+    """
+    Generate a media element.
+
+    Args:
+        root: (str): write your description
+        season: (todo): write your description
+        media_season: (todo): write your description
+        media_episode: (todo): write your description
+    """
     episode = root.find("""./Season[@num="%s"]/Episode[num="%s"]""" % (str(media_season), str(media_episode)))
     if episode == None:
         episode = SubElement(season, "Episode", num=str(media_episode))
@@ -132,6 +185,12 @@ def GenerateEpisode(root, season, media_season, media_episode):
    
    
 def MapSeries(mappingData):
+    """
+    Convert a pandas dataframe to a pandas dataframe.
+
+    Args:
+        mappingData: (dict): write your description
+    """
     #logging.Log_Milestone("MapSeries")
     root = None
     existing = None
@@ -238,6 +297,13 @@ def MapSeries(mappingData):
     return root
 
 def MapLocal(root, media):
+    """
+    Return a list of audio element.
+
+    Args:
+        root: (todo): write your description
+        media: (todo): write your description
+    """
     for item in root.xpath("""./Mapping/Series/Episode"""):
         match = re.search(r".*\bS(?P<season>\d+)E(?P<episode>\d+)\b.*", item.get("tvdb"), re.IGNORECASE)
         if match:
@@ -301,18 +367,54 @@ def MapLocal(root, media):
    
    
 def MapMeta(root):
+    """
+    Lists available providers.
+
+    Args:
+        root: (str): write your description
+    """
     logging.Log_Milestone("MapMeta")
     providerList = [["Anidb"], ["Tvdb","Plex"]]
     @parallelize
     def Providers_Par():
+        """
+        Find providers providers providers
+
+        Args:
+        """
         for providers in providerList:
             @task
             def Providers_Task(root=root, providers=providers):
+                """
+                Get providers.
+
+                Args:
+                    root: (todo): write your description
+                    root: (todo): write your description
+                    providers: (str): write your description
+                    providers: (str): write your description
+                """
                 @parallelize
                 def Provider_Par():
+                    """
+                    Called by provider provider
+
+                    Args:
+                    """
                     for provider in providers:
                         @task
                         def Provider_Task(root=root, providers=providers, provider=provider):
+                            """
+                            Look up a task.
+
+                            Args:
+                                root: (todo): write your description
+                                root: (todo): write your description
+                                providers: (str): write your description
+                                providers: (str): write your description
+                                provider: (str): write your description
+                                provider: (str): write your description
+                            """
                             #Log("Provider: %s" %(providers))
                             data = None
                             for map in sorted(root.xpath("""./Season/Episode/Mapped/%s""" % (providers[0].lower())), key=lambda x: int(x.get("series") if x.get("series") and x.get("series") != "None" else 0)):
@@ -357,6 +459,15 @@ def MapMeta(root):
     logging.Log_Milestone("MapMeta")                                            
 
 def SearchMap(root, media, anidbId, tvdbId):
+    """
+    Searches for a given media.
+
+    Args:
+        root: (str): write your description
+        media: (array): write your description
+        anidbId: (int): write your description
+        tvdbId: (int): write your description
+    """
     logging.Log_Milestone("SearchMap")
     streamTag = []
     seasonNo = 0
@@ -395,6 +506,15 @@ def SearchMap(root, media, anidbId, tvdbId):
     # return data
     
 def MapMedia(root, metadata, anidbId, tvdbId):
+    """
+    Reads a single device.
+
+    Args:
+        root: (str): write your description
+        metadata: (dict): write your description
+        anidbId: (int): write your description
+        tvdbId: (int): write your description
+    """
     logging.Log_Milestone("MapMedia")
     streamTag = []
     seasonNo = 0
@@ -428,10 +548,30 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                     
     @parallelize
     def Episode_Par():
+        """
+        Prints out the metadata for a given season.
+
+        Args:
+        """
         for map in sorted(root.xpath("""./Season[@num>=%s or @num=0]/Episode""" % (seasonNo)), key=lambda x: x.getparent().get("num"),  reverse=False) :
             
             @task
             def Episode_Task(map=map, metadata=metadata, anidbId=anidbId, tvdbId=tvdbId, seasonNo=seasonNo):
+                """
+                Updates a new task.
+
+                Args:
+                    map: (todo): write your description
+                    map: (todo): write your description
+                    metadata: (dict): write your description
+                    metadata: (dict): write your description
+                    anidbId: (str): write your description
+                    anidbId: (str): write your description
+                    tvdbId: (str): write your description
+                    tvdbId: (str): write your description
+                    seasonNo: (todo): write your description
+                    seasonNo: (todo): write your description
+                """
                 season = str(int(map.getparent().get('num')) - seasonNo + 1)
                 #Log("SeasonNumber: %s, %s, %s" % (seasonNo, map.getparent().get('num'), str(int(map.getparent().get('num')) - seasonNo + 1)))
                 episode = map.get('num')

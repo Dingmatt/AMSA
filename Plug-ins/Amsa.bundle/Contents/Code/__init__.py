@@ -12,11 +12,21 @@ from common import Titles
  
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
+    """
+    Creates a new application.
+
+    Args:
+    """
     Log.Debug("--- AmsaTVAgent Start -------------------------------------------------------------------------------------------")
 
 
 ### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
 def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
+    """
+    Validate a list of the options dict.
+
+    Args:
+    """
     DefaultPrefs = ("GetTvdbFanart", "GetTvdbPosters", "GetTvdbBanners", "GetAnidbPoster", "localart", "adult", 
                   "GetPlexThemes", "MinimumWeight", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", 
                   "AgentPref1", "AgentPref2", "AgentPref3", "EpisodeLanguage1", "EpisodeLanguage2")
@@ -35,6 +45,16 @@ class AmsaTVAgent(Agent.TV_Shows):
     accepts_from = ["com.plexapp.agents.localmedia"] 
     
     def search(self, results, media, lang, manual=False):
+        """
+        Search for the given language.
+
+        Args:
+            self: (todo): write your description
+            results: (list): write your description
+            media: (todo): write your description
+            lang: (str): write your description
+            manual: (str): write your description
+        """
         Log.Debug("--- Search Begin -------------------------------------------------------------------------------------------")
         logging.New_Milestones()
         logging.Log_Milestone("WholeSearch")
@@ -64,9 +84,27 @@ class AmsaTVAgent(Agent.TV_Shows):
         orig_title = functions.CleanTitle(orig_title)
         @parallelize
         def searchTitles():
+            """
+            Search for titles for a given task
+
+            Args:
+            """
             for anime in common.GetAnimeTitleByName(orig_title):
                 @task
                 def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, perfectScore=perfectScore): 
+                    """
+                    Get scores for a given scores.
+
+                    Args:
+                        anime: (todo): write your description
+                        anime: (todo): write your description
+                        maxi: (int): write your description
+                        maxi: (int): write your description
+                        anidb: (todo): write your description
+                        anidb: (todo): write your description
+                        perfectScore: (list): write your description
+                        perfectScore: (list): write your description
+                    """
                     logging.Log_Milestone("Title")
                     anime = Titles(anime, orig_title)
                     logging.Log_Milestone("Title")
@@ -109,6 +147,16 @@ class AmsaTVAgent(Agent.TV_Shows):
         
     ### Parse the AniDB anime title XML ##################################################################################################################################
     def update(self, metadata, media, lang, force=False):       
+        """
+        Updates an existing metadata
+
+        Args:
+            self: (todo): write your description
+            metadata: (dict): write your description
+            media: (todo): write your description
+            lang: (str): write your description
+            force: (bool): write your description
+        """
         Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
         if force:
             HTTP.ClearCache()

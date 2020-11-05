@@ -16,6 +16,15 @@ class UrlParser(object):
     """
 
     def __init__(self, web_url, bandwidthKBs=None, timeout=None):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            web_url: (str): write your description
+            bandwidthKBs: (int): write your description
+            timeout: (int): write your description
+        """
         self.url = web_url
         self.timeout = timeout
         if bandwidthKBs is not None:
@@ -24,19 +33,43 @@ class UrlParser(object):
             self.minimum_bandwidth_in_KBs = 150
 
     def get_URl(self):
+        """
+        Gets the ir.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.url is None:
             raise ParserException("webURL is NONE")
         return self.url
 
     def get_min_bandwidth(self):
+        """
+        Get the minimum bandwidthwidth.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.minimum_bandwidth_in_KBs < 0:
             raise ParserException("invalid minimum bandwidth limit {0} ".format(self.minimum_bandwidth_in_KBs))
         return self.minimum_bandwidth_in_KBs
 
     def parse_proxyList(self):
+        """
+        Parse a list of the proxy.
+
+        Args:
+            self: (todo): write your description
+        """
         raise ParserException(" abstract method should be implemented by each subclass")
 
     def __str__(self):
+        """
+        The minimum bandwidth.
+
+        Args:
+            self: (todo): write your description
+        """
         return "URL Parser of '{0}' with required bandwidth: '{1}' KBs" \
             .format(self.url, self.minimum_bandwidth_in_KBs)
 

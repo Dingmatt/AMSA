@@ -6,6 +6,11 @@ AniDBArray = []
 netLock = Thread.Lock()
 
 def New_Milestones():
+    """
+    Creates a new telemetry.
+
+    Args:
+    """
     if constants.MilestoneLogging:
         try:
             netLock.acquire()
@@ -18,6 +23,12 @@ def New_Milestones():
             netLock.release()
             
 def Log_Milestone(milestone):
+    """
+    Acquire incoming log entries
+
+    Args:
+        milestone: (str): write your description
+    """
     if constants.MilestoneLogging:
         try:       
             now = datetime.datetime.now()
@@ -40,6 +51,11 @@ def Log_Milestone(milestone):
             netLock.release() 
             
 def New_AniDB():
+    """
+    Creates a new netLock file.
+
+    Args:
+    """
     if constants.AniDBLogging:
         try:
             netLock.acquire()
@@ -52,6 +68,13 @@ def New_AniDB():
             netLock.release()
             
 def Log_AniDB(id, save = False):
+    """
+    This function is called when the database
+
+    Args:
+        id: (str): write your description
+        save: (bool): write your description
+    """
     if constants.AniDBLogging:
         try:       
             netLock.acquire()

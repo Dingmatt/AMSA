@@ -95,25 +95,56 @@ Latin1ClassModel = (
 
 class Latin1Prober(CharSetProber):
     def __init__(self):
+        """
+        Initialize the counter.
+
+        Args:
+            self: (todo): write your description
+        """
         super(Latin1Prober, self).__init__()
         self._last_char_class = None
         self._freq_counter = None
         self.reset()
 
     def reset(self):
+        """
+        Reset the frequency.
+
+        Args:
+            self: (todo): write your description
+        """
         self._last_char_class = OTH
         self._freq_counter = [0] * FREQ_CAT_NUM
         CharSetProber.reset(self)
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "ISO-8859-1"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return ""
 
     def feed(self, byte_str):
+        """
+        Feed next byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         byte_str = self.filter_with_english_letters(byte_str)
         for c in byte_str:
             char_class = Latin1_CharToClass[c]
@@ -128,6 +159,12 @@ class Latin1Prober(CharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Calculate confidence intervals.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.state == ProbingState.NOT_ME:
             return 0.01
 

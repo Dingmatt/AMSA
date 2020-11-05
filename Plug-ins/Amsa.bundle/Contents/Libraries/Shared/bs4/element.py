@@ -18,10 +18,22 @@ def _alias(attr):
     """Alias one attribute name to another for backward compatibility"""
     @property
     def alias(self):
+        """
+        Returns the alias of an attribute
+
+        Args:
+            self: (todo): write your description
+        """
         return getattr(self, attr)
 
     @alias.setter
     def alias(self):
+        """
+        Returns the alias for the given attribute.
+
+        Args:
+            self: (todo): write your description
+        """
         return setattr(self, attr)
     return alias
 
@@ -29,6 +41,15 @@ def _alias(attr):
 class NamespacedAttribute(unicode):
 
     def __new__(cls, prefix, name, namespace=None):
+        """
+        Create a new object with the given prefix.
+
+        Args:
+            cls: (todo): write your description
+            prefix: (str): write your description
+            name: (str): write your description
+            namespace: (str): write your description
+        """
         if name is None:
             obj = unicode.__new__(cls, prefix)
         elif prefix is None:
@@ -52,11 +73,25 @@ class CharsetMetaAttributeValue(AttributeValueWithCharsetSubstitution):
     """
 
     def __new__(cls, original_value):
+        """
+        Create a new instance of the original value.
+
+        Args:
+            cls: (todo): write your description
+            original_value: (str): write your description
+        """
         obj = unicode.__new__(cls, original_value)
         obj.original_value = original_value
         return obj
 
     def encode(self, encoding):
+        """
+        Encode the given encoding.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+        """
         return encoding
 
 
@@ -72,6 +107,13 @@ class ContentMetaAttributeValue(AttributeValueWithCharsetSubstitution):
     CHARSET_RE = re.compile("((^|;)\s*charset=)([^;]*)", re.M)
 
     def __new__(cls, original_value):
+        """
+        Create a new instance of the original value.
+
+        Args:
+            cls: (todo): write your description
+            original_value: (str): write your description
+        """
         match = cls.CHARSET_RE.search(original_value)
         if match is None:
             # No substitution necessary.
@@ -82,7 +124,20 @@ class ContentMetaAttributeValue(AttributeValueWithCharsetSubstitution):
         return obj
 
     def encode(self, encoding):
+        """
+        Encode the given encoding.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+        """
         def rewrite(match):
+            """
+            Rewrite a string.
+
+            Args:
+                match: (todo): write your description
+            """
             return match.group(1) + encoding
         return self.CHARSET_RE.sub(rewrite, self.original_value)
 
@@ -105,6 +160,14 @@ class HTMLAwareEntitySubstitution(EntitySubstitution):
 
     @classmethod
     def _substitute_if_appropriate(cls, ns, f):
+        """
+        Substitute the given * ns.
+
+        Args:
+            cls: (todo): write your description
+            ns: (todo): write your description
+            f: (todo): write your description
+        """
         if (isinstance(ns, NavigableString)
             and ns.parent is not None
             and ns.parent.name in cls.cdata_containing_tags):
@@ -115,11 +178,25 @@ class HTMLAwareEntitySubstitution(EntitySubstitution):
 
     @classmethod
     def substitute_html(cls, ns):
+        """
+        Substitute html tags.
+
+        Args:
+            cls: (todo): write your description
+            ns: (todo): write your description
+        """
         return cls._substitute_if_appropriate(
             ns, EntitySubstitution.substitute_html)
 
     @classmethod
     def substitute_xml(cls, ns):
+        """
+        Substitute xml tags.
+
+        Args:
+            cls: (todo): write your description
+            ns: (todo): write your description
+        """
         return cls._substitute_if_appropriate(
             ns, EntitySubstitution.substitute_xml)
 
@@ -230,6 +307,13 @@ class PageElement(object):
     previousSibling = _alias("previous_sibling")  # BS3
 
     def replace_with(self, replace_with):
+        """
+        Replace this element * replace_with * with * replace_with *.
+
+        Args:
+            self: (todo): write your description
+            replace_with: (str): write your description
+        """
         if not self.parent:
             raise ValueError(
                 "Cannot replace one element with another when the"
@@ -246,6 +330,12 @@ class PageElement(object):
     replaceWith = replace_with  # BS3
 
     def unwrap(self):
+        """
+        Unwrap the element from the parent.
+
+        Args:
+            self: (todo): write your description
+        """
         my_parent = self.parent
         if not self.parent:
             raise ValueError(
@@ -260,6 +350,13 @@ class PageElement(object):
     replaceWithChildren = unwrap  # BS3
 
     def wrap(self, wrap_inside):
+        """
+        Wrap a callable with a callable function.
+
+        Args:
+            self: (todo): write your description
+            wrap_inside: (bool): write your description
+        """
         me = self.replace_with(wrap_inside)
         wrap_inside.append(me)
         return wrap_inside
@@ -308,6 +405,14 @@ class PageElement(object):
     _lastRecursiveChild = _last_descendant
 
     def insert(self, position, new_child):
+        """
+        Inserts a new child into this node.
+
+        Args:
+            self: (todo): write your description
+            position: (int): write your description
+            new_child: (todo): write your description
+        """
         if new_child is None:
             raise ValueError("Cannot insert None into a tag.")
         if new_child is self:
@@ -500,15 +605,37 @@ class PageElement(object):
 
     @property
     def next(self):
+        """
+        Return the next element. next_element.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.next_element
 
     @property
     def previous(self):
+        """
+        Return the previous previous previous sibling.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.previous_element
 
     #These methods do the real heavy lifting.
 
     def _find_one(self, method, name, attrs, text, **kwargs):
+        """
+        Returns the first occurrence.
+
+        Args:
+            self: (todo): write your description
+            method: (str): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+            text: (str): write your description
+        """
         r = None
         l = method(name, attrs, text, 1, **kwargs)
         if l:
@@ -564,6 +691,12 @@ class PageElement(object):
     #NavigableStrings and Tags.
     @property
     def next_elements(self):
+        """
+        Iterate all the next element.
+
+        Args:
+            self: (todo): write your description
+        """
         i = self.next_element
         while i is not None:
             yield i
@@ -571,6 +704,12 @@ class PageElement(object):
 
     @property
     def next_siblings(self):
+        """
+        Yieldsibling of this node.
+
+        Args:
+            self: (todo): write your description
+        """
         i = self.next_sibling
         while i is not None:
             yield i
@@ -578,6 +717,12 @@ class PageElement(object):
 
     @property
     def previous_elements(self):
+        """
+        Return an iterator over all elements.
+
+        Args:
+            self: (todo): write your description
+        """
         i = self.previous_element
         while i is not None:
             yield i
@@ -585,6 +730,12 @@ class PageElement(object):
 
     @property
     def previous_siblings(self):
+        """
+        Return an iterator over the previous sibling.
+
+        Args:
+            self: (todo): write your description
+        """
         i = self.previous_sibling
         while i is not None:
             yield i
@@ -592,6 +743,12 @@ class PageElement(object):
 
     @property
     def parents(self):
+        """
+        Return an iterator over all direct direct parents.
+
+        Args:
+            self: (todo): write your description
+        """
         i = self.parent
         while i is not None:
             yield i
@@ -625,10 +782,24 @@ class PageElement(object):
         return value
 
     def _tag_name_matches_and(self, function, tag_name):
+        """
+        Return the name of the function name.
+
+        Args:
+            self: (todo): write your description
+            function: (todo): write your description
+            tag_name: (str): write your description
+        """
         if not tag_name:
             return function
         else:
             def _match(tag):
+                """
+                Return true if tag matches tag_name.
+
+                Args:
+                    tag: (str): write your description
+                """
                 return tag.name == tag_name and function(tag)
             return _match
 
@@ -646,6 +817,12 @@ class PageElement(object):
             # space-separated list representation of `attribute`
             # contains `value`
             def _includes_value(element):
+                """
+                Gets the value of an element.
+
+                Args:
+                    element: (todo): write your description
+                """
                 attribute_value = element.get(attribute, [])
                 if not isinstance(attribute_value, list):
                     attribute_value = attribute_value.split()
@@ -666,6 +843,12 @@ class PageElement(object):
             # string representation of `attribute` is either exactly
             # `value` or starts with `value` and then a dash.
             def _is_or_starts_with_dash(element):
+                """
+                Returns true if the element is a valid.
+
+                Args:
+                    element: (todo): write your description
+                """
                 attribute_value = element._attr_value_as_string(attribute, '')
                 return (attribute_value == value or attribute_value.startswith(
                         value + '-'))
@@ -676,18 +859,48 @@ class PageElement(object):
     # Old non-property versions of the generators, for backwards
     # compatibility with BS3.
     def nextGenerator(self):
+        """
+        Returns a generator that yields the next generator.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.next_elements
 
     def nextSiblingGenerator(self):
+        """
+        Return the next sibling.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.next_siblings
 
     def previousGenerator(self):
+        """
+        : return : a generator.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.previous_elements
 
     def previousSiblingGenerator(self):
+        """
+        : return : a previous sibling.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.previous_siblings
 
     def parentGenerator(self):
+        """
+        Return the parent generator for this node s parent.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.parents
 
 
@@ -723,6 +936,12 @@ class NavigableString(unicode, PageElement):
         return type(self)(self)
 
     def __getnewargs__(self):
+        """
+        Return the unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         return (unicode(self),)
 
     def __getattr__(self, attr):
@@ -737,15 +956,35 @@ class NavigableString(unicode, PageElement):
                     self.__class__.__name__, attr))
 
     def output_ready(self, formatter="minimal"):
+        """
+        Returns the output string.
+
+        Args:
+            self: (todo): write your description
+            formatter: (str): write your description
+        """
         output = self.format_string(self, formatter)
         return self.PREFIX + output + self.SUFFIX
 
     @property
     def name(self):
+        """
+        The name of this name.
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     @name.setter
     def name(self, name):
+        """
+        Sets the name of the attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         raise AttributeError("A NavigableString cannot be given a name.")
 
 class PreformattedString(NavigableString):
@@ -792,6 +1031,15 @@ class Doctype(PreformattedString):
 
     @classmethod
     def for_name_and_ids(cls, name, pub_id, system_id):
+        """
+        Return a list of the given pubctype.
+
+        Args:
+            cls: (todo): write your description
+            name: (str): write your description
+            pub_id: (str): write your description
+            system_id: (todo): write your description
+        """
         value = name or ''
         if pub_id is not None:
             value += ' PUBLIC "%s"' % pub_id
@@ -914,6 +1162,13 @@ class Tag(PageElement):
 
     @string.setter
     def string(self, string):
+        """
+        Clear the string
+
+        Args:
+            self: (todo): write your description
+            string: (str): write your description
+        """
         self.clear()
         self.append(string.__class__(string))
 
@@ -939,6 +1194,12 @@ class Tag(PageElement):
 
     @property
     def stripped_strings(self):
+        """
+        Yields all strings.
+
+        Args:
+            self: (todo): write your description
+        """
         for string in self._all_strings(True):
             yield string
 
@@ -1000,9 +1261,22 @@ class Tag(PageElement):
         return value
     
     def has_attr(self, key):
+        """
+        Returns true if the given attribute is present.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         return key in self.attrs
 
     def __hash__(self):
+        """
+        Returns the hash of the hash
+
+        Args:
+            self: (todo): write your description
+        """
         return str(self).__hash__()
 
     def __getitem__(self, key):
@@ -1019,6 +1293,13 @@ class Tag(PageElement):
         return len(self.contents)
 
     def __contains__(self, x):
+        """
+        Returns true if x is contained in this node.
+
+        Args:
+            self: (todo): write your description
+            x: (str): write your description
+        """
         return x in self.contents
 
     def __nonzero__(self):
@@ -1041,6 +1322,13 @@ class Tag(PageElement):
         return self.find_all(*args, **kwargs)
 
     def __getattr__(self, tag):
+        """
+        Get an attribute of the given tag.
+
+        Args:
+            self: (todo): write your description
+            tag: (str): write your description
+        """
         #print "Getattr %s.%s" % (self.__class__, tag)
         if len(tag) > 3 and tag.endswith('Tag'):
             # BS3: soup.aTag -> "soup.find("a")
@@ -1089,9 +1377,21 @@ class Tag(PageElement):
             return self.encode(encoding)
 
     def __unicode__(self):
+        """
+        Return the unicode string.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.decode()
 
     def __str__(self):
+        """
+        Returns a byte string.
+
+        Args:
+            self: (todo): write your description
+        """
         if PY3K:
             return self.decode()
         else:
@@ -1103,6 +1403,17 @@ class Tag(PageElement):
     def encode(self, encoding=DEFAULT_OUTPUT_ENCODING,
                indent_level=None, formatter="minimal",
                errors="xmlcharrefreplace"):
+        """
+        Encode the given encoding.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+            DEFAULT_OUTPUT_ENCODING: (str): write your description
+            indent_level: (todo): write your description
+            formatter: (todo): write your description
+            errors: (todo): write your description
+        """
         # Turn the data structure into Unicode, then encode the
         # Unicode.
         u = self.decode(indent_level, encoding, formatter)
@@ -1210,6 +1521,14 @@ class Tag(PageElement):
         return s
 
     def prettify(self, encoding=None, formatter="minimal"):
+        """
+        Return the formatter.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+            formatter: (str): write your description
+        """
         if encoding is None:
             return self.decode(True, formatter=formatter)
         else:
@@ -1277,6 +1596,16 @@ class Tag(PageElement):
     # Old method for BS3 compatibility
     def renderContents(self, encoding=DEFAULT_OUTPUT_ENCODING,
                        prettyPrint=False, indentLevel=0):
+        """
+        Render the html representation of the object.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+            DEFAULT_OUTPUT_ENCODING: (str): write your description
+            prettyPrint: (bool): write your description
+            indentLevel: (str): write your description
+        """
         if not prettyPrint:
             indentLevel = None
         return self.encode_contents(
@@ -1317,11 +1646,23 @@ class Tag(PageElement):
     #Generator methods
     @property
     def children(self):
+        """
+        Return a list of children.
+
+        Args:
+            self: (todo): write your description
+        """
         # return iter() to make the purpose of the method clear
         return iter(self.contents)  # XXX This seems to be untested.
 
     @property
     def descendants(self):
+        """
+        Iterate over all descendants of this node.
+
+        Args:
+            self: (todo): write your description
+        """
         if not len(self.contents):
             return
         stopNode = self._last_descendant().next_element
@@ -1401,6 +1742,12 @@ class Tag(PageElement):
                 # ID selector
                 tag_name, tag_id = token.split('#', 1)
                 def id_matches(tag):
+                    """
+                    Return a list of a tag.
+
+                    Args:
+                        tag: (dict): write your description
+                    """
                     return tag.get('id', None) == tag_id
                 checker = id_matches
 
@@ -1409,6 +1756,12 @@ class Tag(PageElement):
                 tag_name, klass = token.split('.', 1)
                 classes = set(klass.split('.'))
                 def classes_match(candidate):
+                    """
+                    Return the match of a candidate.
+
+                    Args:
+                        candidate: (dict): write your description
+                    """
                     return classes.issubset(candidate.get('class', []))
                 checker = classes_match
 
@@ -1436,10 +1789,24 @@ class Tag(PageElement):
                             'nth-of-type pseudo-class value must be at least 1.')
                     class Counter(object):
                         def __init__(self, destination):
+                            """
+                            Initialize the destination.
+
+                            Args:
+                                self: (todo): write your description
+                                destination: (str): write your description
+                            """
                             self.count = 0
                             self.destination = destination
 
                         def nth_child_of_type(self, tag):
+                            """
+                            Return true if tag is a tag.
+
+                            Args:
+                                self: (todo): write your description
+                                tag: (str): write your description
+                            """
                             self.count += 1
                             if self.count == self.destination:
                                 return True
@@ -1466,6 +1833,12 @@ class Tag(PageElement):
                 # token as a CSS selector against the tag's next
                 # sibling that's a tag.
                 def next_tag_sibling(tag):
+                    """
+                    Yield the next sibling.
+
+                    Args:
+                        tag: (todo): write your description
+                    """
                     yield tag.find_next_sibling(True)
                 recursive_candidate_generator = next_tag_sibling
 
@@ -1487,6 +1860,12 @@ class Tag(PageElement):
                 # the selector is "foo".
                 next_token = tokens[index+1]
                 def recursive_select(tag):
+                    """
+                    Recursively iterate through tokens.
+
+                    Args:
+                        tag: (todo): write your description
+                    """
                     if self._select_debug:
                         print '    Calling select("%s") recursively on %s %s' % (next_token, tag.name, tag.attrs)
                         print '-' * 40
@@ -1512,6 +1891,12 @@ class Tag(PageElement):
                     # a bunch of bogus tags from cluttering up the
                     # debug log.
                     def default_candidate_generator(tag):
+                        """
+                        Generator that yields a generator for each tag.
+
+                        Args:
+                            tag: (todo): write your description
+                        """
                         for child in tag.descendants:
                             if not isinstance(child, Tag):
                                 continue
@@ -1564,9 +1949,21 @@ class Tag(PageElement):
 
     # Old names for backwards compatibility
     def childGenerator(self):
+        """
+        Return a generator of children.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.children
 
     def recursiveChildGenerator(self):
+        """
+        : return : class : abstractdescriptator
+
+        Args:
+            self: (todo): write your description
+        """
         return self.descendants
 
     def has_key(self, key):
@@ -1583,6 +1980,15 @@ class SoupStrainer(object):
     text)."""
 
     def __init__(self, name=None, attrs={}, text=None, **kwargs):
+        """
+        Initialize a search.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+            text: (str): write your description
+        """
         self.name = self._normalize_search_value(name)
         if not isinstance(attrs, dict):
             # Treat a non-dict value for attrs as a search for the 'class'
@@ -1610,6 +2016,13 @@ class SoupStrainer(object):
         self.text = self._normalize_search_value(text)
 
     def _normalize_search_value(self, value):
+        """
+        Normalizes a string.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         # Leave it alone if it's a Unicode string, a callable, a
         # regular expression, a boolean, or None.
         if (isinstance(value, unicode) or callable(value) or hasattr(value, 'match')
@@ -1640,12 +2053,26 @@ class SoupStrainer(object):
         return unicode(str(value))
 
     def __str__(self):
+        """
+        Return the string representation of this element.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.text:
             return self.text
         else:
             return "%s|%s" % (self.name, self.attrs)
 
     def search_tag(self, markup_name=None, markup_attrs={}):
+        """
+        Search for a given tag.
+
+        Args:
+            self: (todo): write your description
+            markup_name: (str): write your description
+            markup_attrs: (int): write your description
+        """
         found = None
         markup = None
         if isinstance(markup_name, Tag):
@@ -1687,6 +2114,13 @@ class SoupStrainer(object):
     searchTag = search_tag
 
     def search(self, markup):
+        """
+        Search for an instance of the given html tag.
+
+        Args:
+            self: (todo): write your description
+            markup: (str): write your description
+        """
         # print 'looking for %s in %s' % (self, markup)
         found = None
         # If given a list of items, scan it for a text element that
@@ -1713,6 +2147,15 @@ class SoupStrainer(object):
         return found
 
     def _matches(self, markup, match_against, already_tried=None):
+        """
+        Returns true if the given marker matches the match.
+
+        Args:
+            self: (todo): write your description
+            markup: (str): write your description
+            match_against: (todo): write your description
+            already_tried: (todo): write your description
+        """
         # print u"Matching %s against %s" % (markup, match_against)
         result = False
         if isinstance(markup, list) or isinstance(markup, tuple):
@@ -1799,10 +2242,25 @@ class ResultSet(list):
     """A ResultSet is just a list that keeps track of the SoupStrainer
     that created it."""
     def __init__(self, source, result=()):
+        """
+        Initialize result
+
+        Args:
+            self: (todo): write your description
+            source: (str): write your description
+            result: (dict): write your description
+        """
         super(ResultSet, self).__init__(result)
         self.source = source
 
     def __getattr__(self, key):
+        """
+        Return the value of a given attribute.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         raise AttributeError(
             "ResultSet object has no attribute '%s'. You're probably treating a list of items like a single item. Did you call find_all() when you meant to call find()?" % key
         )

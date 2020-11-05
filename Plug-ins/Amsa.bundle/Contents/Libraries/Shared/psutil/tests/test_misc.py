@@ -52,6 +52,14 @@ class TestMisc(unittest.TestCase):
     """Misc / generic tests."""
 
     def test_process__repr__(self, func=repr):
+        """
+        Test if the pid pid.
+
+        Args:
+            self: (todo): write your description
+            func: (todo): write your description
+            repr: (str): write your description
+        """
         p = psutil.Process()
         r = func(p)
         self.assertIn("psutil.Process", r)
@@ -80,9 +88,23 @@ class TestMisc(unittest.TestCase):
             self.assertNotIn("name=", r)
 
     def test_process__str__(self):
+        """
+        Runs the test process
+
+        Args:
+            self: (todo): write your description
+        """
         self.test_process__repr__(func=str)
 
     def test_no_such_process__repr__(self, func=repr):
+        """
+        Perform a process.
+
+        Args:
+            self: (todo): write your description
+            func: (callable): write your description
+            repr: (todo): write your description
+        """
         self.assertEqual(
             repr(psutil.NoSuchProcess(321)),
             "psutil.NoSuchProcess process no longer exists (pid=321)")
@@ -95,6 +117,14 @@ class TestMisc(unittest.TestCase):
             "psutil.NoSuchProcess foo")
 
     def test_zombie_process__repr__(self, func=repr):
+        """
+        Test if a zombie.
+
+        Args:
+            self: (todo): write your description
+            func: (todo): write your description
+            repr: (todo): write your description
+        """
         self.assertEqual(
             repr(psutil.ZombieProcess(321)),
             "psutil.ZombieProcess process still exists but it's a zombie "
@@ -112,6 +142,14 @@ class TestMisc(unittest.TestCase):
             "psutil.ZombieProcess foo")
 
     def test_access_denied__repr__(self, func=repr):
+        """
+        Test if access access to access access access.
+
+        Args:
+            self: (todo): write your description
+            func: (todo): write your description
+            repr: (str): write your description
+        """
         self.assertEqual(
             repr(psutil.AccessDenied(321)),
             "psutil.AccessDenied (pid=321)")
@@ -123,6 +161,14 @@ class TestMisc(unittest.TestCase):
             "psutil.AccessDenied foo")
 
     def test_timeout_expired__repr__(self, func=repr):
+        """
+        Test if a function that the operation has expired timeout.
+
+        Args:
+            self: (todo): write your description
+            func: (callable): write your description
+            repr: (str): write your description
+        """
         self.assertEqual(
             repr(psutil.TimeoutExpired(321)),
             "psutil.TimeoutExpired timeout after 321 seconds")
@@ -135,6 +181,12 @@ class TestMisc(unittest.TestCase):
             "(pid=111, name='foo')")
 
     def test_process__eq__(self):
+        """
+        Test if the process.
+
+        Args:
+            self: (todo): write your description
+        """
         p1 = psutil.Process()
         p2 = psutil.Process()
         self.assertEqual(p1, p2)
@@ -143,10 +195,22 @@ class TestMisc(unittest.TestCase):
         self.assertNotEqual(p1, 'foo')
 
     def test_process__hash__(self):
+        """
+        Test if the test process.
+
+        Args:
+            self: (todo): write your description
+        """
         s = set([psutil.Process(), psutil.Process()])
         self.assertEqual(len(s), 1)
 
     def test__all__(self):
+        """
+        Determine all files.
+
+        Args:
+            self: (todo): write your description
+        """
         dir_psutil = dir(psutil)
         for name in dir_psutil:
             if name in ('callable', 'error', 'namedtuple', 'tests',
@@ -173,16 +237,34 @@ class TestMisc(unittest.TestCase):
             self.assertIn(name, dir_psutil)
 
     def test_version(self):
+        """
+        Test the test test version of the version
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual('.'.join([str(x) for x in psutil.version_info]),
                          psutil.__version__)
 
     def test_process_as_dict_no_new_names(self):
+        """
+        Test for new process names.
+
+        Args:
+            self: (todo): write your description
+        """
         # See https://github.com/giampaolo/psutil/issues/813
         p = psutil.Process()
         p.foo = '1'
         self.assertNotIn('foo', p.as_dict())
 
     def test_memoize(self):
+        """
+        Defines the memoize.
+
+        Args:
+            self: (todo): write your description
+        """
         @memoize
         def foo(*args, **kwargs):
             "foo docstring"
@@ -218,9 +300,21 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(foo.__doc__, "foo docstring")
 
     def test_memoize_when_activated(self):
+        """
+        Test if the memo is_memo.
+
+        Args:
+            self: (todo): write your description
+        """
         class Foo:
             @memoize_when_activated
             def foo(self):
+                """
+                Add a list of calls to the database.
+
+                Args:
+                    self: (todo): write your description
+                """
                 calls.append(None)
 
         f = Foo()
@@ -244,9 +338,21 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(len(calls), 2)
 
     def test_parse_environ_block(self):
+        """
+        Parse the environment variables.
+
+        Args:
+            self: (todo): write your description
+        """
         from psutil._common import parse_environ_block
 
         def k(s):
+            """
+            Returns the k - th value of s
+
+            Args:
+                s: (str): write your description
+            """
             return s.upper() if WINDOWS else s
 
         self.assertEqual(parse_environ_block("a=1\0"),
@@ -265,6 +371,12 @@ class TestMisc(unittest.TestCase):
         self.assertEqual(parse_environ_block("a=1\0b=2"), {k("a"): "1"})
 
     def test_supports_ipv6(self):
+        """
+        Configure the ipv6 ipv6 ipv6.
+
+        Args:
+            self: (todo): write your description
+        """
         if supports_ipv6():
             with mock.patch('psutil._common.socket') as s:
                 s.has_ipv6 = False
@@ -288,6 +400,12 @@ class TestMisc(unittest.TestCase):
                     sock.bind(("::1", 0))
 
     def test_isfile_strict(self):
+        """
+        Checks if the mock file exists.
+
+        Args:
+            self: (todo): write your description
+        """
         from psutil._common import isfile_strict
         this_file = os.path.abspath(__file__)
         assert isfile_strict(this_file)
@@ -305,7 +423,19 @@ class TestMisc(unittest.TestCase):
             assert not isfile_strict(this_file)
 
     def test_serialization(self):
+        """
+        Test if serialization of the serialized state.
+
+        Args:
+            self: (todo): write your description
+        """
         def check(ret):
+            """
+            Check if a json object is valid.
+
+            Args:
+                ret: (int): write your description
+            """
             if json is not None:
                 json.loads(json.dumps(ret))
             a = pickle.dumps(ret)
@@ -328,12 +458,24 @@ class TestMisc(unittest.TestCase):
         check(psutil.users())
 
     def test_setup_script(self):
+        """
+        Execute the setup.
+
+        Args:
+            self: (todo): write your description
+        """
         setup_py = os.path.join(ROOT_DIR, 'setup.py')
         module = imp.load_source('setup', setup_py)
         self.assertRaises(SystemExit, module.setup)
         self.assertEqual(module.get_version(), psutil.__version__)
 
     def test_ad_on_process_creation(self):
+        """
+        Test if the mock process.
+
+        Args:
+            self: (todo): write your description
+        """
         # We are supposed to be able to instantiate Process also in case
         # of zombie processes or access denied.
         with mock.patch.object(psutil.Process, 'create_time',
@@ -351,6 +493,12 @@ class TestMisc(unittest.TestCase):
             assert meth.called
 
     def test_sanity_version_check(self):
+        """
+        Perform the version of - quity.
+
+        Args:
+            self: (todo): write your description
+        """
         # see: https://github.com/giampaolo/psutil/issues/564
         with mock.patch(
                 "psutil._psplatform.cext.version", return_value="0.0.0"):
@@ -369,6 +517,13 @@ class TestScripts(unittest.TestCase):
     """Tests for scripts in the "scripts" directory."""
 
     def assert_stdout(self, exe, args=None):
+        """
+        Runs a command on the given executable.
+
+        Args:
+            self: (todo): write your description
+            exe: (todo): write your description
+        """
         exe = '"%s"' % os.path.join(SCRIPTS_DIR, exe)
         if args:
             exe = exe + ' ' + args
@@ -383,12 +538,25 @@ class TestScripts(unittest.TestCase):
         return out
 
     def assert_syntax(self, exe, args=None):
+        """
+        Create a syml file. syml
+
+        Args:
+            self: (todo): write your description
+            exe: (todo): write your description
+        """
         exe = os.path.join(SCRIPTS_DIR, exe)
         with open(exe, 'r') as f:
             src = f.read()
         ast.parse(src)
 
     def test_coverage(self):
+        """
+        Test for coverage files.
+
+        Args:
+            self: (todo): write your description
+        """
         # make sure all example scripts have a test method defined
         meths = dir(self)
         for name in os.listdir(SCRIPTS_DIR):
@@ -400,6 +568,12 @@ class TestScripts(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, "POSIX only")
     def test_executable(self):
+        """
+        Test for all possible executable files.
+
+        Args:
+            self: (todo): write your description
+        """
         for name in os.listdir(SCRIPTS_DIR):
             if name.endswith('.py'):
                 path = os.path.join(SCRIPTS_DIR, name)
@@ -407,70 +581,184 @@ class TestScripts(unittest.TestCase):
                     self.fail('%r is not executable' % path)
 
     def test_disk_usage(self):
+        """
+        Return the usage usage for disk.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('disk_usage.py')
 
     def test_free(self):
+        """
+        Called when the test is run.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('free.py')
 
     def test_meminfo(self):
+        """
+        Returns the memory info for the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('meminfo.py')
 
     def test_procinfo(self):
+        """
+        Return the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('procinfo.py', args=str(os.getpid()))
 
     # can't find users on APPVEYOR or TRAVIS
     @unittest.skipIf(APPVEYOR or TRAVIS and not psutil.users(),
                      "unreliable on APPVEYOR or TRAVIS")
     def test_who(self):
+        """
+        Test for who who who have a who who who have a test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('who.py')
 
     def test_ps(self):
+        """
+        Test if the test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('ps.py')
 
     def test_pstree(self):
+        """
+        The test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('pstree.py')
 
     def test_netstat(self):
+        """
+        Test if the netstat is enabled.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('netstat.py')
 
     # permission denied on travis
     @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")
     def test_ifconfig(self):
+        """
+        Test if the test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('ifconfig.py')
 
     @unittest.skipIf(OPENBSD or NETBSD, "platform not supported")
     def test_pmap(self):
+        """
+        Determine the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('pmap.py', args=str(os.getpid()))
 
     @unittest.skipUnless(OSX or WINDOWS or LINUX, "platform not supported")
     def test_procsmem(self):
+        """
+        Test if test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('procsmem.py')
 
     def test_killall(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_syntax('killall.py')
 
     def test_nettop(self):
+        """
+        Assertsopop expression.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_syntax('nettop.py')
 
     def test_top(self):
+        """
+        Asserts that the test case.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_syntax('top.py')
 
     def test_iotop(self):
+        """
+        Asserts the test for the test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_syntax('iotop.py')
 
     def test_pidof(self):
+        """
+        Get pid of pid of the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         output = self.assert_stdout('pidof.py', args=psutil.Process().name())
         self.assertIn(str(os.getpid()), output)
 
     @unittest.skipUnless(WINDOWS, "WINDOWS only")
     def test_winservices(self):
+        """
+        Test if test test test test test test test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('winservices.py')
 
     def test_cpu_distribution(self):
+        """
+        Çļ»åĭ¨æī·»æīģ
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_syntax('cpu_distribution.py')
 
     @unittest.skipIf(TRAVIS, "unreliable on travis")
     def test_temperatures(self):
+        """
+        Test if a test is set to none
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(psutil, "sensors_temperatures") and \
                 psutil.sensors_temperatures():
             self.assert_stdout('temperatures.py')
@@ -479,12 +767,24 @@ class TestScripts(unittest.TestCase):
 
     @unittest.skipIf(TRAVIS, "unreliable on travis")
     def test_fans(self):
+        """
+        Run test test test test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(psutil, "sensors_fans") and psutil.sensors_fans():
             self.assert_stdout('fans.py')
         else:
             self.assert_syntax('fans.py')
 
     def test_battery(self):
+        """
+        Test if battery battery battery
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(psutil, "sensors_battery") and \
                 psutil.sensors_battery() is not None:
             self.assert_stdout('battery.py')
@@ -493,6 +793,12 @@ class TestScripts(unittest.TestCase):
 
     @unittest.skipIf(APPVEYOR or TRAVIS, "unreliable on CI")
     def test_sensors(self):
+        """
+        Test if the current test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assert_stdout('sensors.py')
 
 
@@ -505,10 +811,22 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_retry_success(self, sleep):
+        """
+        Test for retry retry and retry.
+
+        Args:
+            self: (todo): write your description
+            sleep: (todo): write your description
+        """
         # Fail 3 times out of 5; make sure the decorated fun returns.
 
         @retry(retries=5, interval=1, logfun=None)
         def foo():
+            """
+            Removes all the next item.
+
+            Args:
+            """
             while queue:
                 queue.pop()
                 1 / 0
@@ -520,10 +838,22 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_retry_failure(self, sleep):
+        """
+        Test for retry and retry.
+
+        Args:
+            self: (todo): write your description
+            sleep: (todo): write your description
+        """
         # Fail 6 times out of 5; th function is supposed to raise exc.
 
         @retry(retries=5, interval=1, logfun=None)
         def foo():
+            """
+            Removes all the next item.
+
+            Args:
+            """
             while queue:
                 queue.pop()
                 1 / 0
@@ -535,8 +865,20 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_exception_arg(self, sleep):
+        """
+        Test if the given interval.
+
+        Args:
+            self: (todo): write your description
+            sleep: (todo): write your description
+        """
         @retry(exception=ValueError, interval=1)
         def foo():
+            """
+            Checks if the given type.
+
+            Args:
+            """
             raise TypeError
 
         self.assertRaises(TypeError, foo)
@@ -544,10 +886,22 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_no_interval_arg(self, sleep):
+        """
+        Test if interval is a test.
+
+        Args:
+            self: (todo): write your description
+            sleep: (bool): write your description
+        """
         # if interval is not specified sleep is not supposed to be called
 
         @retry(retries=5, interval=None, logfun=None)
         def foo():
+            """
+            Æł ]
+
+            Args:
+            """
             1 / 0
 
         self.assertRaises(ZeroDivisionError, foo)
@@ -555,9 +909,21 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_retries_arg(self, sleep):
+        """
+        Test if retries a test call.
+
+        Args:
+            self: (todo): write your description
+            sleep: (todo): write your description
+        """
 
         @retry(retries=5, interval=1, logfun=None)
         def foo():
+            """
+            Æł ]
+
+            Args:
+            """
             1 / 0
 
         self.assertRaises(ZeroDivisionError, foo)
@@ -565,37 +931,80 @@ class TestRetryDecorator(unittest.TestCase):
 
     @mock.patch('time.sleep')
     def test_retries_and_timeout_args(self, sleep):
+        """
+        Test if the retries and wait for the given value.
+
+        Args:
+            self: (todo): write your description
+            sleep: (todo): write your description
+        """
         self.assertRaises(ValueError, retry, retries=5, timeout=1)
 
 
 class TestSyncTestUtils(unittest.TestCase):
 
     def tearDown(self):
+        """
+        ! \ r?
+
+        Args:
+            self: (todo): write your description
+        """
         safe_rmpath(TESTFN)
 
     def test_wait_for_pid(self):
+        """
+        Test for a pid of the pid of a pid.
+
+        Args:
+            self: (todo): write your description
+        """
         wait_for_pid(os.getpid())
         nopid = max(psutil.pids()) + 99999
         with mock.patch('psutil.tests.retry.__iter__', return_value=iter([0])):
             self.assertRaises(psutil.NoSuchProcess, wait_for_pid, nopid)
 
     def test_wait_for_file(self):
+        """
+        Waits a file to be executed.
+
+        Args:
+            self: (todo): write your description
+        """
         with open(TESTFN, 'w') as f:
             f.write('foo')
         wait_for_file(TESTFN)
         assert not os.path.exists(TESTFN)
 
     def test_wait_for_file_empty(self):
+        """
+        Waits for all files to be empty.
+
+        Args:
+            self: (todo): write your description
+        """
         with open(TESTFN, 'w'):
             pass
         wait_for_file(TESTFN, empty=True)
         assert not os.path.exists(TESTFN)
 
     def test_wait_for_file_no_file(self):
+        """
+        Waits for a test is closed.
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch('psutil.tests.retry.__iter__', return_value=iter([0])):
             self.assertRaises(IOError, wait_for_file, TESTFN)
 
     def test_wait_for_file_no_delete(self):
+        """
+        Test if a file exists.
+
+        Args:
+            self: (todo): write your description
+        """
         with open(TESTFN, 'w') as f:
             f.write('foo')
         wait_for_file(TESTFN, delete_file=False)
@@ -605,11 +1014,23 @@ class TestSyncTestUtils(unittest.TestCase):
 class TestFSTestUtils(unittest.TestCase):
 
     def setUp(self):
+        """
+        Èi̇¥è¯¢åįĸ¹è½¬æŀ
+
+        Args:
+            self: (todo): write your description
+        """
         safe_rmpath(TESTFN)
 
     tearDown = setUp
 
     def test_safe_rmpath(self):
+        """
+        Test if a temp file on the master
+
+        Args:
+            self: (todo): write your description
+        """
         # test file is removed
         open(TESTFN, 'w').close()
         safe_rmpath(TESTFN)
@@ -628,6 +1049,12 @@ class TestFSTestUtils(unittest.TestCase):
             assert m.called
 
     def test_chdir(self):
+        """
+        Create the working directory.
+
+        Args:
+            self: (todo): write your description
+        """
         base = os.getcwd()
         os.mkdir(TESTFN)
         with chdir(TESTFN):
@@ -638,6 +1065,12 @@ class TestFSTestUtils(unittest.TestCase):
 class TestTestUtils(unittest.TestCase):
 
     def test_reap_children(self):
+        """
+        Test if the child processes.
+
+        Args:
+            self: (todo): write your description
+        """
         subp = get_test_subprocess()
         p = psutil.Process(subp.pid)
         assert p.is_running()

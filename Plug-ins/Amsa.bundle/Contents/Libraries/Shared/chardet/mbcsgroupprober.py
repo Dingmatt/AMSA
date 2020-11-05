@@ -40,6 +40,13 @@ from .euctwprober import EUCTWProber
 
 class MBCSGroupProber(CharSetGroupProber):
     def __init__(self, lang_filter=None):
+        """
+        Initialize lang
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+        """
         super(MBCSGroupProber, self).__init__(lang_filter=lang_filter)
         self.probers = [
             UTF8Prober(),

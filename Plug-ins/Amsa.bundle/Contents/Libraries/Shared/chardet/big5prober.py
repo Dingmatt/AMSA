@@ -33,6 +33,12 @@ from .mbcssm import BIG5_SM_MODEL
 
 class Big5Prober(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis
+
+        Args:
+            self: (todo): write your description
+        """
         super(Big5Prober, self).__init__()
         self.coding_sm = CodingStateMachine(BIG5_SM_MODEL)
         self.distribution_analyzer = Big5DistributionAnalysis()
@@ -40,8 +46,20 @@ class Big5Prober(MultiByteCharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Big5"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Chinese"

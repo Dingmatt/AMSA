@@ -33,6 +33,12 @@ from .mbcssm import EUCKR_SM_MODEL
 
 class EUCKRProber(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCKRProber, self).__init__()
         self.coding_sm = CodingStateMachine(EUCKR_SM_MODEL)
         self.distribution_analyzer = EUCKRDistributionAnalysis()
@@ -40,8 +46,20 @@ class EUCKRProber(MultiByteCharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "EUC-KR"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Korean"

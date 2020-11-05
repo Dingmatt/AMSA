@@ -25,6 +25,11 @@ TZLOCALKEYNAME = r"SYSTEM\CurrentControlSet\Control\TimeZoneInformation"
 
 
 def _settzkeyname():
+    """
+    Return the name of the windows.
+
+    Args:
+    """
     handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
     try:
         winreg.OpenKey(handle, TZKEYNAMENT).Close()
@@ -47,6 +52,13 @@ class tzres(object):
     p_wchar = ctypes.POINTER(wintypes.WCHAR)        # Pointer to a wide char
 
     def __init__(self, tzres_loc='tzres.dll'):
+        """
+        Initialize the timezone.
+
+        Args:
+            self: (todo): write your description
+            tzres_loc: (todo): write your description
+        """
         # Load the user32 DLL so we can load strings from tzres
         user32 = ctypes.WinDLL('user32')
         
@@ -116,9 +128,22 @@ class tzres(object):
 class tzwinbase(tzrangebase):
     """tzinfo class based on win32's timezones available in the registry."""
     def __init__(self):
+        """
+        Initialize the class.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError('tzwinbase is an abstract base class')
 
     def __eq__(self, other):
+        """
+        Determine if two date objects are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         # Compare on all relevant dimensions, including name.
         if not isinstance(other, tzwinbase):
             return NotImplemented
@@ -146,6 +171,12 @@ class tzwinbase(tzrangebase):
         return result
 
     def display(self):
+        """
+        Returns the display as a string.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._display
 
     def transitions(self, year):
@@ -180,16 +211,35 @@ class tzwinbase(tzrangebase):
         return dston, dstoff
 
     def _get_hasdst(self):
+        """
+        Get the dst.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._dstmonth != 0
 
     @property
     def _dst_base_offset(self):
+        """
+        Return the offset of the dst.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._dst_base_offset_
 
 
 class tzwin(tzwinbase):
 
     def __init__(self, name):
+        """
+        Initialize datweek.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self._name = name
 
         # multiple contexts only possible in 2.7 and 3.1, we still support 2.6
@@ -228,14 +278,32 @@ class tzwin(tzwinbase):
         self.hasdst = self._get_hasdst()
 
     def __repr__(self):
+        """
+        Return a human - friendly name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "tzwin(%s)" % repr(self._name)
 
     def __reduce__(self):
+        """
+        Returns a new instance.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self.__class__, (self._name,))
 
 
 class tzwinlocal(tzwinbase):
     def __init__(self):
+        """
+        Initialize the underlying dst.
+
+        Args:
+            self: (todo): write your description
+        """
         with winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE) as handle:
             with winreg.OpenKey(handle, TZLOCALKEYNAME) as tzlocalkey:
                 keydict = valuestodict(tzlocalkey)
@@ -282,13 +350,31 @@ class tzwinlocal(tzwinbase):
         self.hasdst = self._get_hasdst()
 
     def __repr__(self):
+        """
+        Return a repr representation of a repr__.
+
+        Args:
+            self: (todo): write your description
+        """
         return "tzwinlocal()"
 
     def __str__(self):
+        """
+        Return a string representation of - byte string.
+
+        Args:
+            self: (todo): write your description
+        """
         # str will return the standard name, not the daylight name.
         return "tzwinlocal(%s)" % repr(self._std_abbr)
 
     def __reduce__(self):
+        """
+        Return a new instance.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self.__class__, ())
 
 

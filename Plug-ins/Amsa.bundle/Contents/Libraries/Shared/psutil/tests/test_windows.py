@@ -47,7 +47,19 @@ IS_64_BIT = sys.maxsize > 2**32
 
 
 def wrap_exceptions(fun):
+    """
+    Wrap the exception that case exceptions.
+
+    Args:
+        fun: (callable): write your description
+    """
     def wrapper(self, *args, **kwargs):
+        """
+        Decorator to run a function.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except OSError as err:
@@ -69,6 +81,12 @@ def wrap_exceptions(fun):
 class TestSystemAPIs(unittest.TestCase):
 
     def test_nic_names(self):
+        """
+        Return a list of nic names exist
+
+        Args:
+            self: (todo): write your description
+        """
         p = subprocess.Popen(['ipconfig', '/all'], stdout=subprocess.PIPE)
         out = p.communicate()[0]
         if PY3:
@@ -84,21 +102,45 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipUnless('NUMBER_OF_PROCESSORS' in os.environ,
                          'NUMBER_OF_PROCESSORS env var is not available')
     def test_cpu_count(self):
+        """
+        Count the number of virtual cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         num_cpus = int(os.environ['NUMBER_OF_PROCESSORS'])
         self.assertEqual(num_cpus, psutil.cpu_count())
 
     def test_cpu_count_2(self):
+        """
+        Retrieves the cpu count.
+
+        Args:
+            self: (todo): write your description
+        """
         sys_value = win32api.GetSystemInfo()[5]
         psutil_value = psutil.cpu_count()
         self.assertEqual(sys_value, psutil_value)
 
     def test_cpu_freq(self):
+        """
+        Test for the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI()
         proc = w.Win32_Processor()[0]
         self.assertEqual(proc.CurrentClockSpeed, psutil.cpu_freq().current)
         self.assertEqual(proc.MaxClockSpeed, psutil.cpu_freq().max)
 
     def test_total_phymem(self):
+        """
+        Calculate memory memory memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_ComputerSystem()[0]
         self.assertEqual(int(w.TotalPhysicalMemory),
                          psutil.virtual_memory().total)
@@ -118,6 +160,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipIf(APPVEYOR, "test not relieable on appveyor")
     @retry_before_failing()
     def test_pids(self):
+        """
+        Determine the pids in the same type.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: this test might fail if the OS is starting/killing
         # other processes in the meantime
         w = wmi.WMI().Win32_Process()
@@ -127,6 +175,12 @@ class TestSystemAPIs(unittest.TestCase):
 
     @retry_before_failing()
     def test_disks(self):
+        """
+        Return a list of disk is mounted.
+
+        Args:
+            self: (todo): write your description
+        """
         ps_parts = psutil.disk_partitions(all=True)
         wmi_parts = wmi.WMI().Win32_LogicalDisk()
         for ps_part in ps_parts:
@@ -155,6 +209,12 @@ class TestSystemAPIs(unittest.TestCase):
                 self.fail("can't find partition %s" % repr(ps_part))
 
     def test_disk_usage(self):
+        """
+        Return disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         for disk in psutil.disk_partitions():
             sys_value = win32api.GetDiskFreeSpaceEx(disk.mountpoint)
             psutil_value = psutil.disk_usage(disk.mountpoint)
@@ -166,6 +226,12 @@ class TestSystemAPIs(unittest.TestCase):
                              psutil_value.total - psutil_value.free)
 
     def test_disk_partitions(self):
+        """
+        List all partitions on the disk
+
+        Args:
+            self: (todo): write your description
+        """
         sys_value = [
             x + '\\' for x in win32api.GetLogicalDriveStrings().split("\\\x00")
             if x and not x.startswith('A:')]
@@ -173,6 +239,12 @@ class TestSystemAPIs(unittest.TestCase):
         self.assertEqual(sys_value, psutil_value)
 
     def test_net_if_stats(self):
+        """
+        Test if ifconfig.
+
+        Args:
+            self: (todo): write your description
+        """
         ps_names = set(cext.net_if_stats())
         wmi_adapters = wmi.WMI().Win32_NetworkAdapter()
         wmi_names = set()
@@ -192,6 +264,12 @@ class TestSystemAPIs(unittest.TestCase):
 class TestSensorsBattery(unittest.TestCase):
 
     def test_percent(self):
+        """
+        Returns the current percentage of the battery.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI()
         battery_psutil = psutil.sensors_battery()
         if battery_psutil is None:
@@ -210,18 +288,36 @@ class TestSensorsBattery(unittest.TestCase):
                 battery_psutil.power_plugged, battery_wmi.BatteryStatus == 1)
 
     def test_battery_present(self):
+        """
+        Ens : attribute is present.
+
+        Args:
+            self: (todo): write your description
+        """
         if win32api.GetPwrCapabilities()['SystemBatteriesPresent']:
             self.assertIsNotNone(psutil.sensors_battery())
         else:
             self.assertIsNone(psutil.sensors_battery())
 
     def test_emulate_no_battery(self):
+        """
+        Emits battery battery battery.
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch("psutil._pswindows.cext.sensors_battery",
                         return_value=(0, 128, 0, 0)) as m:
             self.assertIsNone(psutil.sensors_battery())
             assert m.called
 
     def test_emulate_power_connected(self):
+        """
+        Emulate power power.
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch("psutil._pswindows.cext.sensors_battery",
                         return_value=(1, 0, 0, 0)) as m:
             self.assertEqual(psutil.sensors_battery().secsleft,
@@ -229,6 +325,12 @@ class TestSensorsBattery(unittest.TestCase):
             assert m.called
 
     def test_emulate_power_charging(self):
+        """
+        Emulate power power.
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch("psutil._pswindows.cext.sensors_battery",
                         return_value=(0, 8, 0, 0)) as m:
             self.assertEqual(psutil.sensors_battery().secsleft,
@@ -236,6 +338,12 @@ class TestSensorsBattery(unittest.TestCase):
             assert m.called
 
     def test_emulate_secs_left_unknown(self):
+        """
+        Calculate_secs_left
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch("psutil._pswindows.cext.sensors_battery",
                         return_value=(0, 0, 0, -1)) as m:
             self.assertEqual(psutil.sensors_battery().secsleft,
@@ -253,17 +361,41 @@ class TestProcess(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     def test_issue_24(self):
+        """
+        Test if the process.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(0)
         self.assertRaises(psutil.AccessDenied, p.kill)
 
     def test_special_pid(self):
+        """
+        Test if pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(4)
         self.assertEqual(p.name(), 'System')
         # use __str__ to access all common Process properties to check
@@ -281,10 +413,22 @@ class TestProcess(unittest.TestCase):
             self.assertTrue(rss > 0)
 
     def test_send_signal(self):
+        """
+        Send a signal to the daemon.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.pid)
         self.assertRaises(ValueError, p.send_signal, signal.SIGINT)
 
     def test_exe(self):
+        """
+        Runs all of the executable files.
+
+        Args:
+            self: (todo): write your description
+        """
         for p in psutil.process_iter():
             try:
                 self.assertEqual(os.path.basename(p.exe()), p.name())
@@ -292,6 +436,12 @@ class TestProcess(unittest.TestCase):
                 pass
 
     def test_num_handles_increment(self):
+        """
+        Increment the number of num_handles.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(os.getpid())
         before = p.num_handles()
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
@@ -302,10 +452,23 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(p.num_handles(), before)
 
     def test_handles_leak(self):
+        """
+        Test for all processes have been run.
+
+        Args:
+            self: (todo): write your description
+        """
         # Call all Process methods and make sure no handles are left
         # open. This is here mainly to make sure functions using
         # OpenProcess() always call CloseHandle().
         def call(p, attr):
+            """
+            Calls the specified attribute on the given attribute.
+
+            Args:
+                p: (array): write your description
+                attr: (str): write your description
+            """
             attr = getattr(p, name, None)
             if attr is not None and callable(attr):
                 attr()
@@ -338,6 +501,12 @@ class TestProcess(unittest.TestCase):
             self.fail('\n' + '\n'.join(failures))
 
     def test_name_always_available(self):
+        """
+        Check if all available processes are running.
+
+        Args:
+            self: (todo): write your description
+        """
         # On Windows name() is never supposed to raise AccessDenied,
         # see https://github.com/giampaolo/psutil/issues/627
         for p in psutil.process_iter():
@@ -349,6 +518,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(sys.version_info >= (2, 7),
                          "CTRL_* signals not supported")
     def test_ctrl_signals(self):
+        """
+        Test if the child process has been received.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(get_test_subprocess().pid)
         p.send_signal(signal.CTRL_C_EVENT)
         p.send_signal(signal.CTRL_BREAK_EVENT)
@@ -360,6 +535,12 @@ class TestProcess(unittest.TestCase):
                           p.send_signal, signal.CTRL_BREAK_EVENT)
 
     def test_compare_name_exe(self):
+        """
+        Test if the name of the executable.
+
+        Args:
+            self: (todo): write your description
+        """
         for p in psutil.process_iter():
             try:
                 a = os.path.basename(p.exe())
@@ -370,11 +551,23 @@ class TestProcess(unittest.TestCase):
                 self.assertEqual(a, b)
 
     def test_username(self):
+        """
+        Test if the username
+
+        Args:
+            self: (todo): write your description
+        """
         sys_value = win32api.GetUserName()
         psutil_value = psutil.Process().username()
         self.assertEqual(sys_value, psutil_value.split('\\')[1])
 
     def test_cmdline(self):
+        """
+        Test if a command on the command line.
+
+        Args:
+            self: (todo): write your description
+        """
         sys_value = re.sub(' +', ' ', win32api.GetCommandLine()).strip()
         psutil_value = ' '.join(psutil.Process().cmdline())
         self.assertEqual(sys_value, psutil_value)
@@ -395,6 +588,12 @@ class TestProcess(unittest.TestCase):
     #         delta=0.2)
 
     def test_nice(self):
+        """
+        Set the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
                                       win32con.FALSE, os.getpid())
         self.addCleanup(win32api.CloseHandle, handle)
@@ -403,6 +602,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(psutil_value, sys_value)
 
     def test_memory_info(self):
+        """
+        Set memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
                                       win32con.FALSE, self.pid)
         self.addCleanup(win32api.CloseHandle, handle)
@@ -430,6 +635,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(psutil_value.vms, psutil_value.pagefile)
 
     def test_wait(self):
+        """
+        Wait for the pid of a process.
+
+        Args:
+            self: (todo): write your description
+        """
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
                                       win32con.FALSE, self.pid)
         self.addCleanup(win32api.CloseHandle, handle)
@@ -440,7 +651,19 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(psutil_value, sys_value)
 
     def test_cpu_affinity(self):
+        """
+        Returns a list of the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         def from_bitmask(x):
+            """
+            Return the bitmask of the given bitmask.
+
+            Args:
+                x: (todo): write your description
+            """
             return [i for i in range(64) if (1 << i) & x]
 
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
@@ -452,6 +675,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(psutil_value, sys_value)
 
     def test_io_counters(self):
+        """
+        Test if the pid is_io.
+
+        Args:
+            self: (todo): write your description
+        """
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION,
                                       win32con.FALSE, os.getpid())
         self.addCleanup(win32api.CloseHandle, handle)
@@ -471,6 +700,12 @@ class TestProcess(unittest.TestCase):
             psutil_value.other_bytes, sys_value['OtherTransferCount'])
 
     def test_num_handles(self):
+        """
+        Retrieves the number of processes.
+
+        Args:
+            self: (todo): write your description
+        """
         import ctypes
         import ctypes.wintypes
         PROCESS_QUERY_INFORMATION = 0x400
@@ -492,18 +727,42 @@ class TestProcessWMI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     def test_name(self):
+        """
+        Test if pid name of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
         self.assertEqual(p.name(), w.Caption)
 
     def test_exe(self):
+        """
+        Test if the pid of the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
         # Note: wmi reports the exe as a lower case string.
@@ -511,12 +770,24 @@ class TestProcessWMI(unittest.TestCase):
         self.assertEqual(p.exe().lower(), w.ExecutablePath.lower())
 
     def test_cmdline(self):
+        """
+        Test if pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
         self.assertEqual(' '.join(p.cmdline()),
                          w.CommandLine.replace('"', ''))
 
     def test_username(self):
+        """
+        Test for username and username.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
         domain, _, username = w.GetOwner()
@@ -524,6 +795,12 @@ class TestProcessWMI(unittest.TestCase):
         self.assertEqual(p.username(), username)
 
     def test_memory_rss(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         time.sleep(0.1)
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
@@ -531,6 +808,12 @@ class TestProcessWMI(unittest.TestCase):
         self.assertEqual(rss, int(w.WorkingSetSize))
 
     def test_memory_vms(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         time.sleep(0.1)
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
@@ -544,6 +827,12 @@ class TestProcessWMI(unittest.TestCase):
             self.fail("wmi=%s, psutil=%s" % (wmi_usage, vms))
 
     def test_create_time(self):
+        """
+        Create a new pid file.
+
+        Args:
+            self: (todo): write your description
+        """
         w = wmi.WMI().Win32_Process(ProcessId=self.pid)[0]
         p = psutil.Process(self.pid)
         wmic_create = str(w.CreationDate.split('.')[0])
@@ -566,16 +855,34 @@ class TestDualProcessImplementation(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
     # ---
     # same tests as above but mimicks the AccessDenied failure of
     # the first (fast) method failing with AD.
 
     def test_name(self):
+        """
+        Test if the pid file.
+
+        Args:
+            self: (todo): write your description
+        """
         name = psutil.Process(self.pid).name()
         with mock.patch("psutil._psplatform.cext.proc_exe",
                         side_effect=psutil.AccessDenied(os.getpid())) as fun:
@@ -583,6 +890,12 @@ class TestDualProcessImplementation(unittest.TestCase):
             assert fun.called
 
     def test_memory_info(self):
+        """
+        Return memory memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         mem_1 = psutil.Process(self.pid).memory_info()
         with mock.patch("psutil._psplatform.cext.proc_memory_info",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
@@ -595,6 +908,12 @@ class TestDualProcessImplementation(unittest.TestCase):
             assert fun.called
 
     def test_create_time(self):
+        """
+        Create a new test.
+
+        Args:
+            self: (todo): write your description
+        """
         ctime = psutil.Process(self.pid).create_time()
         with mock.patch("psutil._psplatform.cext.proc_create_time",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
@@ -602,6 +921,12 @@ class TestDualProcessImplementation(unittest.TestCase):
             assert fun.called
 
     def test_cpu_times(self):
+        """
+        Perform the cpu times.
+
+        Args:
+            self: (todo): write your description
+        """
         cpu_times_1 = psutil.Process(self.pid).cpu_times()
         with mock.patch("psutil._psplatform.cext.proc_cpu_times",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
@@ -613,6 +938,12 @@ class TestDualProcessImplementation(unittest.TestCase):
                 cpu_times_1.system, cpu_times_2.system, delta=0.01)
 
     def test_io_counters(self):
+        """
+        Test if the pid counters.
+
+        Args:
+            self: (todo): write your description
+        """
         io_counters_1 = psutil.Process(self.pid).io_counters()
         with mock.patch("psutil._psplatform.cext.proc_io_counters",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
@@ -623,6 +954,12 @@ class TestDualProcessImplementation(unittest.TestCase):
             assert fun.called
 
     def test_num_handles(self):
+        """
+        Get number of the number of the number of queues.
+
+        Args:
+            self: (todo): write your description
+        """
         num_handles = psutil.Process(self.pid).num_handles()
         with mock.patch("psutil._psplatform.cext.proc_num_handles",
                         side_effect=OSError(errno.EPERM, "msg")) as fun:
@@ -640,6 +977,11 @@ class RemoteProcessTestCase(unittest.TestCase):
 
     @staticmethod
     def find_other_interpreter():
+        """
+        Find other other other other.
+
+        Args:
+        """
         # find a python interpreter that is of the opposite bitness from us
         code = "import sys; sys.stdout.write(str(sys.maxsize > 2**32))"
 
@@ -655,6 +997,12 @@ class RemoteProcessTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the python interpreter__. __interpreter.
+
+        Args:
+            cls: (todo): write your description
+        """
         other_python = cls.find_other_interpreter()
 
         if other_python is None:
@@ -671,6 +1019,12 @@ class RemoteProcessTestCase(unittest.TestCase):
     test_args = ["-c", "import sys; sys.stdin.read()"]
 
     def setUp(self):
+        """
+        Sets the environment.
+
+        Args:
+            self: (todo): write your description
+        """
         env = os.environ.copy()
         env["THINK_OF_A_NUMBER"] = str(os.getpid())
         self.proc32 = get_test_subprocess([self.python32] + self.test_args,
@@ -681,39 +1035,87 @@ class RemoteProcessTestCase(unittest.TestCase):
                                           stdin=subprocess.PIPE)
 
     def tearDown(self):
+        """
+        Tear down the child processes.
+
+        Args:
+            self: (todo): write your description
+        """
         self.proc32.communicate()
         self.proc64.communicate()
         reap_children()
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     def test_cmdline_32(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc32.pid)
         self.assertEqual(len(p.cmdline()), 3)
         self.assertEqual(p.cmdline()[1:], self.test_args)
 
     def test_cmdline_64(self):
+        """
+        Test for pidline pid.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc64.pid)
         self.assertEqual(len(p.cmdline()), 3)
         self.assertEqual(p.cmdline()[1:], self.test_args)
 
     def test_cwd_32(self):
+        """
+        Test if the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc32.pid)
         self.assertEqual(p.cwd(), os.getcwd())
 
     def test_cwd_64(self):
+        """
+        Test if the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc64.pid)
         self.assertEqual(p.cwd(), os.getcwd())
 
     def test_environ_32(self):
+        """
+        Test if the process is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc32.pid)
         e = p.environ()
         self.assertIn("THINK_OF_A_NUMBER", e)
         self.assertEquals(e["THINK_OF_A_NUMBER"], str(os.getpid()))
 
     def test_environ_64(self):
+        """
+        Test if the process is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process(self.proc64.pid)
         e = p.environ()
         self.assertIn("THINK_OF_A_NUMBER", e)
@@ -729,6 +1131,12 @@ class RemoteProcessTestCase(unittest.TestCase):
 class TestServices(unittest.TestCase):
 
     def test_win_service_iter(self):
+        """
+        Return pid pid pid pid pid pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         valid_statuses = set([
             "running",
             "paused",
@@ -777,6 +1185,12 @@ class TestServices(unittest.TestCase):
             self.assertEqual(serv, s)
 
     def test_win_service_get(self):
+        """
+        Get the status of - jobs.
+
+        Args:
+            self: (todo): write your description
+        """
         name = next(psutil.win_service_iter()).name()
 
         with self.assertRaises(psutil.NoSuchProcess) as cm:

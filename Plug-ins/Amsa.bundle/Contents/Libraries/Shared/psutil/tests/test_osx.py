@@ -54,6 +54,12 @@ def vm_stat(field):
 
 # http://code.activestate.com/recipes/578019/
 def human2bytes(s):
+    """
+    Convert bytes to human - readable string representation.
+
+    Args:
+        s: (str): write your description
+    """
     SYMBOLS = {
         'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
     }
@@ -84,13 +90,31 @@ class TestProcess(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     def test_process_create_time(self):
+        """
+        Test if pid is running process
+
+        Args:
+            self: (todo): write your description
+        """
         cmdline = "ps -o lstart -p %s" % self.pid
         p = subprocess.Popen(cmdline, shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0]
@@ -114,9 +138,21 @@ class TestSystemAPIs(unittest.TestCase):
     # --- disk
 
     def test_disks(self):
+        """
+        Return a list of disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         # test psutil.disk_usage() and psutil.disk_partitions()
         # against "df -a"
         def df(path):
+            """
+            Parse a pdf
+
+            Args:
+                path: (str): write your description
+            """
             out = sh('df -k "%s"' % path).strip()
             lines = out.split('\n')
             lines.pop(0)
@@ -143,14 +179,32 @@ class TestSystemAPIs(unittest.TestCase):
     # --- cpu
 
     def test_cpu_count_logical(self):
+        """
+        Count the number of virtual cpu count.
+
+        Args:
+            self: (todo): write your description
+        """
         num = sysctl("sysctl hw.logicalcpu")
         self.assertEqual(num, psutil.cpu_count(logical=True))
 
     def test_cpu_count_physical(self):
+        """
+        * count the cpu count * cpu count.
+
+        Args:
+            self: (todo): write your description
+        """
         num = sysctl("sysctl hw.physicalcpu")
         self.assertEqual(num, psutil.cpu_count(logical=False))
 
     def test_cpu_freq(self):
+        """
+        R calculate the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         freq = psutil.cpu_freq()
         self.assertEqual(
             freq.current * 1000 * 1000, sysctl("sysctl hw.cpufrequency"))
@@ -162,35 +216,71 @@ class TestSystemAPIs(unittest.TestCase):
     # --- virtual mem
 
     def test_vmem_total(self):
+        """
+        Test if the total memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         sysctl_hwphymem = sysctl('sysctl hw.memsize')
         self.assertEqual(sysctl_hwphymem, psutil.virtual_memory().total)
 
     @retry_before_failing()
     def test_vmem_free(self):
+        """
+        Test if vmemutil.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("free")
         psutil_val = psutil.virtual_memory().free
         self.assertAlmostEqual(psutil_val, vmstat_val, delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_available(self):
+        """
+        Test if the vm is available.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("inactive") + vm_stat("free")
         psutil_val = psutil.virtual_memory().available
         self.assertAlmostEqual(psutil_val, vmstat_val, delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_active(self):
+        """
+        Set the virtual machine memory is active.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("active")
         psutil_val = psutil.virtual_memory().active
         self.assertAlmostEqual(psutil_val, vmstat_val, delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_inactive(self):
+        """
+        Calculate of vmem.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("inactive")
         psutil_val = psutil.virtual_memory().inactive
         self.assertAlmostEqual(psutil_val, vmstat_val, delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_wired(self):
+        """
+        Test if the vmem.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("wired")
         psutil_val = psutil.virtual_memory().wired
         self.assertAlmostEqual(psutil_val, vmstat_val, delta=MEMORY_TOLERANCE)
@@ -199,12 +289,24 @@ class TestSystemAPIs(unittest.TestCase):
 
     @retry_before_failing()
     def test_swapmem_sin(self):
+        """
+        Swap the stat of the stat.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("Pageins")
         psutil_val = psutil.swap_memory().sin
         self.assertEqual(psutil_val, vmstat_val)
 
     @retry_before_failing()
     def test_swapmem_sout(self):
+        """
+        Swap memory memory usage of memory.
+
+        Args:
+            self: (todo): write your description
+        """
         vmstat_val = vm_stat("Pageout")
         psutil_val = psutil.swap_memory().sout
         self.assertEqual(psutil_val, vmstat_val)
@@ -222,6 +324,12 @@ class TestSystemAPIs(unittest.TestCase):
     # --- network
 
     def test_net_if_stats(self):
+        """
+        Test if all network stats.
+
+        Args:
+            self: (todo): write your description
+        """
         for name, stats in psutil.net_if_stats().items():
             try:
                 out = sh("ifconfig %s" % name)

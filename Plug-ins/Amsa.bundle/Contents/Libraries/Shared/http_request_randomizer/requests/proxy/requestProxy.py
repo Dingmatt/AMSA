@@ -28,6 +28,15 @@ handler.setFormatter(formatter)
 
 class RequestProxy:
     def __init__(self, web_proxy_list=[], sustain=False, timeout=5):
+        """
+        Initialize the proxy
+
+        Args:
+            self: (todo): write your description
+            web_proxy_list: (str): write your description
+            sustain: (todo): write your description
+            timeout: (int): write your description
+        """
         self.userAgent = UserAgentManager()
         self.logger = logging.getLogger()
         self.logger.addHandler(handler)
@@ -58,15 +67,40 @@ class RequestProxy:
         self.current_proxy = self.randomize_proxy()
 
     def set_logger_level(self, level):
+        """
+        Set the logging level.
+
+        Args:
+            self: (todo): write your description
+            level: (str): write your description
+        """
         self.logger.setLevel(level)
 
     def get_proxy_list(self):
+        """
+        Return a list of proxy_proxy objects.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.proxy_list
         
     def current_proxy_ip(self):
+        """
+        Return the current proxy ip.
+
+        Args:
+            self: (todo): write your description
+        """
         return str(self.current_proxy)
         
     def generate_random_request_headers(self):
+        """
+        Generate a random http request header.
+
+        Args:
+            self: (todo): write your description
+        """
         headers = {
             "Connection": "close",  # another way to cover tracks
             "User-Agent": self.userAgent.get_random_user_agent()
@@ -74,6 +108,12 @@ class RequestProxy:
         return headers
 
     def randomize_proxy(self):
+        """
+        Randomly select a random proxy.
+
+        Args:
+            self: (todo): write your description
+        """
         if len(self.proxy_list) == 0:
             raise ProxyListException("list is empty")
         rand_proxy = random.choice(self.proxy_list)
@@ -87,6 +127,18 @@ class RequestProxy:
     # http://<USERNAME>:<PASSWORD>@<IP-ADDR>:<PORT>
     #####
     def generate_proxied_request(self, url, method="GET", params={}, data={}, headers={}, req_timeout=30):
+        """
+        Generate a http request.
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+            method: (str): write your description
+            params: (dict): write your description
+            data: (str): write your description
+            headers: (dict): write your description
+            req_timeout: (todo): write your description
+        """
         try:
             random.shuffle(self.proxy_list)
             # req_headers = dict(params.items() + self.generate_random_request_headers().items())

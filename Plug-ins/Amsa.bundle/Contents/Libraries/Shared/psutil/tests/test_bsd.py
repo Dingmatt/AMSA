@@ -80,13 +80,31 @@ class BSDSpecificTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     def test_process_create_time(self):
+        """
+        Test for pid of a pid.
+
+        Args:
+            self: (todo): write your description
+        """
         cmdline = "ps -o lstart -p %s" % self.pid
         p = subprocess.Popen(cmdline, shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0]
@@ -99,9 +117,21 @@ class BSDSpecificTestCase(unittest.TestCase):
         self.assertEqual(start_ps, start_psutil)
 
     def test_disks(self):
+        """
+        Returns a list of disk devices.
+
+        Args:
+            self: (todo): write your description
+        """
         # test psutil.disk_usage() and psutil.disk_partitions()
         # against "df -a"
         def df(path):
+            """
+            Parse a pdf
+
+            Args:
+                path: (str): write your description
+            """
             out = sh('df -k "%s"' % path).strip()
             lines = out.split('\n')
             lines.pop(0)
@@ -127,15 +157,33 @@ class BSDSpecificTestCase(unittest.TestCase):
 
     @unittest.skipIf(not which('sysctl'), "sysctl cmd not available")
     def test_cpu_count_logical(self):
+        """
+        Count the number of cpu count.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("hw.ncpu")
         self.assertEqual(psutil.cpu_count(logical=True), syst)
 
     @unittest.skipIf(not which('sysctl'), "sysctl cmd not available")
     def test_virtual_memory_total(self):
+        """
+        Test if the total memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         num = sysctl('hw.physmem')
         self.assertEqual(num, psutil.virtual_memory().total)
 
     def test_net_if_stats(self):
+        """
+        Test if all network stats.
+
+        Args:
+            self: (todo): write your description
+        """
         for name, stats in psutil.net_if_stats().items():
             try:
                 out = sh("ifconfig %s" % name)
@@ -157,14 +205,32 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess().pid
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     @retry_before_failing()
     def test_proc_memory_maps(self):
+        """
+        Test if memory memory maps.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh('procstat -v %s' % self.pid)
         maps = psutil.Process(self.pid).memory_maps(grouped=False)
         lines = out.split('\n')[1:]
@@ -179,16 +245,34 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
                 self.assertEqual(fields[10], map.path)
 
     def test_proc_exe(self):
+        """
+        Test if the child process.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh('procstat -b %s' % self.pid)
         self.assertEqual(psutil.Process(self.pid).exe(),
                          out.split('\n')[1].split()[-1])
 
     def test_proc_cmdline(self):
+        """
+        Test if the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh('procstat -c %s' % self.pid)
         self.assertEqual(' '.join(psutil.Process(self.pid).cmdline()),
                          ' '.join(out.split('\n')[1].split()[2:]))
 
     def test_proc_uids_gids(self):
+        """
+        Test for gids of pid pids.
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh('procstat -s %s' % self.pid)
         euid, ruid, suid, egid, rgid, sgid = out.split('\n')[1].split()[2:8]
         p = psutil.Process(self.pid)
@@ -203,6 +287,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 
     @retry_before_failing()
     def test_proc_ctx_switches(self):
+        """
+        Test for pid pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         tested = []
         out = sh('procstat -r %s' % self.pid)
         p = psutil.Process(self.pid)
@@ -223,6 +313,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 
     @retry_before_failing()
     def test_proc_cpu_times(self):
+        """
+        Return the cpu process pid.
+
+        Args:
+            self: (todo): write your description
+        """
         tested = []
         out = sh('procstat -r %s' % self.pid)
         p = psutil.Process(self.pid)
@@ -245,36 +341,72 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 
     @retry_before_failing()
     def test_vmem_active(self):
+        """
+        Set the memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vm.stats.vm.v_active_count") * PAGESIZE
         self.assertAlmostEqual(psutil.virtual_memory().active, syst,
                                delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_inactive(self):
+        """
+        Set the test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vm.stats.vm.v_inactive_count") * PAGESIZE
         self.assertAlmostEqual(psutil.virtual_memory().inactive, syst,
                                delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_wired(self):
+        """
+        Test if vmem.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vm.stats.vm.v_wire_count") * PAGESIZE
         self.assertAlmostEqual(psutil.virtual_memory().wired, syst,
                                delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_cached(self):
+        """
+        Perform test test is enabled.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vm.stats.vm.v_cache_count") * PAGESIZE
         self.assertAlmostEqual(psutil.virtual_memory().cached, syst,
                                delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_free(self):
+        """
+        Test if free memory.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vm.stats.vm.v_free_count") * PAGESIZE
         self.assertAlmostEqual(psutil.virtual_memory().free, syst,
                                delta=MEMORY_TOLERANCE)
 
     @retry_before_failing()
     def test_vmem_buffers(self):
+        """
+        Test if the buffer memory.
+
+        Args:
+            self: (todo): write your description
+        """
         syst = sysctl("vfs.bufspace")
         self.assertAlmostEqual(psutil.virtual_memory().buffers, syst,
                                delta=MEMORY_TOLERANCE)
@@ -283,12 +415,24 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     def test_muse_vmem_total(self):
+        """
+        Test if vmemutil.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Total')
         self.assertEqual(psutil.virtual_memory().total, num)
 
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_active(self):
+        """
+        Set the virtual memory.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Active')
         self.assertAlmostEqual(psutil.virtual_memory().active, num,
                                delta=MEMORY_TOLERANCE)
@@ -296,6 +440,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_inactive(self):
+        """
+        Test if the vmemo memory.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Inactive')
         self.assertAlmostEqual(psutil.virtual_memory().inactive, num,
                                delta=MEMORY_TOLERANCE)
@@ -303,6 +453,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_wired(self):
+        """
+        Test if vmem_memory.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Wired')
         self.assertAlmostEqual(psutil.virtual_memory().wired, num,
                                delta=MEMORY_TOLERANCE)
@@ -310,6 +466,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_cached(self):
+        """
+        Test if vmemutil.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Cache')
         self.assertAlmostEqual(psutil.virtual_memory().cached, num,
                                delta=MEMORY_TOLERANCE)
@@ -317,6 +479,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_free(self):
+        """
+        Test if the memory.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Free')
         self.assertAlmostEqual(psutil.virtual_memory().free, num,
                                delta=MEMORY_TOLERANCE)
@@ -324,23 +492,53 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     @unittest.skipUnless(MUSE_AVAILABLE, "muse not installed")
     @retry_before_failing()
     def test_muse_vmem_buffers(self):
+        """
+        Test if vmem buffer.
+
+        Args:
+            self: (todo): write your description
+        """
         num = muse('Buffer')
         self.assertAlmostEqual(psutil.virtual_memory().buffers, num,
                                delta=MEMORY_TOLERANCE)
 
     def test_cpu_stats_ctx_switches(self):
+        """
+        Determine the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(psutil.cpu_stats().ctx_switches,
                                sysctl('vm.stats.sys.v_swtch'), delta=1000)
 
     def test_cpu_stats_interrupts(self):
+        """
+        Interrupt the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(psutil.cpu_stats().interrupts,
                                sysctl('vm.stats.sys.v_intr'), delta=1000)
 
     def test_cpu_stats_soft_interrupts(self):
+        """
+        Test the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(psutil.cpu_stats().soft_interrupts,
                                sysctl('vm.stats.sys.v_soft'), delta=1000)
 
     def test_cpu_stats_syscalls(self):
+        """
+        Test if sysctl syscalls.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(psutil.cpu_stats().syscalls,
                                sysctl('vm.stats.sys.v_syscall'), delta=1000)
 
@@ -351,6 +549,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
     # --- others
 
     def test_boot_time(self):
+        """
+        Test if the boot time.
+
+        Args:
+            self: (todo): write your description
+        """
         s = sysctl('sysctl kern.boottime')
         s = s[s.find(" sec = ") + 7:]
         s = s[:s.find(',')]
@@ -363,7 +567,19 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
         hasattr(psutil, "sensors_battery") and psutil.sensors_battery(),
         "no battery")
     def test_sensors_battery(self):
+        """
+        Test for sensors
+
+        Args:
+            self: (todo): write your description
+        """
         def secs2hours(secs):
+            """
+            Convert seconds to seconds.
+
+            Args:
+                secs: (todo): write your description
+            """
             m, s = divmod(secs, 60)
             h, m = divmod(m, 60)
             return "%d:%02d" % (h, m)
@@ -381,6 +597,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
             self.assertEqual(secs2hours(metrics.secsleft), remaining_time)
 
     def test_sensors_battery_against_sysctl(self):
+        """
+        Perform battery battery battery
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(psutil.sensors_battery().percent,
                          sysctl("hw.acpi.battery.life"))
         self.assertEqual(psutil.sensors_battery().power_plugged,
@@ -401,6 +623,12 @@ class FreeBSDSpecificTestCase(unittest.TestCase):
 class OpenBSDSpecificTestCase(unittest.TestCase):
 
     def test_boot_time(self):
+        """
+        Test the boot time.
+
+        Args:
+            self: (todo): write your description
+        """
         s = sysctl('kern.boottime')
         sys_bt = datetime.datetime.strptime(s, "%a %b %d %H:%M:%S %Y")
         psutil_bt = datetime.datetime.fromtimestamp(psutil.boot_time())
@@ -416,6 +644,13 @@ class OpenBSDSpecificTestCase(unittest.TestCase):
 class NetBSDSpecificTestCase(unittest.TestCase):
 
     def parse_meminfo(self, look_for):
+        """
+        Parse memory information.
+
+        Args:
+            self: (todo): write your description
+            look_for: (todo): write your description
+        """
         with open('/proc/meminfo', 'rb') as f:
             for line in f:
                 if line.startswith(look_for):
@@ -423,39 +658,87 @@ class NetBSDSpecificTestCase(unittest.TestCase):
         raise ValueError("can't find %s" % look_for)
 
     def test_vmem_total(self):
+        """
+        Test if the total number of memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             psutil.virtual_memory().total, self.parse_meminfo("MemTotal:"))
 
     def test_vmem_free(self):
+        """
+        Free memory memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(
             psutil.virtual_memory().free, self.parse_meminfo("MemFree:"),
             delta=MEMORY_TOLERANCE)
 
     def test_vmem_buffers(self):
+        """
+        Test if vmem buffer.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(
             psutil.virtual_memory().buffers, self.parse_meminfo("Buffers:"),
             delta=MEMORY_TOLERANCE)
 
     def test_vmem_shared(self):
+        """
+        Check if memory memory memory exists in memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(
             psutil.virtual_memory().shared, self.parse_meminfo("MemShared:"),
             delta=MEMORY_TOLERANCE)
 
     def test_swapmem_total(self):
+        """
+        Swap memory memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(
             psutil.swap_memory().total, self.parse_meminfo("SwapTotal:"),
             delta=MEMORY_TOLERANCE)
 
     def test_swapmem_free(self):
+        """
+        Swap memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertAlmostEqual(
             psutil.swap_memory().free, self.parse_meminfo("SwapFree:"),
             delta=MEMORY_TOLERANCE)
 
     def test_swapmem_used(self):
+        """
+        Swap memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         smem = psutil.swap_memory()
         self.assertEqual(smem.used, smem.total - smem.free)
 
     def test_cpu_stats_interrupts(self):
+        """
+        Test the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         with open('/proc/stat', 'rb') as f:
             for line in f:
                 if line.startswith(b'intr'):
@@ -467,6 +750,12 @@ class NetBSDSpecificTestCase(unittest.TestCase):
             psutil.cpu_stats().interrupts, interrupts, delta=1000)
 
     def test_cpu_stats_ctx_switches(self):
+        """
+        Display cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         with open('/proc/stat', 'rb') as f:
             for line in f:
                 if line.startswith(b'ctxt'):

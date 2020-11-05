@@ -325,6 +325,12 @@ def wrap_exceptions(fun):
     """
 
     def wrapper(self, *args, **kwargs):
+        """
+        Wrapper around the given by args.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except EnvironmentError as err:
@@ -353,40 +359,89 @@ class Process(object):
     __slots__ = ["pid", "_name", "_ppid", "_procfs_path"]
 
     def __init__(self, pid):
+        """
+        Initialize the process.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self.pid = pid
         self._name = None
         self._ppid = None
         self._procfs_path = get_procfs_path()
 
     def oneshot_enter(self):
+        """
+        Enter the user s account.
+
+        Args:
+            self: (todo): write your description
+        """
         self._proc_name_and_args.cache_activate()
         self._proc_basic_info.cache_activate()
         self._proc_cred.cache_activate()
 
     def oneshot_exit(self):
+        """
+        Deactivates of the current user.
+
+        Args:
+            self: (todo): write your description
+        """
         self._proc_name_and_args.cache_deactivate()
         self._proc_basic_info.cache_deactivate()
         self._proc_cred.cache_deactivate()
 
     @memoize_when_activated
     def _proc_name_and_args(self):
+        """
+        Return a tuple of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_name_and_args(self.pid, self._procfs_path)
 
     @memoize_when_activated
     def _proc_basic_info(self):
+        """
+        Return process info.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_basic_info(self.pid, self._procfs_path)
 
     @memoize_when_activated
     def _proc_cred(self):
+        """
+        Return the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_cred(self.pid, self._procfs_path)
 
     @wrap_exceptions
     def name(self):
+        """
+        The name of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # note: max len == 15
         return self._proc_name_and_args()[0]
 
     @wrap_exceptions
     def exe(self):
+        """
+        Return the pid of the executable.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return os.readlink(
                 "%s/%s/path/a.out" % (self._procfs_path, self.pid))
@@ -400,18 +455,42 @@ class Process(object):
 
     @wrap_exceptions
     def cmdline(self):
+        """
+        The command line arguments.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._proc_name_and_args()[1].split(' ')
 
     @wrap_exceptions
     def create_time(self):
+        """
+        : return : py : class :.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._proc_basic_info()[3]
 
     @wrap_exceptions
     def num_threads(self):
+        """
+        The number of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._proc_basic_info()[5]
 
     @wrap_exceptions
     def nice_get(self):
+        """
+        Return the pid of the pid file. pid.
+
+        Args:
+            self: (todo): write your description
+        """
         # For some reason getpriority(3) return ESRCH (no such process)
         # for certain low-pid processes, no matter what (even as root).
         # The process actually exists though, as it has a name,
@@ -431,6 +510,13 @@ class Process(object):
 
     @wrap_exceptions
     def nice_set(self, value):
+        """
+        Set the pid of the set.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         if self.pid in (2, 3):
             # Special case PIDs: internally setpriority(3) return ESRCH
             # (no such process), no matter what.
@@ -441,21 +527,45 @@ class Process(object):
 
     @wrap_exceptions
     def ppid(self):
+        """
+        The unique identifier.
+
+        Args:
+            self: (todo): write your description
+        """
         self._ppid = self._proc_basic_info()[0]
         return self._ppid
 
     @wrap_exceptions
     def uids(self):
+        """
+        Return a list of ids in - memory.
+
+        Args:
+            self: (todo): write your description
+        """
         real, effective, saved, _, _, _ = self._proc_cred()
         return _common.puids(real, effective, saved)
 
     @wrap_exceptions
     def gids(self):
+        """
+        Return a list of gids for the current.
+
+        Args:
+            self: (todo): write your description
+        """
         _, _, _, real, effective, saved = self._proc_cred()
         return _common.puids(real, effective, saved)
 
     @wrap_exceptions
     def cpu_times(self):
+        """
+        Return the cpu times.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             times = cext.proc_cpu_times(self.pid, self._procfs_path)
         except OSError as err:
@@ -474,10 +584,22 @@ class Process(object):
 
     @wrap_exceptions
     def cpu_num(self):
+        """
+        Return the number of cores.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_cpu_num(self.pid, self._procfs_path)
 
     @wrap_exceptions
     def terminal(self):
+        """
+        Return the pid of a process.
+
+        Args:
+            self: (todo): write your description
+        """
         procfs_path = self._procfs_path
         hit_enoent = False
         tty = wrap_exceptions(
@@ -498,6 +620,12 @@ class Process(object):
 
     @wrap_exceptions
     def cwd(self):
+        """
+        Return the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # /proc/PID/path/cwd may not be resolved by readlink() even if
         # it exists (ls shows it). If that's the case and the process
         # is still alive return None (we can return None also on BSD).
@@ -513,6 +641,12 @@ class Process(object):
 
     @wrap_exceptions
     def memory_info(self):
+        """
+        Return memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         ret = self._proc_basic_info()
         rss, vms = ret[1] * 1024, ret[2] * 1024
         return pmem(rss, vms)
@@ -521,12 +655,24 @@ class Process(object):
 
     @wrap_exceptions
     def status(self):
+        """
+        Return the status of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         code = self._proc_basic_info()[6]
         # XXX is '?' legit? (we're not supposed to return it anyway)
         return PROC_STATUSES.get(code, '?')
 
     @wrap_exceptions
     def threads(self):
+        """
+        Return a list of all threads.
+
+        Args:
+            self: (todo): write your description
+        """
         procfs_path = self._procfs_path
         ret = []
         tids = os.listdir('%s/%d/lwp' % (procfs_path, self.pid))
@@ -561,6 +707,12 @@ class Process(object):
 
     @wrap_exceptions
     def open_files(self):
+        """
+        Return a list of hit files.
+
+        Args:
+            self: (todo): write your description
+        """
         retlist = []
         hit_enoent = False
         procfs_path = self._procfs_path
@@ -618,6 +770,13 @@ class Process(object):
 
     @wrap_exceptions
     def connections(self, kind='inet'):
+        """
+        Return a list of connection connections.
+
+        Args:
+            self: (todo): write your description
+            kind: (str): write your description
+        """
         ret = net_connections(kind, _pid=self.pid)
         # The underlying C implementation retrieves all OS connections
         # and filters them by PID.  At this point we can't tell whether
@@ -639,7 +798,20 @@ class Process(object):
 
     @wrap_exceptions
     def memory_maps(self):
+        """
+        Return a list of memory.
+
+        Args:
+            self: (todo): write your description
+        """
         def toaddr(start, end):
+            """
+            Convert start and end of start end
+
+            Args:
+                start: (todo): write your description
+                end: (int): write your description
+            """
             return '%s-%s' % (hex(start)[2:].strip('L'),
                               hex(end)[2:].strip('L'))
 
@@ -687,15 +859,34 @@ class Process(object):
 
     @wrap_exceptions
     def num_fds(self):
+        """
+        Return the number of pid files.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(os.listdir("%s/%s/fd" % (self._procfs_path, self.pid)))
 
     @wrap_exceptions
     def num_ctx_switches(self):
+        """
+        Return the number of open_ctx.
+
+        Args:
+            self: (todo): write your description
+        """
         return _common.pctxsw(
             *cext.proc_num_ctx_switches(self.pid, self._procfs_path))
 
     @wrap_exceptions
     def wait(self, timeout=None):
+        """
+        Wait for the specified consumer to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         try:
             return _psposix.wait_pid(self.pid, timeout)
         except _psposix.TimeoutExpired:

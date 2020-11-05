@@ -23,15 +23,31 @@ METADATA_FN = 'METADATA'
 tar_open = TarFile.open
 if not hasattr(TarFile, '__exit__'):
     def tar_open(*args, **kwargs):
+        """
+        Return a file - like object.
+
+        Args:
+        """
         return closing(TarFile.open(*args, **kwargs))
 
 
 class tzfile(tzfile):
     def __reduce__(self):
+        """
+        Reduce the time of the file.
+
+        Args:
+            self: (todo): write your description
+        """
         return (gettz, (self._filename,))
 
 
 def getzoneinfofile_stream():
+    """
+    Get zoneinfofilestream.
+
+    Args:
+    """
     try:
         return BytesIO(get_data(__name__, ZONEFILENAME))
     except IOError as e:  # TODO  switch to FileNotFoundError?
@@ -41,6 +57,13 @@ def getzoneinfofile_stream():
 
 class ZoneInfoFile(object):
     def __init__(self, zonefile_stream=None):
+        """
+        Initialize zonefile.
+
+        Args:
+            self: (todo): write your description
+            zonefile_stream: (str): write your description
+        """
         if zonefile_stream is not None:
             with tar_open(fileobj=zonefile_stream, mode='r') as tf:
                 # dict comprehension does not work on python2.6

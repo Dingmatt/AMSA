@@ -23,6 +23,12 @@ try:
     #  PyPI package: cchardet
     import cchardet
     def chardet_dammit(s):
+        """
+        Return true ifet ismitet s.
+
+        Args:
+            s: (todo): write your description
+        """
         return cchardet.detect(s)['encoding']
 except ImportError:
     try:
@@ -31,12 +37,24 @@ except ImportError:
         #  PyPI package: chardet
         import chardet
         def chardet_dammit(s):
+            """
+            Return the number of s * s.
+
+            Args:
+                s: (todo): write your description
+            """
             return chardet.detect(s)['encoding']
         #import chardet.constants
         #chardet.constants._debug = 1
     except ImportError:
         # No chardet available.
         def chardet_dammit(s):
+            """
+            Return the number of bytes.
+
+            Args:
+                s: (todo): write your description
+            """
             return None
 
 # Available from http://cjkpython.i18n.org/.
@@ -55,6 +73,11 @@ class EntitySubstitution(object):
     """Substitute XML or HTML entities for the corresponding characters."""
 
     def _populate_class_variables():
+        """
+        Populate the class variables.
+
+        Args:
+        """
         lookup = {}
         reverse_lookup = {}
         characters_for_re = []
@@ -89,6 +112,13 @@ class EntitySubstitution(object):
 
     @classmethod
     def _substitute_html_entity(cls, matchobj):
+        """
+        Substitute html entities.
+
+        Args:
+            cls: (todo): write your description
+            matchobj: (todo): write your description
+        """
         entity = cls.CHARACTER_TO_HTML_ENTITY.get(matchobj.group(0))
         return "&%s;" % entity
 
@@ -217,6 +247,16 @@ class EncodingDetector:
     """
     def __init__(self, markup, override_encodings=None, is_html=False,
                  exclude_encodings=None):
+        """
+        Init the markdown object.
+
+        Args:
+            self: (todo): write your description
+            markup: (str): write your description
+            override_encodings: (str): write your description
+            is_html: (bool): write your description
+            exclude_encodings: (str): write your description
+        """
         self.override_encodings = override_encodings or []
         exclude_encodings = exclude_encodings or []
         self.exclude_encodings = set([x.lower() for x in exclude_encodings])
@@ -228,6 +268,14 @@ class EncodingDetector:
         self.markup, self.sniffed_encoding = self.strip_byte_order_mark(markup)
 
     def _usable(self, encoding, tried):
+        """
+        Return true if encoding of - if encoding.
+
+        Args:
+            self: (todo): write your description
+            encoding: (str): write your description
+            tried: (todo): write your description
+        """
         if encoding is not None:
             encoding = encoding.lower()
             if encoding in self.exclude_encodings:
@@ -343,6 +391,17 @@ class UnicodeDammit:
 
     def __init__(self, markup, override_encodings=[],
                  smart_quotes_to=None, is_html=False, exclude_encodings=[]):
+        """
+        Init the html content of this message.
+
+        Args:
+            self: (todo): write your description
+            markup: (str): write your description
+            override_encodings: (str): write your description
+            smart_quotes_to: (todo): write your description
+            is_html: (bool): write your description
+            exclude_encodings: (str): write your description
+        """
         self.smart_quotes_to = smart_quotes_to
         self.tried_encodings = []
         self.contains_replacement_characters = False
@@ -409,6 +468,14 @@ class UnicodeDammit:
         return sub
 
     def _convert_from(self, proposed, errors="strict"):
+        """
+        Convert the given value *
+
+        Args:
+            self: (todo): write your description
+            proposed: (todo): write your description
+            errors: (todo): write your description
+        """
         proposed = self.find_codec(proposed)
         if not proposed or (proposed, errors) in self.tried_encodings:
             return None
@@ -442,11 +509,24 @@ class UnicodeDammit:
 
     @property
     def declared_html_encoding(self):
+        """
+        Return html encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.is_html:
             return None
         return self.detector.declared_encoding
 
     def find_codec(self, charset):
+        """
+        Find the charset in the given charset.
+
+        Args:
+            self: (todo): write your description
+            charset: (str): write your description
+        """
         value = (self._codec(self.CHARSET_ALIASES.get(charset, charset))
                or (charset and self._codec(charset.replace("-", "")))
                or (charset and self._codec(charset.replace("-", "_")))
@@ -458,6 +538,13 @@ class UnicodeDammit:
         return None
 
     def _codec(self, charset):
+        """
+        Return the charset for the given charset.
+
+        Args:
+            self: (todo): write your description
+            charset: (str): write your description
+        """
         if not charset:
             return charset
         codec = None

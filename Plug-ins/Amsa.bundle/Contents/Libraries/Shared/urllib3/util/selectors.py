@@ -28,13 +28,32 @@ _DEFAULT_SELECTOR = None
 
 class SelectorError(Exception):
     def __init__(self, errcode):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+            errcode: (str): write your description
+        """
         super(SelectorError, self).__init__()
         self.errno = errcode
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "<SelectorError errno={0}>".format(self.errno)
 
     def __str__(self):
+        """
+        Return a string representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__repr__()
 
 
@@ -131,12 +150,32 @@ class _SelectorMapping(Mapping):
     """ Mapping of file objects to selector keys """
 
     def __init__(self, selector):
+        """
+        Initialize the selector.
+
+        Args:
+            self: (todo): write your description
+            selector: (str): write your description
+        """
         self._selector = selector
 
     def __len__(self):
+        """
+        Return the number of bytes in the stream.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self._selector._fd_to_key)
 
     def __getitem__(self, fileobj):
+        """
+        Get an item from fileobj.
+
+        Args:
+            self: (todo): write your description
+            fileobj: (todo): write your description
+        """
         try:
             fd = self._selector._fileobj_lookup(fileobj)
             return self._selector._fd_to_key[fd]
@@ -144,6 +183,12 @@ class _SelectorMapping(Mapping):
             raise KeyError("{0!r} is not registered.".format(fileobj))
 
     def __iter__(self):
+        """
+        Return an iterator over all the elements of the elements.
+
+        Args:
+            self: (todo): write your description
+        """
         return iter(self._selector._fd_to_key)
 
 
@@ -163,6 +208,12 @@ class BaseSelector(object):
     the most efficient implementation for the current platform.
     """
     def __init__(self):
+        """
+        Initialize the descriptor.
+
+        Args:
+            self: (todo): write your description
+        """
         # Maps file descriptors to keys.
         self._fd_to_key = {}
 
@@ -276,9 +327,21 @@ class BaseSelector(object):
             return None
 
     def __enter__(self):
+        """
+        Decor function.
+
+        Args:
+            self: (todo): write your description
+        """
         return self
 
     def __exit__(self, *args):
+        """
+        Exit the exit.
+
+        Args:
+            self: (todo): write your description
+        """
         self.close()
 
 
@@ -287,11 +350,26 @@ if hasattr(select, "select"):
     class SelectSelector(BaseSelector):
         """ Select-based selector. """
         def __init__(self):
+            """
+            Initialize the underlying settings.
+
+            Args:
+                self: (todo): write your description
+            """
             super(SelectSelector, self).__init__()
             self._readers = set()
             self._writers = set()
 
         def register(self, fileobj, events, data=None):
+            """
+            Register a file descriptor to be read.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (todo): write your description
+                events: (str): write your description
+                data: (array): write your description
+            """
             key = super(SelectSelector, self).register(fileobj, events, data)
             if events & EVENT_READ:
                 self._readers.add(key.fd)
@@ -300,6 +378,13 @@ if hasattr(select, "select"):
             return key
 
         def unregister(self, fileobj):
+            """
+            Unregister fileobj.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (str): write your description
+            """
             key = super(SelectSelector, self).unregister(fileobj)
             self._readers.discard(key.fd)
             self._writers.discard(key.fd)
@@ -310,6 +395,13 @@ if hasattr(select, "select"):
             return select.select(r, w, [], timeout)
 
         def select(self, timeout=None):
+            """
+            Selects a message.
+
+            Args:
+                self: (todo): write your description
+                timeout: (float): write your description
+            """
             # Selecting on empty lists on Windows errors out.
             if not len(self._readers) and not len(self._writers):
                 return []
@@ -337,10 +429,25 @@ if hasattr(select, "poll"):
     class PollSelector(BaseSelector):
         """ Poll-based selector """
         def __init__(self):
+            """
+            Init pollor
+
+            Args:
+                self: (todo): write your description
+            """
             super(PollSelector, self).__init__()
             self._poll = select.poll()
 
         def register(self, fileobj, events, data=None):
+            """
+            Register a new event handler.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (todo): write your description
+                events: (str): write your description
+                data: (array): write your description
+            """
             key = super(PollSelector, self).register(fileobj, events, data)
             event_mask = 0
             if events & EVENT_READ:
@@ -351,6 +458,13 @@ if hasattr(select, "poll"):
             return key
 
         def unregister(self, fileobj):
+            """
+            Unregister fileobj.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (str): write your description
+            """
             key = super(PollSelector, self).unregister(fileobj)
             self._poll.unregister(key.fd)
             return key
@@ -370,6 +484,13 @@ if hasattr(select, "poll"):
             return result
 
         def select(self, timeout=None):
+            """
+            Selects events from the socket : class : ~. select.
+
+            Args:
+                self: (todo): write your description
+                timeout: (float): write your description
+            """
             ready = []
             fd_events = _syscall_wrapper(self._wrap_poll, True, timeout=timeout)
             for fd, event_mask in fd_events:
@@ -390,13 +511,34 @@ if hasattr(select, "epoll"):
     class EpollSelector(BaseSelector):
         """ Epoll-based selector """
         def __init__(self):
+            """
+            Initialize the epoll.
+
+            Args:
+                self: (todo): write your description
+            """
             super(EpollSelector, self).__init__()
             self._epoll = select.epoll()
 
         def fileno(self):
+            """
+            Return the query filters.
+
+            Args:
+                self: (todo): write your description
+            """
             return self._epoll.fileno()
 
         def register(self, fileobj, events, data=None):
+            """
+            Register a mask to the given a fileobj.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (todo): write your description
+                events: (str): write your description
+                data: (array): write your description
+            """
             key = super(EpollSelector, self).register(fileobj, events, data)
             events_mask = 0
             if events & EVENT_READ:
@@ -407,6 +549,13 @@ if hasattr(select, "epoll"):
             return key
 
         def unregister(self, fileobj):
+            """
+            Unregister fileobj.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (str): write your description
+            """
             key = super(EpollSelector, self).unregister(fileobj)
             try:
                 _syscall_wrapper(self._epoll.unregister, False, key.fd)
@@ -416,6 +565,13 @@ if hasattr(select, "epoll"):
             return key
 
         def select(self, timeout=None):
+            """
+            Select a new : class from the given timeout.
+
+            Args:
+                self: (todo): write your description
+                timeout: (float): write your description
+            """
             if timeout is not None:
                 if timeout <= 0:
                     timeout = 0.0
@@ -449,6 +605,12 @@ if hasattr(select, "epoll"):
             return ready
 
         def close(self):
+            """
+            Close the connection.
+
+            Args:
+                self: (todo): write your description
+            """
             self._epoll.close()
             super(EpollSelector, self).close()
 
@@ -457,13 +619,34 @@ if hasattr(select, "kqueue"):
     class KqueueSelector(BaseSelector):
         """ Kqueue / Kevent-based selector """
         def __init__(self):
+            """
+            Initialize the kqueue queue.
+
+            Args:
+                self: (todo): write your description
+            """
             super(KqueueSelector, self).__init__()
             self._kqueue = select.kqueue()
 
         def fileno(self):
+            """
+            Return the number of filters in the queue.
+
+            Args:
+                self: (todo): write your description
+            """
             return self._kqueue.fileno()
 
         def register(self, fileobj, events, data=None):
+            """
+            Register a new event loop.
+
+            Args:
+                self: (todo): write your description
+                fileobj: (todo): write your description
+                events: (str): write your description
+                data: (array): write your description
+            """
             key = super(KqueueSelector, self).register(fileobj, events, data)
             if events & EVENT_READ:
                 kevent = select.kevent(key.fd,
@@ -482,6 +665,13 @@ if hasattr(select, "kqueue"):
             return key
 
         def unregister(self, fileobj):
+            """
+            Unregister a key from the queue
+
+            Args:
+                self: (todo): write your description
+                fileobj: (str): write your description
+            """
             key = super(KqueueSelector, self).unregister(fileobj)
             if key.events & EVENT_READ:
                 kevent = select.kevent(key.fd,
@@ -503,6 +693,13 @@ if hasattr(select, "kqueue"):
             return key
 
         def select(self, timeout=None):
+            """
+            Return a new message from the queue.
+
+            Args:
+                self: (todo): write your description
+                timeout: (float): write your description
+            """
             if timeout is not None:
                 timeout = max(timeout, 0)
 
@@ -532,6 +729,12 @@ if hasattr(select, "kqueue"):
             return list(ready_fds.values())
 
         def close(self):
+            """
+            Close the connection
+
+            Args:
+                self: (todo): write your description
+            """
             self._kqueue.close()
             super(KqueueSelector, self).close()
 
