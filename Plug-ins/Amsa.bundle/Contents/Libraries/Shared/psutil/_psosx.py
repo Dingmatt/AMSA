@@ -167,6 +167,11 @@ def cpu_count_physical():
 
 
 def cpu_stats():
+    """
+    Calculate cpu stats.
+
+    Args:
+    """
     ctx_switches, interrupts, soft_interrupts, syscalls, traps = \
         cext.cpu_stats()
     return _common.scpustats(
@@ -289,6 +294,12 @@ def wrap_exceptions(fun):
     """
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
+        """
+        Decor for : meth : exit.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except OSError as err:
@@ -314,12 +325,25 @@ class Process(object):
     __slots__ = ["pid", "_name", "_ppid"]
 
     def __init__(self, pid):
+        """
+        Initialize a new pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self.pid = pid
         self._name = None
         self._ppid = None
 
     @memoize_when_activated
     def _get_kinfo_proc(self):
+        """
+        Return the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: should work with all PIDs without permission issues.
         ret = cext.proc_kinfo_oneshot(self.pid)
         assert len(ret) == len(kinfo_proc_map)
@@ -327,51 +351,111 @@ class Process(object):
 
     @memoize_when_activated
     def _get_pidtaskinfo(self):
+        """
+        Get the pidinfo.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: should work for PIDs owned by user only.
         ret = cext.proc_pidtaskinfo_oneshot(self.pid)
         assert len(ret) == len(pidtaskinfo_map)
         return ret
 
     def oneshot_enter(self):
+        """
+        Enter the cache.
+
+        Args:
+            self: (todo): write your description
+        """
         self._get_kinfo_proc.cache_activate()
         self._get_pidtaskinfo.cache_activate()
 
     def oneshot_exit(self):
+        """
+        Deactivate the failed.
+
+        Args:
+            self: (todo): write your description
+        """
         self._get_kinfo_proc.cache_deactivate()
         self._get_pidtaskinfo.cache_deactivate()
 
     @wrap_exceptions
     def name(self):
+        """
+        The name of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         name = self._get_kinfo_proc()[kinfo_proc_map['name']]
         return name if name is not None else cext.proc_name(self.pid)
 
     @wrap_exceptions
     def exe(self):
+        """
+        Return the daemon.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_exe(self.pid)
 
     @wrap_exceptions
     def cmdline(self):
+        """
+        Determine whether the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         if not pid_exists(self.pid):
             raise NoSuchProcess(self.pid, self._name)
         return cext.proc_cmdline(self.pid)
 
     @wrap_exceptions
     def environ(self):
+        """
+        Fetches a new process.
+
+        Args:
+            self: (todo): write your description
+        """
         if not pid_exists(self.pid):
             raise NoSuchProcess(self.pid, self._name)
         return parse_environ_block(cext.proc_environ(self.pid))
 
     @wrap_exceptions
     def ppid(self):
+        """
+        Str : py : class : ~pypid.
+
+        Args:
+            self: (todo): write your description
+        """
         self._ppid = self._get_kinfo_proc()[kinfo_proc_map['ppid']]
         return self._ppid
 
     @wrap_exceptions
     def cwd(self):
+        """
+        Return the cwd for this process.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_cwd(self.pid)
 
     @wrap_exceptions
     def uids(self):
+        """
+        The raw raw tuple of raw ids.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self._get_kinfo_proc()
         return _common.puids(
             rawtuple[kinfo_proc_map['ruid']],
@@ -380,6 +464,12 @@ class Process(object):
 
     @wrap_exceptions
     def gids(self):
+        """
+        A tuple containing raw gids.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self._get_kinfo_proc()
         return _common.puids(
             rawtuple[kinfo_proc_map['rgid']],
@@ -388,6 +478,12 @@ class Process(object):
 
     @wrap_exceptions
     def terminal(self):
+        """
+        The terminal height of the terminal.
+
+        Args:
+            self: (todo): write your description
+        """
         tty_nr = self._get_kinfo_proc()[kinfo_proc_map['ttynr']]
         tmap = _psposix.get_terminal_map()
         try:
@@ -397,6 +493,12 @@ class Process(object):
 
     @wrap_exceptions
     def memory_info(self):
+        """
+        Get memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self._get_pidtaskinfo()
         return pmem(
             rawtuple[pidtaskinfo_map['rss']],
@@ -407,12 +509,24 @@ class Process(object):
 
     @wrap_exceptions
     def memory_full_info(self):
+        """
+        Return memory memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         basic_mem = self.memory_info()
         uss = cext.proc_memory_uss(self.pid)
         return pfullmem(*basic_mem + (uss, ))
 
     @wrap_exceptions
     def cpu_times(self):
+        """
+        Returns the raw cpu time.
+
+        Args:
+            self: (todo): write your description
+        """
         rawtuple = self._get_pidtaskinfo()
         return _common.pcputimes(
             rawtuple[pidtaskinfo_map['cpuutime']],
@@ -422,10 +536,22 @@ class Process(object):
 
     @wrap_exceptions
     def create_time(self):
+        """
+        : return : class time.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._get_kinfo_proc()[kinfo_proc_map['ctime']]
 
     @wrap_exceptions
     def num_ctx_switches(self):
+        """
+        Returns the number of open volume.
+
+        Args:
+            self: (todo): write your description
+        """
         # Unvoluntary value seems not to be available;
         # getrusage() numbers seems to confirm this theory.
         # We set it to 0.
@@ -434,10 +560,22 @@ class Process(object):
 
     @wrap_exceptions
     def num_threads(self):
+        """
+        Return the number of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._get_pidtaskinfo()[pidtaskinfo_map['numthreads']]
 
     @wrap_exceptions
     def open_files(self):
+        """
+        Return a list.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.pid == 0:
             return []
         files = []
@@ -450,6 +588,13 @@ class Process(object):
 
     @wrap_exceptions
     def connections(self, kind='inet'):
+        """
+        Return a list of connections.
+
+        Args:
+            self: (todo): write your description
+            kind: (str): write your description
+        """
         if kind not in conn_tmap:
             raise ValueError("invalid %r kind argument; choose between %s"
                              % (kind, ', '.join([repr(x) for x in conn_tmap])))
@@ -467,12 +612,25 @@ class Process(object):
 
     @wrap_exceptions
     def num_fds(self):
+        """
+        Return the number of fds.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.pid == 0:
             return 0
         return cext.proc_num_fds(self.pid)
 
     @wrap_exceptions
     def wait(self, timeout=None):
+        """
+        Wait for the specified consumer to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         try:
             return _psposix.wait_pid(self.pid, timeout)
         except _psposix.TimeoutExpired:
@@ -480,20 +638,45 @@ class Process(object):
 
     @wrap_exceptions
     def nice_get(self):
+        """
+        Return the position of pid.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext_posix.getpriority(self.pid)
 
     @wrap_exceptions
     def nice_set(self, value):
+        """
+        Nicely set of pid pid pids.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         return cext_posix.setpriority(self.pid, value)
 
     @wrap_exceptions
     def status(self):
+        """
+        Return the status of the status.
+
+        Args:
+            self: (todo): write your description
+        """
         code = self._get_kinfo_proc()[kinfo_proc_map['status']]
         # XXX is '?' legit? (we're not supposed to return it anyway)
         return PROC_STATUSES.get(code, '?')
 
     @wrap_exceptions
     def threads(self):
+        """
+        Return a list of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         rawlist = cext.proc_threads(self.pid)
         retlist = []
         for thread_id, utime, stime in rawlist:
@@ -503,4 +686,10 @@ class Process(object):
 
     @wrap_exceptions
     def memory_maps(self):
+        """
+        Return memory maps.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_memory_maps(self.pid)

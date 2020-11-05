@@ -438,18 +438,45 @@ class WindowsService(object):
     """Represents an installed Windows service."""
 
     def __init__(self, name, display_name):
+        """
+        Initialize a display.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            display_name: (str): write your description
+        """
         self._name = name
         self._display_name = display_name
 
     def __str__(self):
+        """
+        Return a human - readable string representation of this instance.
+
+        Args:
+            self: (todo): write your description
+        """
         details = "(name=%r, display_name=%r)" % (
             self._name, self._display_name)
         return "%s%s" % (self.__class__.__name__, details)
 
     def __repr__(self):
+        """
+        Return a representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "<%s at %s>" % (self.__str__(), id(self))
 
     def __eq__(self, other):
+        """
+        Determine if two values are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         # Test for equality with another WindosService object based
         # on name.
         if not isinstance(other, WindowsService):
@@ -457,9 +484,22 @@ class WindowsService(object):
         return self._name == other._name
 
     def __ne__(self, other):
+        """
+        Determine if self objects.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not self == other
 
     def _query_config(self):
+        """
+        Query configuration.
+
+        Args:
+            self: (todo): write your description
+        """
         with self._wrap_exceptions():
             display_name, binpath, username, start_type = \
                 cext.winservice_query_config(self._name)
@@ -471,6 +511,12 @@ class WindowsService(object):
             start_type=start_type)
 
     def _query_status(self):
+        """
+        Return the status of the query.
+
+        Args:
+            self: (todo): write your description
+        """
         with self._wrap_exceptions():
             status, pid = cext.winservice_query_status(self._name)
         if pid == 0:
@@ -616,6 +662,12 @@ def wrap_exceptions(fun):
     """
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
+        """
+        Wrapper for the given the decorator.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except OSError as err:
@@ -633,6 +685,13 @@ class Process(object):
     __slots__ = ["pid", "_name", "_ppid"]
 
     def __init__(self, pid):
+        """
+        Initialize a new pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self.pid = pid
         self._name = None
         self._ppid = None
@@ -640,9 +699,21 @@ class Process(object):
     # --- oneshot() stuff
 
     def oneshot_enter(self):
+        """
+        Enter the cache.
+
+        Args:
+            self: (todo): write your description
+        """
         self.oneshot_info.cache_activate()
 
     def oneshot_exit(self):
+        """
+        Deactivate the cache.
+
+        Args:
+            self: (todo): write your description
+        """
         self.oneshot_info.cache_deactivate()
 
     @memoize_when_activated
@@ -675,6 +746,12 @@ class Process(object):
 
     @wrap_exceptions
     def exe(self):
+        """
+        Return the pid of this target.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: os.path.exists(path) may return False even if the file
         # is there, see:
         # http://stackoverflow.com/questions/3112546/os-path-exists-lies
@@ -687,6 +764,12 @@ class Process(object):
 
     @wrap_exceptions
     def cmdline(self):
+        """
+        Return a list of cmdline instances.
+
+        Args:
+            self: (todo): write your description
+        """
         ret = cext.proc_cmdline(self.pid)
         if PY3:
             return ret
@@ -695,15 +778,33 @@ class Process(object):
 
     @wrap_exceptions
     def environ(self):
+        """
+        Fetch a new environ the given pid.
+
+        Args:
+            self: (todo): write your description
+        """
         return parse_environ_block(cext.proc_environ(self.pid))
 
     def ppid(self):
+        """
+        Returns the pid id for this map.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return ppid_map()[self.pid]
         except KeyError:
             raise NoSuchProcess(self.pid, self._name)
 
     def _get_raw_meminfo(self):
+        """
+        Get memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return cext.proc_memory_info(self.pid)
         except OSError as err:
@@ -727,6 +828,12 @@ class Process(object):
 
     @wrap_exceptions
     def memory_info(self):
+        """
+        Return memory memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         # on Windows RSS == WorkingSetSize and VSM == PagefileUsage.
         # Underlying C function returns fields of PROCESS_MEMORY_COUNTERS
         # struct.
@@ -737,11 +844,23 @@ class Process(object):
 
     @wrap_exceptions
     def memory_full_info(self):
+        """
+        Return memory memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         basic_mem = self.memory_info()
         uss = cext.proc_memory_uss(self.pid)
         return pfullmem(*basic_mem + (uss, ))
 
     def memory_maps(self):
+        """
+        Get memory map of the memory.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             raw = cext.proc_memory_maps(self.pid)
         except OSError as err:
@@ -760,14 +879,34 @@ class Process(object):
 
     @wrap_exceptions
     def kill(self):
+        """
+        Kill the child process.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_kill(self.pid)
 
     @wrap_exceptions
     def send_signal(self, sig):
+        """
+        Send a signal to the child process.
+
+        Args:
+            self: (todo): write your description
+            sig: (str): write your description
+        """
         os.kill(self.pid, sig)
 
     @wrap_exceptions
     def wait(self, timeout=None):
+        """
+        Wait for the specified process to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         if timeout is None:
             cext_timeout = cext.INFINITE
         else:
@@ -780,12 +919,24 @@ class Process(object):
 
     @wrap_exceptions
     def username(self):
+        """
+        The username of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.pid in (0, 4):
             return 'NT AUTHORITY\\SYSTEM'
         return cext.proc_username(self.pid)
 
     @wrap_exceptions
     def create_time(self):
+        """
+        Create a new pid entry.
+
+        Args:
+            self: (todo): write your description
+        """
         # special case for kernel process PIDs; return system boot time
         if self.pid in (0, 4):
             return boot_time()
@@ -798,10 +949,22 @@ class Process(object):
 
     @wrap_exceptions
     def num_threads(self):
+        """
+        : return : number of the queue
+
+        Args:
+            self: (todo): write your description
+        """
         return self.oneshot_info()[pinfo_map['num_threads']]
 
     @wrap_exceptions
     def threads(self):
+        """
+        Return a list of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         rawlist = cext.proc_threads(self.pid)
         retlist = []
         for thread_id, utime, stime in rawlist:
@@ -811,6 +974,12 @@ class Process(object):
 
     @wrap_exceptions
     def cpu_times(self):
+        """
+        Return the cpu time.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             user, system = cext.proc_cpu_times(self.pid)
         except OSError as err:
@@ -825,14 +994,32 @@ class Process(object):
 
     @wrap_exceptions
     def suspend(self):
+        """
+        Releases the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_suspend(self.pid)
 
     @wrap_exceptions
     def resume(self):
+        """
+        Resume the process.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_resume(self.pid)
 
     @wrap_exceptions
     def cwd(self):
+        """
+        Return the pid of the working directory.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.pid in (0, 4):
             raise AccessDenied(self.pid, self._name)
         # return a normalized pathname since the native C function appends
@@ -842,6 +1029,12 @@ class Process(object):
 
     @wrap_exceptions
     def open_files(self):
+        """
+        Open files in files.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.pid in (0, 4):
             return []
         ret = set()
@@ -861,10 +1054,23 @@ class Process(object):
 
     @wrap_exceptions
     def connections(self, kind='inet'):
+        """
+        Return a list of connections. net.
+
+        Args:
+            self: (todo): write your description
+            kind: (str): write your description
+        """
         return net_connections(kind, _pid=self.pid)
 
     @wrap_exceptions
     def nice_get(self):
+        """
+        Return the priority of the priority.
+
+        Args:
+            self: (todo): write your description
+        """
         value = cext.proc_priority_get(self.pid)
         if enum is not None:
             value = Priority(value)
@@ -872,16 +1078,37 @@ class Process(object):
 
     @wrap_exceptions
     def nice_set(self, value):
+        """
+        Set the priority set of the priority set.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         return cext.proc_priority_set(self.pid, value)
 
     # available on Windows >= Vista
     if hasattr(cext, "proc_io_priority_get"):
         @wrap_exceptions
         def ionice_get(self):
+            """
+            Return the pid of the pid.
+
+            Args:
+                self: (todo): write your description
+            """
             return cext.proc_io_priority_get(self.pid)
 
         @wrap_exceptions
         def ionice_set(self, value, _):
+            """
+            Sets the pid value.
+
+            Args:
+                self: (todo): write your description
+                value: (todo): write your description
+                _: (todo): write your description
+            """
             if _:
                 raise TypeError("set_proc_ionice() on Windows takes only "
                                 "1 argument (2 given)")
@@ -892,6 +1119,12 @@ class Process(object):
 
     @wrap_exceptions
     def io_counters(self):
+        """
+        Return counters counters.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             ret = cext.proc_io_counters(self.pid)
         except OSError as err:
@@ -911,6 +1144,12 @@ class Process(object):
 
     @wrap_exceptions
     def status(self):
+        """
+        Return the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         suspended = cext.proc_is_suspended(self.pid)
         if suspended:
             return _common.STATUS_STOPPED
@@ -919,14 +1158,39 @@ class Process(object):
 
     @wrap_exceptions
     def cpu_affinity_get(self):
+        """
+        Returns the cpu cpu cpu cpu usage.
+
+        Args:
+            self: (todo): write your description
+        """
         def from_bitmask(x):
+            """
+            Convert a bitmask to a list of bits.
+
+            Args:
+                x: (todo): write your description
+            """
             return [i for i in xrange(64) if (1 << i) & x]
         bitmask = cext.proc_cpu_affinity_get(self.pid)
         return from_bitmask(bitmask)
 
     @wrap_exceptions
     def cpu_affinity_set(self, value):
+        """
+        Set cpu cpu cpu cpu cpu cpu.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         def to_bitmask(l):
+            """
+            Convert a bitmask to a bitmask.
+
+            Args:
+                l: (array): write your description
+            """
             if not l:
                 raise ValueError("invalid argument %r" % l)
             out = 0
@@ -951,6 +1215,12 @@ class Process(object):
 
     @wrap_exceptions
     def num_handles(self):
+        """
+        The number of pid of the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return cext.proc_num_handles(self.pid)
         except OSError as err:
@@ -960,6 +1230,12 @@ class Process(object):
 
     @wrap_exceptions
     def num_ctx_switches(self):
+        """
+        Returns the number of switches.
+
+        Args:
+            self: (todo): write your description
+        """
         ctx_switches = self.oneshot_info()[pinfo_map['ctx_switches']]
         # only voluntary ctx switches are supported
         return _common.pctxsw(ctx_switches, 0)

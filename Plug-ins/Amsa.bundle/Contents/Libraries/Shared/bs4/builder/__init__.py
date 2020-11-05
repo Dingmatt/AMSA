@@ -30,6 +30,12 @@ HTML_5 = 'html5'
 class TreeBuilderRegistry(object):
 
     def __init__(self):
+        """
+        Initialize the default values.
+
+        Args:
+            self: (todo): write your description
+        """
         self.builders_for_feature = defaultdict(list)
         self.builders = []
 
@@ -40,6 +46,13 @@ class TreeBuilderRegistry(object):
         self.builders.insert(0, treebuilder_class)
 
     def lookup(self, *features):
+        """
+        Look up a lookup of features.
+
+        Args:
+            self: (todo): write your description
+            features: (todo): write your description
+        """
         if len(self.builders) == 0:
             # There are no builders at all.
             return None
@@ -100,9 +113,21 @@ class TreeBuilder(object):
 
 
     def __init__(self):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+        """
         self.soup = None
 
     def reset(self):
+        """
+        Reset the state.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def can_be_empty_element(self, tag_name):
@@ -127,10 +152,26 @@ class TreeBuilder(object):
         return tag_name in self.empty_element_tags
 
     def feed(self, markup):
+        """
+        Feeds the given marker.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+        """
         raise NotImplementedError()
 
     def prepare_markup(self, markup, user_specified_encoding=None,
                        document_declared_encoding=None):
+        """
+        Prepare markdown document.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+            user_specified_encoding: (todo): write your description
+            document_declared_encoding: (todo): write your description
+        """
         return markup, None, None, False
 
     def test_fragment_to_document(self, fragment):
@@ -147,6 +188,13 @@ class TreeBuilder(object):
         return fragment
 
     def set_up_substitutions(self, tag):
+        """
+        Set up the given tag for the given tag.
+
+        Args:
+            self: (todo): write your description
+            tag: (str): write your description
+        """
         return False
 
     def _replace_cdata_list_attribute_values(self, tag_name, attrs):
@@ -183,45 +231,124 @@ class SAXTreeBuilder(TreeBuilder):
     """A Beautiful Soup treebuilder that listens for SAX events."""
 
     def feed(self, markup):
+        """
+        Feeds the given marker.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+        """
         raise NotImplementedError()
 
     def close(self):
+        """
+        Close the connection.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def startElement(self, name, attrs):
+        """
+        Process xml element.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+        """
         attrs = dict((key[1], value) for key, value in list(attrs.items()))
         #print "Start %s, %r" % (name, attrs)
         self.soup.handle_starttag(name, attrs)
 
     def endElement(self, name):
+        """
+        Add end element.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         #print "End %s" % name
         self.soup.handle_endtag(name)
 
     def startElementNS(self, nsTuple, nodeName, attrs):
+        """
+        Start a new element
+
+        Args:
+            self: (todo): write your description
+            nsTuple: (todo): write your description
+            nodeName: (str): write your description
+            attrs: (dict): write your description
+        """
         # Throw away (ns, nodeName) for now.
         self.startElement(nodeName, attrs)
 
     def endElementNS(self, nsTuple, nodeName):
+        """
+        Add a new element
+
+        Args:
+            self: (todo): write your description
+            nsTuple: (todo): write your description
+            nodeName: (str): write your description
+        """
         # Throw away (ns, nodeName) for now.
         self.endElement(nodeName)
         #handler.endElementNS((ns, node.nodeName), node.nodeName)
 
     def startPrefixMapping(self, prefix, nodeValue):
+        """
+        Add a prefix to a prefix.
+
+        Args:
+            self: (todo): write your description
+            prefix: (str): write your description
+            nodeValue: (todo): write your description
+        """
         # Ignore the prefix for now.
         pass
 
     def endPrefixMapping(self, prefix):
+        """
+        [ { prefix }
+
+        Args:
+            self: (todo): write your description
+            prefix: (str): write your description
+        """
         # Ignore the prefix for now.
         # handler.endPrefixMapping(prefix)
         pass
 
     def characters(self, content):
+        """
+        Parses content.
+
+        Args:
+            self: (todo): write your description
+            content: (str): write your description
+        """
         self.soup.handle_data(content)
 
     def startDocument(self):
+        """
+        Start the document.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def endDocument(self):
+        """
+        Called to end of the endpoints
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
 
@@ -265,6 +392,13 @@ class HTMLTreeBuilder(TreeBuilder):
         }
 
     def set_up_substitutions(self, tag):
+        """
+        Set the tag tagset of the tag.
+
+        Args:
+            self: (todo): write your description
+            tag: (dict): write your description
+        """
         # We are only interested in <meta> tags
         if tag.name != 'meta':
             return False

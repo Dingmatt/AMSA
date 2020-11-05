@@ -187,6 +187,12 @@ pio = namedtuple('pio', ['read_count', 'write_count',
 
 
 def open_binary(fname, **kwargs):
+    """
+    Open a binary file.
+
+    Args:
+        fname: (str): write your description
+    """
     return open(fname, "rb", **kwargs)
 
 
@@ -206,9 +212,21 @@ def open_text(fname, **kwargs):
 
 if PY3:
     def decode(s):
+        """
+        Decode s into bytes.
+
+        Args:
+            s: (todo): write your description
+        """
         return s.decode(encoding=FS_ENCODING, errors=ENCODING_ERRORS_HANDLER)
 else:
     def decode(s):
+        """
+        Decode s to a string.
+
+        Args:
+            s: (todo): write your description
+        """
         return s
 
 
@@ -691,6 +709,12 @@ class Connections:
     """
 
     def __init__(self):
+        """
+        Initialize the tcp socket.
+
+        Args:
+            self: (todo): write your description
+        """
         tcp4 = ("tcp", socket.AF_INET, socket.SOCK_STREAM)
         tcp6 = ("tcp6", socket.AF_INET6, socket.SOCK_STREAM)
         udp4 = ("udp", socket.AF_INET, socket.SOCK_DGRAM)
@@ -712,6 +736,13 @@ class Connections:
         self._procfs_path = None
 
     def get_proc_inodes(self, pid):
+        """
+        Return a list of pid nodes.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         inodes = defaultdict(list)
         for fd in os.listdir("%s/%s/fd" % (self._procfs_path, pid)):
             try:
@@ -735,6 +766,12 @@ class Connections:
         return inodes
 
     def get_all_inodes(self):
+        """
+        Get all nodes in the process
+
+        Args:
+            self: (todo): write your description
+        """
         inodes = {}
         for pid in pids():
             try:
@@ -883,6 +920,14 @@ class Connections:
                         yield (fd, family, type_, path, raddr, status, pid)
 
     def retrieve(self, kind, pid=None):
+        """
+        Retrieve filesystem ::
+
+        Args:
+            self: (todo): write your description
+            kind: (int): write your description
+            pid: (str): write your description
+        """
         if kind not in self.tmap:
             raise ValueError("invalid %r kind argument; choose between %s"
                              % (kind, ', '.join([repr(x) for x in self.tmap])))
@@ -989,6 +1034,11 @@ def disk_io_counters():
     """
     # determine partitions we want to look for
     def get_partitions():
+        """
+        Parse partitions
+
+        Args:
+        """
         partitions = []
         with open_text("%s/partitions" % get_procfs_path()) as f:
             lines = f.readlines()[2:]
@@ -1316,6 +1366,12 @@ def wrap_exceptions(fun):
     """
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
+        """
+        Decorator to run a function.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return fun(self, *args, **kwargs)
         except EnvironmentError as err:
@@ -1336,6 +1392,13 @@ class Process(object):
     __slots__ = ["pid", "_name", "_ppid", "_procfs_path"]
 
     def __init__(self, pid):
+        """
+        Initialize the process.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self.pid = pid
         self._name = None
         self._ppid = None
@@ -1374,22 +1437,46 @@ class Process(object):
 
     @memoize_when_activated
     def _read_smaps_file(self):
+        """
+        Reads pid file.
+
+        Args:
+            self: (todo): write your description
+        """
         with open_binary("%s/%s/smaps" % (self._procfs_path, self.pid),
                          buffering=BIGGER_FILE_BUFFERING) as f:
             return f.read().strip()
 
     def oneshot_enter(self):
+        """
+        Reads the cache file.
+
+        Args:
+            self: (todo): write your description
+        """
         self._parse_stat_file.cache_activate()
         self._read_status_file.cache_activate()
         self._read_smaps_file.cache_activate()
 
     def oneshot_exit(self):
+        """
+        Deactivates.
+
+        Args:
+            self: (todo): write your description
+        """
         self._parse_stat_file.cache_deactivate()
         self._read_status_file.cache_deactivate()
         self._read_smaps_file.cache_deactivate()
 
     @wrap_exceptions
     def name(self):
+        """
+        Returns the name of the file.
+
+        Args:
+            self: (todo): write your description
+        """
         name = self._parse_stat_file()[0]
         if PY3:
             name = decode(name)
@@ -1397,6 +1484,12 @@ class Process(object):
         return name
 
     def exe(self):
+        """
+        Check if the process is running.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return readlink("%s/%s/exe" % (self._procfs_path, self.pid))
         except OSError as err:
@@ -1417,6 +1510,12 @@ class Process(object):
 
     @wrap_exceptions
     def cmdline(self):
+        """
+        Return list of the pid file.
+
+        Args:
+            self: (todo): write your description
+        """
         with open_text("%s/%s/cmdline" % (self._procfs_path, self.pid)) as f:
             data = f.read()
         if not data:
@@ -1428,12 +1527,24 @@ class Process(object):
 
     @wrap_exceptions
     def environ(self):
+        """
+        Reads a process with the pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         with open_text("%s/%s/environ" % (self._procfs_path, self.pid)) as f:
             data = f.read()
         return parse_environ_block(data)
 
     @wrap_exceptions
     def terminal(self):
+        """
+        Returns the terminal height.
+
+        Args:
+            self: (todo): write your description
+        """
         tty_nr = int(self._parse_stat_file()[5])
         tmap = _psposix.get_terminal_map()
         try:
@@ -1444,6 +1555,12 @@ class Process(object):
     if os.path.exists('/proc/%s/io' % os.getpid()):
         @wrap_exceptions
         def io_counters(self):
+            """
+            Return i / obs counters.
+
+            Args:
+                self: (todo): write your description
+            """
             fname = "%s/%s/io" % (self._procfs_path, self.pid)
             fields = {}
             with open_binary(fname) as f:
@@ -1465,11 +1582,23 @@ class Process(object):
             )
     else:
         def io_counters(self):
+            """
+            Set counters counters.
+
+            Args:
+                self: (todo): write your description
+            """
             raise NotImplementedError("couldn't find /proc/%s/io (kernel "
                                       "too old?)" % self.pid)
 
     @wrap_exceptions
     def cpu_times(self):
+        """
+        Returns the cpu time.
+
+        Args:
+            self: (todo): write your description
+        """
         values = self._parse_stat_file()
         utime = float(values[12]) / CLOCK_TICKS
         stime = float(values[13]) / CLOCK_TICKS
@@ -1484,6 +1613,13 @@ class Process(object):
 
     @wrap_exceptions
     def wait(self, timeout=None):
+        """
+        Wait for the specified consumer to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         try:
             return _psposix.wait_pid(self.pid, timeout)
         except _psposix.TimeoutExpired:
@@ -1491,6 +1627,12 @@ class Process(object):
 
     @wrap_exceptions
     def create_time(self):
+        """
+        Create a time of the file.
+
+        Args:
+            self: (todo): write your description
+        """
         values = self._parse_stat_file()
         # According to documentation, starttime is in field 21 and the
         # unit is jiffies (clock ticks).
@@ -1502,6 +1644,12 @@ class Process(object):
 
     @wrap_exceptions
     def memory_info(self):
+        """
+        Return memory information.
+
+        Args:
+            self: (todo): write your description
+        """
         #  ============================================================
         # | FIELD  | DESCRIPTION                         | AKA  | TOP  |
         #  ============================================================
@@ -1528,6 +1676,21 @@ class Process(object):
                 _private_re=re.compile(b"Private.*:\s+(\d+)"),
                 _pss_re=re.compile(b"Pss.*:\s+(\d+)"),
                 _swap_re=re.compile(b"Swap.*:\s+(\d+)")):
+            """
+            Return memory memory information.
+
+            Args:
+                self: (todo): write your description
+                _private_re: (bool): write your description
+                re: (todo): write your description
+                compile: (str): write your description
+                _pss_re: (todo): write your description
+                re: (todo): write your description
+                compile: (str): write your description
+                _swap_re: (todo): write your description
+                re: (todo): write your description
+                compile: (str): write your description
+            """
             basic_mem = self.memory_info()
             # Note: using 3 regexes is faster than reading the file
             # line by line.
@@ -1561,6 +1724,13 @@ class Process(object):
             (Apr 2012) version: http://goo.gl/fmebo
             """
             def get_blocks(lines, current_block):
+                """
+                Parse blocks
+
+                Args:
+                    lines: (list): write your description
+                    current_block: (list): write your description
+                """
                 data = {}
                 for line in lines:
                     fields = line.split(None, 5)
@@ -1621,6 +1791,12 @@ class Process(object):
 
     else:
         def memory_maps(self):
+            """
+            Set the memory map.
+
+            Args:
+                self: (todo): write your description
+            """
             raise NotImplementedError(
                 "/proc/%s/smaps does not exist on kernels < 2.6.14 or "
                 "if CONFIG_MMU kernel configuration option is not "
@@ -1628,6 +1804,12 @@ class Process(object):
 
     @wrap_exceptions
     def cwd(self):
+        """
+        Return the pid of a process.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             return readlink("%s/%s/cwd" % (self._procfs_path, self.pid))
         except OSError as err:
@@ -1641,6 +1823,15 @@ class Process(object):
 
     @wrap_exceptions
     def num_ctx_switches(self, _ctxsw_re=re.compile(b'ctxt_switches:\t(\d+)')):
+        """
+        Returns the number of switches in the given subtitle.
+
+        Args:
+            self: (todo): write your description
+            _ctxsw_re: (todo): write your description
+            re: (todo): write your description
+            compile: (str): write your description
+        """
         data = self._read_status_file()
         ctxsw = _ctxsw_re.findall(data)
         if not ctxsw:
@@ -1654,6 +1845,15 @@ class Process(object):
 
     @wrap_exceptions
     def num_threads(self, _num_threads_re=re.compile(b'Threads:\t(\d+)')):
+        """
+        Return number of threads in the process
+
+        Args:
+            self: (todo): write your description
+            _num_threads_re: (int): write your description
+            re: (todo): write your description
+            compile: (str): write your description
+        """
         # Note: on Python 3 using a re is faster than iterating over file
         # line by line. On Python 2 is the exact opposite, and iterating
         # over a file on Python 3 is slower than on Python 2.
@@ -1662,6 +1862,12 @@ class Process(object):
 
     @wrap_exceptions
     def threads(self):
+        """
+        Return a list of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         thread_ids = os.listdir("%s/%s/task" % (self._procfs_path, self.pid))
         thread_ids.sort()
         retlist = []
@@ -1693,6 +1899,12 @@ class Process(object):
 
     @wrap_exceptions
     def nice_get(self):
+        """
+        Return the position of pid.
+
+        Args:
+            self: (todo): write your description
+        """
         # with open_text('%s/%s/stat' % (self._procfs_path, self.pid)) as f:
         #   data = f.read()
         #   return int(data.split()[18])
@@ -1702,14 +1914,36 @@ class Process(object):
 
     @wrap_exceptions
     def nice_set(self, value):
+        """
+        Nicely set of pid pid pids.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         return cext_posix.setpriority(self.pid, value)
 
     @wrap_exceptions
     def cpu_affinity_get(self):
+        """
+        Returns the number of the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         return cext.proc_cpu_affinity_get(self.pid)
 
     def _get_eligible_cpus(
             self, _re=re.compile(b"Cpus_allowed_list:\t(\d+)-(\d+)")):
+        """
+        Returns a list of available cpus
+
+        Args:
+            self: (todo): write your description
+            _re: (todo): write your description
+            re: (str): write your description
+            compile: (str): write your description
+        """
         # See: https://github.com/giampaolo/psutil/issues/956
         data = self._read_status_file()
         match = _re.findall(data)
@@ -1720,6 +1954,13 @@ class Process(object):
 
     @wrap_exceptions
     def cpu_affinity_set(self, cpus):
+        """
+        Set the cpu cpu cpu.
+
+        Args:
+            self: (todo): write your description
+            cpus: (todo): write your description
+        """
         try:
             cext.proc_cpu_affinity_set(self.pid, cpus)
         except (OSError, ValueError) as err:
@@ -1742,6 +1983,12 @@ class Process(object):
 
         @wrap_exceptions
         def ionice_get(self):
+            """
+            Get the pid of the pid.
+
+            Args:
+                self: (todo): write your description
+            """
             ioclass, value = cext.proc_ioprio_get(self.pid)
             if enum is not None:
                 ioclass = IOPriority(ioclass)
@@ -1749,6 +1996,14 @@ class Process(object):
 
         @wrap_exceptions
         def ionice_set(self, ioclass, value):
+            """
+            Set a ioclass value.
+
+            Args:
+                self: (todo): write your description
+                ioclass: (str): write your description
+                value: (todo): write your description
+            """
             if value is not None:
                 if not PY3 and not isinstance(value, (int, long)):
                     msg = "value argument is not an integer (gor %r)" % value
@@ -1783,6 +2038,14 @@ class Process(object):
     if HAS_PRLIMIT:
         @wrap_exceptions
         def rlimit(self, resource, limits=None):
+            """
+            Rlimit limit limit.
+
+            Args:
+                self: (todo): write your description
+                resource: (dict): write your description
+                limits: (int): write your description
+            """
             # If pid is 0 prlimit() applies to the calling process and
             # we don't want that. We should never get here though as
             # PID 0 is not supported on Linux.
@@ -1810,6 +2073,12 @@ class Process(object):
 
     @wrap_exceptions
     def status(self):
+        """
+        Return the status
+
+        Args:
+            self: (todo): write your description
+        """
         letter = self._parse_stat_file()[1]
         if PY3:
             letter = letter.decode()
@@ -1818,6 +2087,12 @@ class Process(object):
 
     @wrap_exceptions
     def open_files(self):
+        """
+        Open a list of files in a list of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         retlist = []
         files = os.listdir("%s/%s/fd" % (self._procfs_path, self.pid))
         hit_enoent = False
@@ -1857,6 +2132,13 @@ class Process(object):
 
     @wrap_exceptions
     def connections(self, kind='inet'):
+        """
+        Return a dict of all connections.
+
+        Args:
+            self: (todo): write your description
+            kind: (str): write your description
+        """
         ret = _connections.retrieve(kind, self.pid)
         # raise NSP if the process disappeared on us
         os.stat('%s/%s' % (self._procfs_path, self.pid))
@@ -1864,20 +2146,50 @@ class Process(object):
 
     @wrap_exceptions
     def num_fds(self):
+        """
+        Return the number of pid files.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(os.listdir("%s/%s/fd" % (self._procfs_path, self.pid)))
 
     @wrap_exceptions
     def ppid(self):
+        """
+        Return the id of the file.
+
+        Args:
+            self: (todo): write your description
+        """
         return int(self._parse_stat_file()[2])
 
     @wrap_exceptions
     def uids(self, _uids_re=re.compile(b'Uid:\t(\d+)\t(\d+)\t(\d+)')):
+        """
+        Returns the ids
+
+        Args:
+            self: (todo): write your description
+            _uids_re: (todo): write your description
+            re: (todo): write your description
+            compile: (str): write your description
+        """
         data = self._read_status_file()
         real, effective, saved = _uids_re.findall(data)[0]
         return _common.puids(int(real), int(effective), int(saved))
 
     @wrap_exceptions
     def gids(self, _gids_re=re.compile(b'Gid:\t(\d+)\t(\d+)\t(\d+)')):
+        """
+        Get gids
+
+        Args:
+            self: (todo): write your description
+            _gids_re: (todo): write your description
+            re: (todo): write your description
+            compile: (str): write your description
+        """
         data = self._read_status_file()
         real, effective, saved = _gids_re.findall(data)[0]
         return _common.pgids(int(real), int(effective), int(saved))

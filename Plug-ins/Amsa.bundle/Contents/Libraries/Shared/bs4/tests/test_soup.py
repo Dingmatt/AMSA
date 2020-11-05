@@ -40,16 +40,34 @@ PYTHON_3_PRE_3_2 = (sys.version_info[0] == 3 and sys.version_info < (3,2))
 class TestConstructor(SoupTest):
 
     def test_short_unicode_input(self):
+        """
+        Test if the unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         data = u"<h1>éé</h1>"
         soup = self.soup(data)
         self.assertEqual(u"éé", soup.h1.string)
 
     def test_embedded_null(self):
+        """
+        Test if the test.
+
+        Args:
+            self: (todo): write your description
+        """
         data = u"<h1>foo\0bar</h1>"
         soup = self.soup(data)
         self.assertEqual(u"foo\0bar", soup.h1.string)
 
     def test_exclude_encodings(self):
+        """
+        Exclude the unicodings.
+
+        Args:
+            self: (todo): write your description
+        """
         utf8_data = u"Räksmörgås".encode("utf-8")
         soup = self.soup(utf8_data, exclude_encodings=["utf-8"])
         self.assertEqual("windows-1252", soup.original_encoding)
@@ -58,27 +76,59 @@ class TestConstructor(SoupTest):
 class TestWarnings(SoupTest):
 
     def _no_parser_specified(self, s, is_there=True):
+        """
+        Check if the parser is permitted ().
+
+        Args:
+            self: (todo): write your description
+            s: (str): write your description
+            is_there: (todo): write your description
+        """
         v = s.startswith(BeautifulSoup.NO_PARSER_SPECIFIED_WARNING[:80])
         self.assertTrue(v)
 
     def test_warning_if_no_parser_specified(self):
+        """
+        Check if the warning warning if the test is raised.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as w:
             soup = self.soup("<a><b></b></a>")
         msg = str(w[0].message)
         self._assert_no_parser_specified(msg)
 
     def test_warning_if_parser_specified_too_vague(self):
+        """
+        Check if a test is raised.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as w:
             soup = self.soup("<a><b></b></a>", "html")
         msg = str(w[0].message)
         self._assert_no_parser_specified(msg)
 
     def test_no_warning_if_explicit_parser_specified(self):
+        """
+        Test if a warning warning warning warning is raised.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as w:
             soup = self.soup("<a><b></b></a>", "html.parser")
         self.assertEqual([], w)
 
     def test_parseOnlyThese_renamed_to_parse_only(self):
+        """
+        Makes sure that test test test record.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as w:
             soup = self.soup("<a><b></b></a>", parseOnlyThese=SoupStrainer("b"))
         msg = str(w[0].message)
@@ -87,6 +137,12 @@ class TestWarnings(SoupTest):
         self.assertEqual(b"<b></b>", soup.encode())
 
     def test_fromEncoding_renamed_to_from_encoding(self):
+        """
+        Test if the test record.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as w:
             utf8 = b"\xc3\xa9"
             soup = self.soup(utf8, fromEncoding="utf8")
@@ -96,12 +152,24 @@ class TestWarnings(SoupTest):
         self.assertEqual("utf8", soup.original_encoding)
 
     def test_unrecognized_keyword_argument(self):
+        """
+        Test if a test_argument_argument.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertRaises(
             TypeError, self.soup, "<a>", no_such_argument=True)
 
 class TestWarnings(SoupTest):
 
     def test_disk_file_warning(self):
+        """
+        Test if a warning for a warning.
+
+        Args:
+            self: (todo): write your description
+        """
         filehandle = tempfile.NamedTemporaryFile()
         filename = filehandle.name
         try:
@@ -118,6 +186,12 @@ class TestWarnings(SoupTest):
         self.assertEqual(0, len(w))
 
     def test_url_warning_with_bytes_url(self):
+        """
+        Test if test test test for test.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as warning_list:
             soup = self.soup(b"http://www.crummybytes.com/")
         # Be aware this isn't the only warning that can be raised during
@@ -126,6 +200,12 @@ class TestWarnings(SoupTest):
             for w in warning_list))
 
     def test_url_warning_with_unicode_url(self):
+        """
+        Test if the test url warning.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as warning_list:
             # note - this url must differ from the bytes one otherwise
             # python's warnings system swallows the second warning
@@ -134,12 +214,24 @@ class TestWarnings(SoupTest):
             for w in warning_list))
 
     def test_url_warning_with_bytes_and_space(self):
+        """
+        Check if test test test test test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as warning_list:
             soup = self.soup(b"http://www.crummybytes.com/ is great")
         self.assertFalse(any("looks like a URL" in str(w.message) 
             for w in warning_list))
 
     def test_url_warning_with_unicode_and_space(self):
+        """
+        Check if the test test.
+
+        Args:
+            self: (todo): write your description
+        """
         with warnings.catch_warnings(record=True) as warning_list:
             soup = self.soup(u"http://www.crummyuncode.com/ is great")
         self.assertFalse(any("looks like a URL" in str(w.message) 
@@ -149,6 +241,12 @@ class TestWarnings(SoupTest):
 class TestSelectiveParsing(SoupTest):
 
     def test_parse_with_soupstrainer(self):
+        """
+        Parse the soup.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = "No<b>Yes</b><a>No<b>Yes <c>Yes</c></b>"
         strainer = SoupStrainer("b")
         soup = self.soup(markup, parse_only=strainer)
@@ -158,9 +256,21 @@ class TestSelectiveParsing(SoupTest):
 class TestEntitySubstitution(unittest.TestCase):
     """Standalone tests of the EntitySubstitution class."""
     def setUp(self):
+        """
+        Sets the entity.
+
+        Args:
+            self: (todo): write your description
+        """
         self.sub = EntitySubstitution
 
     def test_simple_html_substitution(self):
+        """
+        Test if the html can be displayed.
+
+        Args:
+            self: (todo): write your description
+        """
         # Unicode characters corresponding to named HTML entites
         # are substituted, and no others.
         s = u"foo\u2200\N{SNOWMAN}\u00f5bar"
@@ -168,6 +278,12 @@ class TestEntitySubstitution(unittest.TestCase):
                           u"foo&forall;\N{SNOWMAN}&otilde;bar")
 
     def test_smart_quote_substitution(self):
+        """
+        Test if the html quote html.
+
+        Args:
+            self: (todo): write your description
+        """
         # MS smart quotes are a common source of frustration, so we
         # give them a special test.
         quotes = b"\x91\x92foo\x93\x94"
@@ -176,44 +292,98 @@ class TestEntitySubstitution(unittest.TestCase):
                           "&lsquo;&rsquo;foo&ldquo;&rdquo;")
 
     def test_xml_converstion_includes_no_quotes_if_make_quoted_attribute_is_false(self):
+        """
+        Check that the xml element contains xml.
+
+        Args:
+            self: (todo): write your description
+        """
         s = 'Welcome to "my bar"'
         self.assertEqual(self.sub.substitute_xml(s, False), s)
 
     def test_xml_attribute_quoting_normally_uses_double_quotes(self):
+        """
+        Evaluate the xml element.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(self.sub.substitute_xml("Welcome", True),
                           '"Welcome"')
         self.assertEqual(self.sub.substitute_xml("Bob's Bar", True),
                           '"Bob\'s Bar"')
 
     def test_xml_attribute_quoting_uses_single_quotes_when_value_contains_double_quotes(self):
+        """
+        Set the xml_xml.
+
+        Args:
+            self: (todo): write your description
+        """
         s = 'Welcome to "my bar"'
         self.assertEqual(self.sub.substitute_xml(s, True),
                           "'Welcome to \"my bar\"'")
 
     def test_xml_attribute_quoting_escapes_single_quotes_when_value_contains_both_single_and_double_quotes(self):
+        """
+        Evaluate xml or xml or xml.
+
+        Args:
+            self: (todo): write your description
+        """
         s = 'Welcome to "Bob\'s Bar"'
         self.assertEqual(
             self.sub.substitute_xml(s, True),
             '"Welcome to &quot;Bob\'s Bar&quot;"')
 
     def test_xml_quotes_arent_escaped_when_value_is_not_being_quoted(self):
+        """
+        Setter for _test_xml.
+
+        Args:
+            self: (todo): write your description
+        """
         quoted = 'Welcome to "Bob\'s Bar"'
         self.assertEqual(self.sub.substitute_xml(quoted), quoted)
 
     def test_xml_quoting_handles_angle_brackets(self):
+        """
+        Evaluates quoting xml.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             self.sub.substitute_xml("foo<bar>"),
             "foo&lt;bar&gt;")
 
     def test_xml_quoting_handles_ampersands(self):
+        """
+        Evaluate xml xml.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(self.sub.substitute_xml("AT&T"), "AT&amp;T")
 
     def test_xml_quoting_including_ampersands_when_they_are_part_of_an_entity(self):
+        """
+        Test if any test test entities are xml.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             self.sub.substitute_xml("&Aacute;T&T"),
             "&amp;Aacute;T&amp;T")
 
     def test_xml_quoting_ignoring_ampersands_when_they_are_part_of_an_entity(self):
+        """
+        Test if any xml entities are xml.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(
             self.sub.substitute_xml_containing_entities("&Aacute;T&T"),
             "&Aacute;T&amp;T")
@@ -229,6 +399,12 @@ class TestEncodingConversion(SoupTest):
     # encodings.
 
     def setUp(self):
+        """
+        Set the utf - 8 encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         super(TestEncodingConversion, self).setUp()
         self.unicode_data = u'<html><head><meta charset="utf-8"/></head><body><foo>Sacr\N{LATIN SMALL LETTER E WITH ACUTE} bleu!</foo></body></html>'
         self.utf8_data = self.unicode_data.encode("utf-8")
@@ -238,12 +414,24 @@ class TestEncodingConversion(SoupTest):
             b'<html><head><meta charset="utf-8"/></head><body><foo>Sacr\xc3\xa9 bleu!</foo></body></html>')
 
     def test_ascii_in_unicode_out(self):
+        """
+        Test if the unicode ascii ascii.
+
+        Args:
+            self: (todo): write your description
+        """
         # ASCII input is converted to Unicode. The original_encoding
         # attribute is set to 'utf-8', a superset of ASCII.
         chardet = bs4.dammit.chardet_dammit
         logging.disable(logging.WARNING)
         try:
             def noop(str):
+                """
+                Returns a function that matches the given string.
+
+                Args:
+                    str: (todo): write your description
+                """
                 return None
             # Disable chardet, which will realize that the ASCII is ASCII.
             bs4.dammit.chardet_dammit = noop
@@ -258,6 +446,12 @@ class TestEncodingConversion(SoupTest):
             bs4.dammit.chardet_dammit = chardet
 
     def test_unicode_in_unicode_out(self):
+        """
+        Test if unicode is unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         # Unicode input is left alone. The original_encoding attribute
         # is not set.
         soup_from_unicode = self.soup(self.unicode_data)
@@ -266,6 +460,12 @@ class TestEncodingConversion(SoupTest):
         self.assertEqual(soup_from_unicode.original_encoding, None)
 
     def test_utf8_in_unicode_out(self):
+        """
+        Test if unicode string is encoded in unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         # UTF-8 input is converted to Unicode. The original_encoding
         # attribute is set.
         soup_from_utf8 = self.soup(self.utf8_data)
@@ -273,6 +473,12 @@ class TestEncodingConversion(SoupTest):
         self.assertEqual(soup_from_utf8.foo.string, u'Sacr\xe9 bleu!')
 
     def test_utf8_out(self):
+        """
+        Test if the unicode string contains unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         # The internal data structures can be encoded as UTF-8.
         soup_from_unicode = self.soup(self.unicode_data)
         self.assertEqual(soup_from_unicode.encode('utf-8'), self.utf8_data)
@@ -281,6 +487,12 @@ class TestEncodingConversion(SoupTest):
         PYTHON_3_PRE_3_2,
         "Bad HTMLParser detected; skipping test of non-ASCII characters in attribute name.")
     def test_attribute_name_containing_unicode_characters(self):
+        """
+        Test if the attribute name.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = u'<div><a \N{SNOWMAN}="snowman"></a></div>'
         self.assertEqual(self.soup(markup).div.encode("utf8"), markup.encode("utf8"))
 
@@ -288,35 +500,71 @@ class TestUnicodeDammit(unittest.TestCase):
     """Standalone tests of UnicodeDammit."""
 
     def test_unicode_input(self):
+        """
+        Test if the input.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = u"I'm already Unicode! \N{SNOWMAN}"
         dammit = UnicodeDammit(markup)
         self.assertEqual(dammit.unicode_markup, markup)
 
     def test_smart_quotes_to_unicode(self):
+        """
+        Test if the quotes to unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"<foo>\x91\x92\x93\x94</foo>"
         dammit = UnicodeDammit(markup)
         self.assertEqual(
             dammit.unicode_markup, u"<foo>\u2018\u2019\u201c\u201d</foo>")
 
     def test_smart_quotes_to_xml_entities(self):
+        """
+        Test if the xml entities are xml.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"<foo>\x91\x92\x93\x94</foo>"
         dammit = UnicodeDammit(markup, smart_quotes_to="xml")
         self.assertEqual(
             dammit.unicode_markup, "<foo>&#x2018;&#x2019;&#x201C;&#x201D;</foo>")
 
     def test_smart_quotes_to_html_entities(self):
+        """
+        Convert html to html.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"<foo>\x91\x92\x93\x94</foo>"
         dammit = UnicodeDammit(markup, smart_quotes_to="html")
         self.assertEqual(
             dammit.unicode_markup, "<foo>&lsquo;&rsquo;&ldquo;&rdquo;</foo>")
 
     def test_smart_quotes_to_ascii(self):
+        """
+        Test if the given quotes is true.
+
+        Args:
+            self: (todo): write your description
+        """
         markup = b"<foo>\x91\x92\x93\x94</foo>"
         dammit = UnicodeDammit(markup, smart_quotes_to="ascii")
         self.assertEqual(
             dammit.unicode_markup, """<foo>''""</foo>""")
 
     def test_detect_utf8(self):
+        """
+        Test if the encoding is utf - 8 encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         utf8 = b"Sacr\xc3\xa9 bleu! \xe2\x98\x83"
         dammit = UnicodeDammit(utf8)
         self.assertEqual(dammit.original_encoding.lower(), 'utf-8')
@@ -324,29 +572,59 @@ class TestUnicodeDammit(unittest.TestCase):
 
 
     def test_convert_hebrew(self):
+        """
+        Convert unicode.
+
+        Args:
+            self: (todo): write your description
+        """
         hebrew = b"\xed\xe5\xec\xf9"
         dammit = UnicodeDammit(hebrew, ["iso-8859-8"])
         self.assertEqual(dammit.original_encoding.lower(), 'iso-8859-8')
         self.assertEqual(dammit.unicode_markup, u'\u05dd\u05d5\u05dc\u05e9')
 
     def test_dont_see_smart_quotes_where_there_are_none(self):
+        """
+        Check if the quotes are escaped.
+
+        Args:
+            self: (todo): write your description
+        """
         utf_8 = b"\343\202\261\343\203\274\343\202\277\343\202\244 Watch"
         dammit = UnicodeDammit(utf_8)
         self.assertEqual(dammit.original_encoding.lower(), 'utf-8')
         self.assertEqual(dammit.unicode_markup.encode("utf-8"), utf_8)
 
     def test_ignore_inappropriate_codecs(self):
+        """
+        Test whether the encoding of - encoding encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         utf8_data = u"Räksmörgås".encode("utf-8")
         dammit = UnicodeDammit(utf8_data, ["iso-8859-8"])
         self.assertEqual(dammit.original_encoding.lower(), 'utf-8')
 
     def test_ignore_invalid_codecs(self):
+        """
+        Validate encoding of encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         utf8_data = u"Räksmörgås".encode("utf-8")
         for bad_encoding in ['.utf8', '...', 'utF---16.!']:
             dammit = UnicodeDammit(utf8_data, [bad_encoding])
             self.assertEqual(dammit.original_encoding.lower(), 'utf-8')
 
     def test_exclude_encodings(self):
+        """
+        Exclude encoding encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         # This is UTF-8.
         utf8_data = u"Räksmörgås".encode("utf-8")
 
@@ -361,12 +639,24 @@ class TestUnicodeDammit(unittest.TestCase):
         self.assertEqual(dammit.original_encoding, None)
 
     def test_encoding_detector_replaces_junk_in_encoding_name_with_replacement_character(self):
+        """
+        Returns the encoding of a list of unicode encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         detected = EncodingDetector(
             b'<?xml version="1.0" encoding="UTF-\xdb" ?>')
         encodings = list(detected.encodings)
         assert u'utf-\N{REPLACEMENT CHARACTER}' in encodings
 
     def test_detect_html5_style_meta_tag(self):
+        """
+        Test if the meta tags have changed.
+
+        Args:
+            self: (todo): write your description
+        """
 
         for data in (
             b'<html><meta charset="euc-jp" /></html>',
@@ -378,6 +668,12 @@ class TestUnicodeDammit(unittest.TestCase):
                 "euc-jp", dammit.original_encoding)
 
     def test_last_ditch_entity_replacement(self):
+        """
+        Test if the last document.
+
+        Args:
+            self: (todo): write your description
+        """
         # This is a UTF-8 document that contains bytestrings
         # completely incompatible with UTF-8 (ie. encoded with some other
         # encoding).
@@ -400,6 +696,12 @@ class TestUnicodeDammit(unittest.TestCase):
         logging.disable(logging.WARNING)
         try:
             def noop(str):
+                """
+                Returns a function that matches the given string.
+
+                Args:
+                    str: (todo): write your description
+                """
                 return None
             bs4.dammit.chardet_dammit = noop
             dammit = UnicodeDammit(doc)
@@ -413,6 +715,12 @@ class TestUnicodeDammit(unittest.TestCase):
             bs4.dammit.chardet_dammit = chardet
 
     def test_byte_order_mark_removed(self):
+        """
+        Test if the order of the order.
+
+        Args:
+            self: (todo): write your description
+        """
         # A document written in UTF-16LE will have its byte order marker stripped.
         data = b'\xff\xfe<\x00a\x00>\x00\xe1\x00\xe9\x00<\x00/\x00a\x00>\x00'
         dammit = UnicodeDammit(data)
@@ -420,6 +728,12 @@ class TestUnicodeDammit(unittest.TestCase):
         self.assertEqual("utf-16le", dammit.original_encoding)
 
     def test_detwingle(self):
+        """
+        Test if the detection isochrone.
+
+        Args:
+            self: (todo): write your description
+        """
         # Here's a UTF8 document.
         utf8 = (u"\N{SNOWMAN}" * 3).encode("utf8")
 
@@ -444,6 +758,12 @@ class TestUnicodeDammit(unittest.TestCase):
             u"☃☃☃“Hi, I like Windows!”☃☃☃", fixed.decode("utf8"))
 
     def test_detwingle_ignores_multibyte_characters(self):
+        """
+        Evaluate multibtele encoding.
+
+        Args:
+            self: (todo): write your description
+        """
         # Each of these characters has a UTF-8 representation ending
         # in \x93. \x93 is a smart quote if interpreted as
         # Windows-1252. But our code knows to skip over multibyte
@@ -461,14 +781,32 @@ class TestUnicodeDammit(unittest.TestCase):
 class TestNamedspacedAttribute(SoupTest):
 
     def test_name_may_be_none(self):
+        """
+        Assigns name of the value
+
+        Args:
+            self: (todo): write your description
+        """
         a = NamespacedAttribute("xmlns", None)
         self.assertEqual(a, "xmlns")
 
     def test_attribute_is_equivalent_to_colon_separated_string(self):
+        """
+        Assigns is_to_attribute.
+
+        Args:
+            self: (todo): write your description
+        """
         a = NamespacedAttribute("a", "b")
         self.assertEqual("a:b", a)
 
     def test_attributes_are_equivalent_if_prefix_and_name_identical(self):
+        """
+        Test for identical attributes that are identical.
+
+        Args:
+            self: (todo): write your description
+        """
         a = NamespacedAttribute("a", "b", "c")
         b = NamespacedAttribute("a", "b", "c")
         self.assertEqual(a, b)
@@ -488,6 +826,12 @@ class TestNamedspacedAttribute(SoupTest):
 class TestAttributeValueWithCharsetSubstitution(unittest.TestCase):
 
     def test_content_meta_attribute_value(self):
+        """
+        The meta - content meta data.
+
+        Args:
+            self: (todo): write your description
+        """
         value = CharsetMetaAttributeValue("euc-jp")
         self.assertEqual("euc-jp", value)
         self.assertEqual("euc-jp", value.original_value)
@@ -495,6 +839,12 @@ class TestAttributeValueWithCharsetSubstitution(unittest.TestCase):
 
 
     def test_content_meta_attribute_value(self):
+        """
+        Sets content meta attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         value = ContentMetaAttributeValue("text/html; charset=euc-jp")
         self.assertEqual("text/html; charset=euc-jp", value)
         self.assertEqual("text/html; charset=euc-jp", value.original_value)

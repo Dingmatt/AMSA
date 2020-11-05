@@ -44,6 +44,12 @@ class CharDistributionAnalysis(object):
     MINIMUM_DATA_THRESHOLD = 3
 
     def __init__(self):
+        """
+        Initialize self.
+
+        Args:
+            self: (todo): write your description
+        """
         # Mapping table to get frequency order from char order (get from
         # GetOrder())
         self._char_to_freq_order = None
@@ -98,11 +104,24 @@ class CharDistributionAnalysis(object):
         return self.SURE_YES
 
     def got_enough_data(self):
+        """
+        Return the raw data.
+
+        Args:
+            self: (todo): write your description
+        """
         # It is not necessary to receive all data to draw conclusion.
         # For charset detection, certain amount of data is enough
         return self._total_chars > self.ENOUGH_DATA_THRESHOLD
 
     def get_order(self, byte_str):
+        """
+        Get the order of a byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # We do not handle characters based on the original encoding string,
         # but convert this encoding string to a number, here called order.
         # This allows multiple encodings of a language to share one frequency
@@ -112,12 +131,25 @@ class CharDistributionAnalysis(object):
 
 class EUCTWDistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize the analysis table.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCTWDistributionAnalysis, self).__init__()
         self._char_to_freq_order = EUCTW_CHAR_TO_FREQ_ORDER
         self._table_size = EUCTW_TABLE_SIZE
         self.typical_distribution_ratio = EUCTW_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Get the order of a string
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for euc-TW encoding, we are interested
         #   first  byte range: 0xc4 -- 0xfe
         #   second byte range: 0xa1 -- 0xfe
@@ -131,12 +163,25 @@ class EUCTWDistributionAnalysis(CharDistributionAnalysis):
 
 class EUCKRDistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize analysis table.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCKRDistributionAnalysis, self).__init__()
         self._char_to_freq_order = EUCKR_CHAR_TO_FREQ_ORDER
         self._table_size = EUCKR_TABLE_SIZE
         self.typical_distribution_ratio = EUCKR_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Get the order of a byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for euc-KR encoding, we are interested
         #   first  byte range: 0xb0 -- 0xfe
         #   second byte range: 0xa1 -- 0xfe
@@ -150,12 +195,25 @@ class EUCKRDistributionAnalysis(CharDistributionAnalysis):
 
 class GB2312DistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize the analysis table.
+
+        Args:
+            self: (todo): write your description
+        """
         super(GB2312DistributionAnalysis, self).__init__()
         self._char_to_freq_order = GB2312_CHAR_TO_FREQ_ORDER
         self._table_size = GB2312_TABLE_SIZE
         self.typical_distribution_ratio = GB2312_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Return the order of a string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for GB2312 encoding, we are interested
         #  first  byte range: 0xb0 -- 0xfe
         #  second byte range: 0xa1 -- 0xfe
@@ -169,12 +227,25 @@ class GB2312DistributionAnalysis(CharDistributionAnalysis):
 
 class Big5DistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize table table.
+
+        Args:
+            self: (todo): write your description
+        """
         super(Big5DistributionAnalysis, self).__init__()
         self._char_to_freq_order = BIG5_CHAR_TO_FREQ_ORDER
         self._table_size = BIG5_TABLE_SIZE
         self.typical_distribution_ratio = BIG5_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Return the order from the string
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for big5 encoding, we are interested
         #   first  byte range: 0xa4 -- 0xfe
         #   second byte range: 0x40 -- 0x7e , 0xa1 -- 0xfe
@@ -191,12 +262,25 @@ class Big5DistributionAnalysis(CharDistributionAnalysis):
 
 class SJISDistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SJISDistributionAnalysis, self).__init__()
         self._char_to_freq_order = JIS_CHAR_TO_FREQ_ORDER
         self._table_size = JIS_TABLE_SIZE
         self.typical_distribution_ratio = JIS_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Returns the order from the string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for sjis encoding, we are interested
         #   first  byte range: 0x81 -- 0x9f , 0xe0 -- 0xfe
         #   second byte range: 0x40 -- 0x7e,  0x81 -- oxfe
@@ -216,12 +300,25 @@ class SJISDistributionAnalysis(CharDistributionAnalysis):
 
 class EUCJPDistributionAnalysis(CharDistributionAnalysis):
     def __init__(self):
+        """
+        Initialize analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCJPDistributionAnalysis, self).__init__()
         self._char_to_freq_order = JIS_CHAR_TO_FREQ_ORDER
         self._table_size = JIS_TABLE_SIZE
         self.typical_distribution_ratio = JIS_TYPICAL_DISTRIBUTION_RATIO
 
     def get_order(self, byte_str):
+        """
+        Get the order of a character.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # for euc-JP encoding, we are interested
         #   first  byte range: 0xa0 -- 0xfe
         #   second byte range: 0xa1 -- 0xfe

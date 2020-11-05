@@ -6,6 +6,14 @@ class PluginPreferencesInterface(Interface):
     path = ':/plugins/*/prefs'
 
     def get(self, plugin_id, id=None):
+        """
+        Retrieve a single container.
+
+        Args:
+            self: (todo): write your description
+            plugin_id: (int): write your description
+            id: (int): write your description
+        """
         response = self.http.get('/:/plugins/%s/prefs' % plugin_id)
 
         container = self.parse(response, idict({
@@ -24,6 +32,15 @@ class PluginPreferencesInterface(Interface):
         return None
 
     def set(self, plugin_id, id, value):
+        """
+        Set a single plugin
+
+        Args:
+            self: (todo): write your description
+            plugin_id: (str): write your description
+            id: (str): write your description
+            value: (todo): write your description
+        """
         response = self.http.get('/:/plugins/%s/prefs/set' % plugin_id, query={
             id: self.to_setting_value(value, type(value))
         })
@@ -31,6 +48,14 @@ class PluginPreferencesInterface(Interface):
         return response.status_code == 200
 
     def to_setting_value(self, value, value_type=None):
+        """
+        Convert the given value as a setting.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+            value_type: (str): write your description
+        """
         if value is None:
             return None
 

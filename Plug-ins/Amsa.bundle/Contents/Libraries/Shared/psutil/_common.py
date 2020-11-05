@@ -265,6 +265,11 @@ def memoize(fun):
     """
     @functools.wraps(fun)
     def wrapper(*args, **kwargs):
+        """
+        A decorator for a function.
+
+        Args:
+        """
         key = (args, frozenset(sorted(kwargs.items())))
         try:
             return cache[key]
@@ -309,6 +314,12 @@ def memoize_when_activated(fun):
     """
     @functools.wraps(fun)
     def wrapper(self):
+        """
+        Return a function for caching the wrapped function.
+
+        Args:
+            self: (todo): write your description
+        """
         if not wrapper.cache_activated:
             return fun(self)
         else:
@@ -436,6 +447,12 @@ def deprecated_method(replacement):
     'replcement' is the method name which will be called instead.
     """
     def outer(fun):
+        """
+        Decorator to mark a function as deprecated.
+
+        Args:
+            fun: (callable): write your description
+        """
         msg = "%s() is deprecated; use %s() instead" % (
             fun.__name__, replacement)
         if fun.__doc__ is None:
@@ -443,6 +460,12 @@ def deprecated_method(replacement):
 
         @functools.wraps(fun)
         def inner(self, *args, **kwargs):
+            """
+            Deprecated : use : meth : logging.
+
+            Args:
+                self: (todo): write your description
+            """
             warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
             return getattr(self, replacement)(*args, **kwargs)
         return inner

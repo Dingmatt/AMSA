@@ -21,10 +21,23 @@ class Season(Directory, Metadata):
     view_count = Property('viewCount', type=int)
 
     def children(self):
+        """
+        Return the child node
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].children(self.rating_key)
 
     @staticmethod
     def construct_show(client, node):
+        """
+        Construct a node
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index'    : 'parentIndex',
             'key'      : 'parentKey',
@@ -51,6 +64,13 @@ class SeasonChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_show(client, node):
+        """
+        Construct a node
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'title'        : 'grandparentTitle',
 
@@ -63,6 +83,13 @@ class SeasonChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_season(client, node):
+        """
+        Constructs a season
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
             'title': 'parentTitle'
@@ -71,6 +98,12 @@ class SeasonChildrenContainer(ChildrenContainer):
         return Season.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over all the season.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(ChildrenContainer, self).__iter__():
             item.show = self.show
             item.season = self.season

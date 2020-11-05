@@ -33,10 +33,24 @@ class Detail(Container):
 
     @staticmethod
     def construct_myplex(client, node):
+        """
+        Construct an instance of - based on a node.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return MyPlexDetail.construct(client, node, child=True)
 
     @staticmethod
     def construct_transcoder(client, node):
+        """
+        Construct a transcoder object from a node.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return TranscoderDetail.construct(client, node, child=True)
 
 

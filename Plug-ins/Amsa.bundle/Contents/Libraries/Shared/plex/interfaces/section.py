@@ -6,6 +6,13 @@ class SectionInterface(Interface):
     path = 'library/sections'
 
     def all(self, key):
+        """
+        Retrieves all of the keys.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         response = self.http.get(key, 'all')
 
         return self.parse(response, idict({
@@ -21,6 +28,13 @@ class SectionInterface(Interface):
         }))
 
     def recently_added(self, key):
+        """
+        Retrieves a deferred.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         response = self.http.get(key, 'recentlyAdded')
 
         return self.parse(response, idict({
@@ -38,6 +52,14 @@ class SectionInterface(Interface):
         }))
 
     def first_character(self, key, character=None):
+        """
+        This method is used to get a character.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            character: (todo): write your description
+        """
         if character:
             response = self.http.get(key, ['firstCharacter', character])
 

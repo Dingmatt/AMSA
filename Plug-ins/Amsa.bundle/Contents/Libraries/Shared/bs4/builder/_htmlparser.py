@@ -54,6 +54,12 @@ HTMLPARSER = 'html.parser'
 class BeautifulSoupHTMLParser(HTMLParser):
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize an empty element.
+
+        Args:
+            self: (todo): write your description
+        """
         HTMLParser.__init__(self, *args, **kwargs)
 
         # Keep a list of empty-element tags that were encountered
@@ -66,6 +72,14 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.already_closed_empty_element = []
     
     def handle_startendtag(self, name, attrs):
+        """
+        Handle startendtag element.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+        """
         # This is only called when the markup looks like
         # <tag/>.
 
@@ -77,6 +91,15 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.handle_endtag(name)
         
     def handle_starttag(self, name, attrs, handle_empty_element=True):
+        """
+        Handles starttag tags.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            attrs: (dict): write your description
+            handle_empty_element: (todo): write your description
+        """
         # XXX namespace
         attr_dict = {}
         for key, value in attrs:
@@ -105,6 +128,14 @@ class BeautifulSoupHTMLParser(HTMLParser):
             self.already_closed_empty_element.append(name)
             
     def handle_endtag(self, name, check_already_closed=True):
+        """
+        Called when the endtag.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            check_already_closed: (bool): write your description
+        """
         #print "END", name
         if check_already_closed and name in self.already_closed_empty_element:
             # This is a redundant end tag for an empty-element tag.
@@ -116,9 +147,23 @@ class BeautifulSoupHTMLParser(HTMLParser):
             self.soup.handle_endtag(name)
 
     def handle_data(self, data):
+        """
+        Handle incoming data.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self.soup.handle_data(data)
 
     def handle_charref(self, name):
+        """
+        Parse a character name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         # XXX workaround for a bug in HTMLParser. Remove this once
         # it's fixed in all supported versions.
         # http://bugs.python.org/issue13633
@@ -137,6 +182,13 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.handle_data(data)
 
     def handle_entityref(self, name):
+        """
+        Handle a substitution.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         character = EntitySubstitution.HTML_ENTITY_TO_CHARACTER.get(name)
         if character is not None:
             data = character
@@ -145,11 +197,25 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.handle_data(data)
 
     def handle_comment(self, data):
+        """
+        Handle the comment.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self.soup.endData()
         self.soup.handle_data(data)
         self.soup.endData(Comment)
 
     def handle_decl(self, data):
+        """
+        Handle the declaration
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self.soup.endData()
         if data.startswith("DOCTYPE "):
             data = data[len("DOCTYPE "):]
@@ -160,6 +226,13 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.soup.endData(Doctype)
 
     def unknown_decl(self, data):
+        """
+        Add a declaration
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         if data.upper().startswith('CDATA['):
             cls = CData
             data = data[len('CDATA['):]
@@ -170,6 +243,13 @@ class BeautifulSoupHTMLParser(HTMLParser):
         self.soup.endData(cls)
 
     def handle_pi(self, data):
+        """
+        Handle the data.
+
+        Args:
+            self: (todo): write your description
+            data: (todo): write your description
+        """
         self.soup.endData()
         self.soup.handle_data(data)
         self.soup.endData(ProcessingInstruction)
@@ -183,6 +263,12 @@ class HTMLParserTreeBuilder(HTMLTreeBuilder):
     features = [NAME, HTML, STRICT]
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the parser.
+
+        Args:
+            self: (todo): write your description
+        """
         if CONSTRUCTOR_TAKES_STRICT and not CONSTRUCTOR_STRICT_IS_DEPRECATED:
             kwargs['strict'] = False
         if CONSTRUCTOR_TAKES_CONVERT_CHARREFS:
@@ -208,6 +294,13 @@ class HTMLParserTreeBuilder(HTMLTreeBuilder):
                dammit.contains_replacement_characters)
 
     def feed(self, markup):
+        """
+        Feeds feed.
+
+        Args:
+            self: (todo): write your description
+            markup: (todo): write your description
+        """
         args, kwargs = self.parser_args
         parser = BeautifulSoupHTMLParser(*args, **kwargs)
         parser.soup = self.soup
@@ -250,6 +343,13 @@ if major == 3 and minor == 2 and not CONSTRUCTOR_TAKES_STRICT:
     from html.parser import tagfind, attrfind
 
     def parse_starttag(self, i):
+        """
+        Parse a starttag.
+
+        Args:
+            self: (todo): write your description
+            i: (str): write your description
+        """
         self.__starttag_text = None
         endpos = self.check_for_whole_start_tag(i)
         if endpos < 0:
@@ -305,6 +405,13 @@ if major == 3 and minor == 2 and not CONSTRUCTOR_TAKES_STRICT:
         return endpos
 
     def set_cdata_mode(self, elem):
+        """
+        Set the cdata mode.
+
+        Args:
+            self: (todo): write your description
+            elem: (str): write your description
+        """
         self.cdata_elem = elem.lower()
         self.interesting = re.compile(r'</\s*%s\s*>' % self.cdata_elem, re.I)
 

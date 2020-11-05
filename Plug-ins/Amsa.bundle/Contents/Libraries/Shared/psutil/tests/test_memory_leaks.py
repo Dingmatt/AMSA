@@ -57,6 +57,11 @@ thisproc = psutil.Process()
 
 
 def skip_if_linux():
+    """
+    Return true if the linux linux linux.
+
+    Args:
+    """
     return unittest.skipIf(LINUX and SKIP_PYTHON_IMPL,
                            "worthless on LINUX (pure python)")
 
@@ -90,11 +95,22 @@ class TestMemLeak(unittest.TestCase):
     retry_for = RETRY_FOR
 
     def setUp(self):
+        """
+        Sets the currently running task.
+
+        Args:
+            self: (todo): write your description
+        """
         gc.collect()
 
     def execute(self, fun, *args, **kwargs):
         """Test a callable."""
         def call_many_times():
+            """
+            Call all callbacks and callbacks.
+
+            Args:
+            """
             for x in xrange(loops):
                 self._call(fun, *args, **kwargs)
             del x
@@ -151,12 +167,22 @@ class TestMemLeak(unittest.TestCase):
         an exception.
         """
         def call():
+            """
+            Calls the given callable and raise an exception.
+
+            Args:
+            """
             self.assertRaises(exc, fun, *args, **kwargs)
 
         self.execute(call)
 
     @staticmethod
     def _get_mem():
+        """
+        Return memory memory memory memory.
+
+        Args:
+        """
         # By using USS memory it seems it's less likely to bump
         # into false positives.
         if LINUX or WINDOWS or OSX:
@@ -166,6 +192,12 @@ class TestMemLeak(unittest.TestCase):
 
     @staticmethod
     def _call(fun, *args, **kwargs):
+        """
+        Call the given function call.
+
+        Args:
+            fun: (callable): write your description
+        """
         fun(*args, **kwargs)
 
 
@@ -180,6 +212,12 @@ class TestProcessObjectLeaks(TestMemLeak):
     proc = thisproc
 
     def test_coverage(self):
+        """
+        Run coverage coverage.
+
+        Args:
+            self: (todo): write your description
+        """
         skip = set((
             "pid", "as_dict", "children", "cpu_affinity", "cpu_percent",
             "ionice", "is_running", "kill", "memory_info_ex", "memory_percent",
@@ -194,49 +232,115 @@ class TestProcessObjectLeaks(TestMemLeak):
 
     @skip_if_linux()
     def test_name(self):
+        """
+        Test the test name exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.name)
 
     @skip_if_linux()
     def test_cmdline(self):
+        """
+        Perform a command.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.cmdline)
 
     @skip_if_linux()
     def test_exe(self):
+        """
+        Execute the command.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.exe)
 
     @skip_if_linux()
     def test_ppid(self):
+        """
+        Runs the test id.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.ppid)
 
     @unittest.skipUnless(POSIX, "POSIX only")
     @skip_if_linux()
     def test_uids(self):
+        """
+        Test if uids.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.uids)
 
     @unittest.skipUnless(POSIX, "POSIX only")
     @skip_if_linux()
     def test_gids(self):
+        """
+        Test if the gids of the gids are running process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.gids)
 
     @skip_if_linux()
     def test_status(self):
+        """
+        Execute status of the test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.status)
 
     def test_nice_get(self):
+        """
+        Execute test test test test test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.nice)
 
     def test_nice_set(self):
+        """
+        Sets the test set.
+
+        Args:
+            self: (todo): write your description
+        """
         niceness = thisproc.nice()
         self.execute(self.proc.nice, niceness)
 
     @unittest.skipUnless(hasattr(psutil.Process, 'ionice'),
                          "platform not supported")
     def test_ionice_get(self):
+        """
+        Perform a test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.ionice)
 
     @unittest.skipUnless(hasattr(psutil.Process, 'ionice'),
                          "platform not supported")
     def test_ionice_set(self):
+        """
+        Set the test set of the test set.
+
+        Args:
+            self: (todo): write your description
+        """
         if WINDOWS:
             value = thisproc.ionice()
             self.execute(self.proc.ionice, value)
@@ -248,79 +352,181 @@ class TestProcessObjectLeaks(TestMemLeak):
     @unittest.skipIf(OSX or SUNOS, "platform not supported")
     @skip_if_linux()
     def test_io_counters(self):
+        """
+        Test if all counters have finished.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.io_counters)
 
     @unittest.skipIf(POSIX, "worthless on POSIX")
     def test_username(self):
+        """
+        Test if user exists in the database.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.username)
 
     @skip_if_linux()
     def test_create_time(self):
+        """
+        Create a new test time.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.create_time)
 
     @skip_if_linux()
     def test_num_threads(self):
+        """
+        The number of threads in the threads have been executed.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.num_threads)
 
     @unittest.skipUnless(WINDOWS, "WINDOWS only")
     def test_num_handles(self):
+        """
+        Returns the number of num_handles.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.num_handles)
 
     @unittest.skipUnless(POSIX, "POSIX only")
     @skip_if_linux()
     def test_num_fds(self):
+        """
+        Get the number of num_nums.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.num_fds)
 
     @skip_if_linux()
     def test_num_ctx_switches(self):
+        """
+        Test the number of the switches.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.num_ctx_switches)
 
     @skip_if_linux()
     def test_threads(self):
+        """
+        Execute all threads in the thread.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.threads)
 
     @skip_if_linux()
     def test_cpu_times(self):
+        """
+        Perform the cpu times
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.cpu_times)
 
     @skip_if_linux()
     @unittest.skipUnless(hasattr(psutil.Process, "cpu_num"),
                          "platform not supported")
     def test_cpu_num(self):
+        """
+        Search the number of cpu cpu results.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.cpu_num)
 
     @skip_if_linux()
     def test_memory_info(self):
+        """
+        Test if memory info is in - memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.memory_info)
 
     # also available on Linux but it's pure python
     @unittest.skipUnless(OSX or WINDOWS,
                          "platform not supported")
     def test_memory_full_info(self):
+        """
+        Test the memory info.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.memory_full_info)
 
     @unittest.skipUnless(POSIX, "POSIX only")
     @skip_if_linux()
     def test_terminal(self):
+        """
+        Test if the terminal is running.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.terminal)
 
     @unittest.skipIf(POSIX and SKIP_PYTHON_IMPL,
                      "worthless on POSIX (pure python)")
     def test_resume(self):
+        """
+        Resume the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.resume)
 
     @skip_if_linux()
     def test_cwd(self):
+        """
+        Test if the current working copy.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.cwd)
 
     @unittest.skipUnless(WINDOWS or LINUX or FREEBSD,
                          "platform not supported")
     def test_cpu_affinity_get(self):
+        """
+        Perform cpu_cpu
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.cpu_affinity)
 
     @unittest.skipUnless(WINDOWS or LINUX or FREEBSD,
                          "platform not supported")
     def test_cpu_affinity_set(self):
+        """
+        Set the cpu cpu cpu cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         affinity = thisproc.cpu_affinity()
         self.execute(self.proc.cpu_affinity, affinity)
         if not TRAVIS:
@@ -328,6 +534,12 @@ class TestProcessObjectLeaks(TestMemLeak):
 
     @skip_if_linux()
     def test_open_files(self):
+        """
+        Open a copy of the current working copy.
+
+        Args:
+            self: (todo): write your description
+        """
         safe_rmpath(TESTFN)  # needed after UNIX socket test has run
         with open(TESTFN, 'w'):
             self.execute(self.proc.open_files)
@@ -337,16 +549,34 @@ class TestProcessObjectLeaks(TestMemLeak):
     @unittest.skipIf(OPENBSD, "platform not supported")
     @skip_if_linux()
     def test_memory_maps(self):
+        """
+        Test the memory maps.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.memory_maps)
 
     @unittest.skipUnless(LINUX, "LINUX only")
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_get(self):
+        """
+        Executes the number of the test.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.rlimit, psutil.RLIMIT_NOFILE)
 
     @unittest.skipUnless(LINUX, "LINUX only")
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_set(self):
+        """
+        Test for the number of - schedule.
+
+        Args:
+            self: (todo): write your description
+        """
         limit = thisproc.rlimit(psutil.RLIMIT_NOFILE)
         self.execute(self.proc.rlimit, psutil.RLIMIT_NOFILE, limit)
         self.execute_w_exc(OSError, self.proc.rlimit, -1)
@@ -356,7 +586,20 @@ class TestProcessObjectLeaks(TestMemLeak):
     # function (tested later).
     @unittest.skipIf(WINDOWS, "worthless on WINDOWS")
     def test_connections(self):
+        """
+        Create socket connections.
+
+        Args:
+            self: (todo): write your description
+        """
         def create_socket(family, type):
+            """
+            Create a socket.
+
+            Args:
+                family: (str): write your description
+                type: (str): write your description
+            """
             sock = socket.socket(family, type)
             sock.bind(('', 0))
             if type == socket.SOCK_STREAM:
@@ -390,10 +633,22 @@ class TestProcessObjectLeaks(TestMemLeak):
     @unittest.skipUnless(hasattr(psutil.Process, 'environ'),
                          "platform not supported")
     def test_environ(self):
+        """
+        Runs the environment variable.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(self.proc.environ)
 
     @unittest.skipUnless(WINDOWS, "WINDOWS only")
     def test_proc_info(self):
+        """
+        Test if the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(cext.proc_info, os.getpid())
 
 
@@ -406,6 +661,12 @@ class TestTerminatedProcessLeaks(TestProcessObjectLeaks):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid.
+
+        Args:
+            cls: (todo): write your description
+        """
         super(TestTerminatedProcessLeaks, cls).setUpClass()
         p = get_test_subprocess()
         cls.proc = psutil.Process(p.pid)
@@ -414,10 +675,23 @@ class TestTerminatedProcessLeaks(TestProcessObjectLeaks):
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tearches the class.
+
+        Args:
+            cls: (todo): write your description
+        """
         super(TestTerminatedProcessLeaks, cls).tearDownClass()
         reap_children()
 
     def _call(self, fun, *args, **kwargs):
+        """
+        Call a function callable.
+
+        Args:
+            self: (todo): write your description
+            fun: (callable): write your description
+        """
         try:
             fun(*args, **kwargs)
         except psutil.NoSuchProcess:
@@ -426,23 +700,64 @@ class TestTerminatedProcessLeaks(TestProcessObjectLeaks):
     if WINDOWS:
 
         def test_kill(self):
+            """
+            Executes the test.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(self.proc.kill)
 
         def test_terminate(self):
+            """
+            Terminate the test.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(self.proc.terminate)
 
         def test_suspend(self):
+            """
+            Execute the test.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(self.proc.suspend)
 
         def test_resume(self):
+            """
+            Resume the process.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(self.proc.resume)
 
         def test_wait(self):
+            """
+            Waits the command to complete.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(self.proc.wait)
 
         def test_proc_info(self):
+            """
+            Return the process info.
+
+            Args:
+                self: (todo): write your description
+            """
             # test dual implementation
             def call():
+                """
+                Call process info.
+
+                Args:
+                """
                 try:
                     return cext.proc_info(self.proc.pid)
                 except OSError as err:
@@ -461,6 +776,12 @@ class TestModuleFunctionsLeaks(TestMemLeak):
     """Test leaks of psutil module functions."""
 
     def test_coverage(self):
+        """
+        Run coverage of coverage.
+
+        Args:
+            self: (todo): write your description
+        """
         skip = set((
             "version_info", "__version__", "process_iter", "wait_procs",
             "cpu_percent", "cpu_times_percent", "cpu_count"))
@@ -475,42 +796,96 @@ class TestModuleFunctionsLeaks(TestMemLeak):
 
     @skip_if_linux()
     def test_cpu_count_logical(self):
+        """
+        Count the number of the cpu count *
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_count, logical=True)
 
     @skip_if_linux()
     def test_cpu_count_physical(self):
+        """
+        Returns the number of virtual cpu count.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_count, logical=False)
 
     @skip_if_linux()
     def test_cpu_times(self):
+        """
+        Set the cpu times.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_times)
 
     @skip_if_linux()
     def test_per_cpu_times(self):
+        """
+        Calculate the cpu times
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_times, percpu=True)
 
     def test_cpu_stats(self):
+        """
+        Test the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_stats)
 
     @skip_if_linux()
     @unittest.skipUnless(hasattr(psutil, "cpu_freq"), "platform not supported")
     def test_cpu_freq(self):
+        """
+        Test the cpu frequency.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.cpu_freq)
 
     # --- mem
 
     def test_virtual_memory(self):
+        """
+        Test if the virtual memory exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.virtual_memory)
 
     # TODO: remove this skip when this gets fixed
     @unittest.skipIf(SUNOS,
                      "worthless on SUNOS (uses a subprocess)")
     def test_swap_memory(self):
+        """
+        Swap memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.swap_memory)
 
     @unittest.skipIf(POSIX and SKIP_PYTHON_IMPL,
                      "worthless on POSIX (pure python)")
     def test_pid_exists(self):
+        """
+        Check if pid exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.pid_exists, os.getpid())
 
     # --- disk
@@ -518,42 +893,90 @@ class TestModuleFunctionsLeaks(TestMemLeak):
     @unittest.skipIf(POSIX and SKIP_PYTHON_IMPL,
                      "worthless on POSIX (pure python)")
     def test_disk_usage(self):
+        """
+        Test the disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.disk_usage, '.')
 
     def test_disk_partitions(self):
+        """
+        Test if the partitions.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.disk_partitions)
 
     @unittest.skipIf(LINUX and not os.path.exists('/proc/diskstats'),
                      '/proc/diskstats not available on this Linux version')
     @skip_if_linux()
     def test_disk_io_counters(self):
+        """
+        Test if disk counters.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.disk_io_counters)
 
     # --- proc
 
     @skip_if_linux()
     def test_pids(self):
+        """
+        Test if all test ids
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.pids)
 
     # --- net
 
     @skip_if_linux()
     def test_net_io_counters(self):
+        """
+        Test if the network counters.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.net_io_counters)
 
     @unittest.skipIf(LINUX,
                      "worthless on Linux (pure python)")
     @unittest.skipIf(OSX and os.getuid() != 0, "need root access")
     def test_net_connections(self):
+        """
+        Test if the network connections.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.net_connections)
 
     def test_net_if_addrs(self):
+        """
+        Test if if if_net is enabled.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: verified that on Windows this was a false positive.
         self.execute(psutil.net_if_addrs,
                      tolerance_=80 * 1024 if WINDOWS else None)
 
     @unittest.skipIf(TRAVIS, "EPERM on travis")
     def test_net_if_stats(self):
+        """
+        Test if the network statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.net_if_stats)
 
     # --- sensors
@@ -562,29 +985,59 @@ class TestModuleFunctionsLeaks(TestMemLeak):
                          "platform not supported")
     @skip_if_linux()
     def test_sensors_battery(self):
+        """
+        Test if sensors.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.sensors_battery)
 
     @skip_if_linux()
     @unittest.skipUnless(hasattr(psutil, "sensors_temperatures"),
                          "platform not supported")
     def test_sensors_temperatures(self):
+        """
+        Test if sensors exist.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.sensors_temperatures)
 
     @unittest.skipUnless(hasattr(psutil, "sensors_fans"),
                          "platform not supported")
     @skip_if_linux()
     def test_sensors_fans(self):
+        """
+        Executes all sensors.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.sensors_fans)
 
     # --- others
 
     @skip_if_linux()
     def test_boot_time(self):
+        """
+        Change the boot time.
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.boot_time)
 
     # XXX - on Windows this produces a false positive
     @unittest.skipIf(WINDOWS, "XXX produces a false positive on Windows")
     def test_users(self):
+        """
+        Execute all users
+
+        Args:
+            self: (todo): write your description
+        """
         self.execute(psutil.users)
 
     if WINDOWS:
@@ -592,17 +1045,41 @@ class TestModuleFunctionsLeaks(TestMemLeak):
         # --- win services
 
         def test_win_service_iter(self):
+            """
+            Return a test for_win_iter.
+
+            Args:
+                self: (todo): write your description
+            """
             self.execute(cext.winservice_enumerate)
 
         def test_win_service_get_config(self):
+            """
+            Test if the service config.
+
+            Args:
+                self: (todo): write your description
+            """
             name = next(psutil.win_service_iter()).name()
             self.execute(cext.winservice_query_config, name)
 
         def test_win_service_get_status(self):
+            """
+            Get the status of a service.
+
+            Args:
+                self: (todo): write your description
+            """
             name = next(psutil.win_service_iter()).name()
             self.execute(cext.winservice_query_status, name)
 
         def test_win_service_get_description(self):
+            """
+            Get a service description.
+
+            Args:
+                self: (todo): write your description
+            """
             name = next(psutil.win_service_iter()).name()
             self.execute(cext.winservice_query_descr, name)
 

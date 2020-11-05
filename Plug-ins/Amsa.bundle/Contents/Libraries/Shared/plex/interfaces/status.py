@@ -6,6 +6,12 @@ class StatusInterface(Interface):
     path = 'status'
 
     def sessions(self):
+        """
+        Retrieves a list of the sessions.
+
+        Args:
+            self: (todo): write your description
+        """
         response = self.http.get('sessions')
 
         return self.parse(response, idict({

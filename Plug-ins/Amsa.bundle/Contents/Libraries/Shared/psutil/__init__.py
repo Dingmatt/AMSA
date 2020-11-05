@@ -234,10 +234,23 @@ class Error(Exception):
     """
 
     def __init__(self, msg=""):
+        """
+        Create a message
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         Exception.__init__(self, msg)
         self.msg = msg
 
     def __repr__(self):
+        """
+        Return the __str__ methods for this class.
+
+        Args:
+            self: (todo): write your description
+        """
         ret = "%s.%s %s" % (self.__class__.__module__,
                             self.__class__.__name__, self.msg)
         return ret.strip()
@@ -251,6 +264,15 @@ class NoSuchProcess(Error):
     """
 
     def __init__(self, pid, name=None, msg=None):
+        """
+        Initialize the pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+            name: (str): write your description
+            msg: (str): write your description
+        """
         Error.__init__(self, msg)
         self.pid = pid
         self.name = name
@@ -272,6 +294,16 @@ class ZombieProcess(NoSuchProcess):
     """
 
     def __init__(self, pid, name=None, ppid=None, msg=None):
+        """
+        Initialize a pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+            name: (str): write your description
+            ppid: (int): write your description
+            msg: (str): write your description
+        """
         Error.__init__(self, msg)
         self.pid = pid
         self.ppid = ppid
@@ -291,6 +323,15 @@ class AccessDenied(Error):
     """Exception raised when permission to perform an action is denied."""
 
     def __init__(self, pid=None, name=None, msg=None):
+        """
+        Initialize the pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+            name: (str): write your description
+            msg: (str): write your description
+        """
         Error.__init__(self, msg)
         self.pid = pid
         self.name = name
@@ -310,6 +351,15 @@ class TimeoutExpired(Error):
     """
 
     def __init__(self, seconds, pid=None, name=None):
+        """
+        Initialize a pid.
+
+        Args:
+            self: (todo): write your description
+            seconds: (int): write your description
+            pid: (int): write your description
+            name: (str): write your description
+        """
         Error.__init__(self, "timeout after %s seconds" % seconds)
         self.seconds = seconds
         self.pid = pid
@@ -338,6 +388,12 @@ def _assert_pid_not_reused(fun):
     """
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
+        """
+        Decorator that runs a process.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.is_running():
             raise NoSuchProcess(self.pid, self._name)
         return fun(self, *args, **kwargs)
@@ -378,9 +434,24 @@ class Process(object):
     """
 
     def __init__(self, pid=None):
+        """
+        Initialize the pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+        """
         self._init(pid)
 
     def _init(self, pid, _ignore_nsp=False):
+        """
+        Initialize a new pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+            _ignore_nsp: (int): write your description
+        """
         if pid is None:
             pid = os.getpid()
         else:
@@ -428,6 +499,12 @@ class Process(object):
         self._ident = (self.pid, self._create_time)
 
     def __str__(self):
+        """
+        Returns a string representation of this job.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             pid = self.pid
             name = repr(self.name())
@@ -443,9 +520,22 @@ class Process(object):
                             self.__class__.__name__, details)
 
     def __repr__(self):
+        """
+        Return a representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "<%s at %s>" % (self.__str__(), id(self))
 
     def __eq__(self, other):
+        """
+        Returns true if other is equal identifier.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         # Test for equality with another Process object based
         # on PID and creation time.
         if not isinstance(other, Process):
@@ -453,9 +543,22 @@ class Process(object):
         return self._ident == other._ident
 
     def __ne__(self, other):
+        """
+        Determine if self objects.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not self == other
 
     def __hash__(self):
+        """
+        Returns the hash of the field
+
+        Args:
+            self: (todo): write your description
+        """
         if self._hash is None:
             self._hash = hash(self._ident)
         return self._hash
@@ -663,6 +766,12 @@ class Process(object):
         The return value is cached after first call.
         """
         def guess_it(fallback):
+            """
+            Guess the command line.
+
+            Args:
+                fallback: (todo): write your description
+            """
             # try to guess exe from cmdline[0] in absence of a native
             # exe representation
             cmdline = self.cmdline()
@@ -1034,6 +1143,11 @@ class Process(object):
         num_cpus = cpu_count() or 1
 
         def timer():
+            """
+            Return a timer.
+
+            Args:
+            """
             return _timer() * num_cpus
 
         if blocking:
@@ -1109,6 +1223,12 @@ class Process(object):
 
     @deprecated_method(replacement="memory_info")
     def memory_info_ex(self):
+        """
+        Return memory info.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.memory_info()
 
     def memory_full_info(self):
@@ -1220,6 +1340,13 @@ class Process(object):
 
     if POSIX:
         def _send_signal(self, sig):
+            """
+            Send signal tosignal signal.
+
+            Args:
+                self: (todo): write your description
+                sig: (str): write your description
+            """
             assert not self.pid < 0, self.pid
             if self.pid == 0:
                 # see "man 2 kill"
@@ -1364,6 +1491,12 @@ class Popen(Process):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the subprocess.
+
+        Args:
+            self: (todo): write your description
+        """
         # Explicitly avoid to raise NoSuchProcess in case the process
         # spawned by subprocess.Popen terminates too quickly, see:
         # https://github.com/giampaolo/psutil/issues/193
@@ -1371,14 +1504,32 @@ class Popen(Process):
         self._init(self.__subproc.pid, _ignore_nsp=True)
 
     def __dir__(self):
+        """
+        Return a list of all the directory.
+
+        Args:
+            self: (todo): write your description
+        """
         return sorted(set(dir(Popen) + dir(subprocess.Popen)))
 
     def __enter__(self):
+        """
+        Enter subproc.
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(self.__subproc, '__enter__'):
             self.__subproc.__enter__()
         return self
 
     def __exit__(self, *args, **kwargs):
+        """
+        Close the subprocess. popen
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(self.__subproc, '__exit__'):
             return self.__subproc.__exit__(*args, **kwargs)
         else:
@@ -1395,6 +1546,13 @@ class Popen(Process):
                 self.wait()
 
     def __getattribute__(self, name):
+        """
+        Retrieves the attribute by name.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
@@ -1405,6 +1563,13 @@ class Popen(Process):
                                      % (self.__class__.__name__, name))
 
     def wait(self, timeout=None):
+        """
+        Wait for the subprocess to complete.
+
+        Args:
+            self: (todo): write your description
+            timeout: (float): write your description
+        """
         if self.__subproc.returncode is not None:
             return self.__subproc.returncode
         ret = super(Popen, self).wait(timeout)
@@ -1466,11 +1631,23 @@ def process_iter():
     their PIDs.
     """
     def add(pid):
+        """
+        Add a new process to the process.
+
+        Args:
+            pid: (int): write your description
+        """
         proc = Process(pid)
         _pmap[proc.pid] = proc
         return proc
 
     def remove(pid):
+        """
+        Remove a pid.
+
+        Args:
+            pid: (int): write your description
+        """
         _pmap.pop(pid, None)
 
     a = set(pids())
@@ -1544,6 +1721,13 @@ def wait_procs(procs, timeout=None, callback=None):
     ...     p.kill()
     """
     def check_gone(proc, timeout):
+        """
+        Check if the process and return the exit code.
+
+        Args:
+            proc: (todo): write your description
+            timeout: (float): write your description
+        """
         try:
             returncode = proc.wait(timeout=timeout)
         except TimeoutExpired:
@@ -1739,6 +1923,13 @@ def cpu_percent(interval=None, percpu=False):
         raise ValueError("interval is not positive (got %r)" % interval)
 
     def calculate(t1, t2):
+        """
+        Calculate the average time of two t1 and t1.
+
+        Args:
+            t1: (float): write your description
+            t2: (float): write your description
+        """
         t1_all = _cpu_tot_time(t1)
         t1_busy = _cpu_busy_time(t1)
 
@@ -1818,6 +2009,13 @@ def cpu_times_percent(interval=None, percpu=False):
         raise ValueError("interval is not positive (got %r)" % interval)
 
     def calculate(t1, t2):
+        """
+        Calculate the temperature of t1 and t2.
+
+        Args:
+            t1: (float): write your description
+            t2: (float): write your description
+        """
         nums = []
         all_delta = _cpu_tot_time(t2) - _cpu_tot_time(t1)
         for field in t1._fields:
@@ -2206,6 +2404,12 @@ if hasattr(_psplatform, "sensors_temperatures"):
         is set to True.
         """
         def to_fahrenheit(n):
+            """
+            Convert n to_fahrenheit
+
+            Args:
+                n: (todo): write your description
+            """
             return (float(n) * 9 / 5) + 32
 
         ret = collections.defaultdict(list)

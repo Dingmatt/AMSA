@@ -31,12 +31,25 @@ from .charsetprober import CharSetProber
 
 class CharSetGroupProber(CharSetProber):
     def __init__(self, lang_filter=None):
+        """
+        Initialize the filter
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+        """
         super(CharSetGroupProber, self).__init__(lang_filter=lang_filter)
         self._active_num = 0
         self.probers = []
         self._best_guess_prober = None
 
     def reset(self):
+        """
+        Reset the statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         super(CharSetGroupProber, self).reset()
         self._active_num = 0
         for prober in self.probers:
@@ -48,6 +61,12 @@ class CharSetGroupProber(CharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Returns the name.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self._best_guess_prober:
             self.get_confidence()
             if not self._best_guess_prober:
@@ -56,6 +75,12 @@ class CharSetGroupProber(CharSetProber):
 
     @property
     def language(self):
+        """
+        Return the language.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self._best_guess_prober:
             self.get_confidence()
             if not self._best_guess_prober:
@@ -63,6 +88,13 @@ class CharSetGroupProber(CharSetProber):
         return self._best_guess_prober.language
 
     def feed(self, byte_str):
+        """
+        Feed the next feed
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for prober in self.probers:
             if not prober:
                 continue
@@ -83,6 +115,12 @@ class CharSetGroupProber(CharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Returns the confidence confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         state = self.state
         if state == ProbingState.FOUND_IT:
             return 0.99

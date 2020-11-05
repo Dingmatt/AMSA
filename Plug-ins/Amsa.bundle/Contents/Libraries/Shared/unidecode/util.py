@@ -11,10 +11,21 @@ from unidecode import unidecode
 PY3 = sys.version_info[0] >= 3
 
 def fatal(msg):
+    """
+    Prints a message to stderr.
+
+    Args:
+        msg: (str): write your description
+    """
     sys.stderr.write(msg + "\n")
     sys.exit(1)
 
 def main():
+    """
+    Main entry point.
+
+    Args:
+    """
     default_encoding = locale.getpreferredencoding()
 
     parser = optparse.OptionParser('%prog [options] [FILE]',

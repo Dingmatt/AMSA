@@ -19,6 +19,14 @@ class Setting(Descriptor):
 
     @classmethod
     def parse_value(cls, client, node):
+        """
+        Parse a value.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         type = cls.helpers.get(node, 'type')
         value = cls.helpers.get(node, 'value')
 
@@ -26,6 +34,14 @@ class Setting(Descriptor):
 
     @classmethod
     def parse_default(cls, client, node):
+        """
+        Parse command
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         type = cls.helpers.get(node, 'type')
         default = cls.helpers.get(node, 'default')
 
@@ -33,6 +49,14 @@ class Setting(Descriptor):
 
     @classmethod
     def parse_options(cls, client, node):
+        """
+        Parse command line options.
+
+        Args:
+            cls: (callable): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         value = cls.helpers.get(node, 'enumValues')
 
         if not value:
@@ -44,6 +68,13 @@ class Setting(Descriptor):
 
     @staticmethod
     def convert(type, value):
+        """
+        Converts the value of the int or int.
+
+        Args:
+            type: (todo): write your description
+            value: (str): write your description
+        """
         if type == 'bool':
             value = value.lower()
             value = value == 'true'

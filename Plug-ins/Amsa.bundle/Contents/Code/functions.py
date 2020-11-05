@@ -19,6 +19,20 @@ ns['clean-title-filter'] = lambda context, s: CleanTitle(s, True)
 ns['is-match'] = lambda context, x,y: SequenceMatch(x, y)
     
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
+    """
+    Downloads an xml file from a url. xml file.
+
+    Args:
+        url: (str): write your description
+        filename: (str): write your description
+        directory: (str): write your description
+        cache: (bool): write your description
+        constants: (todo): write your description
+        DefaultCache: (str): write your description
+        timeout: (float): write your description
+        constants: (todo): write your description
+        DefaultTimeout: (todo): write your description
+    """
     Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil, req_proxy #, AniDB_RequestCount
     #try:
@@ -118,6 +132,12 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
     return None
 
 def Decompress(file):
+    """
+    Reads the file and gzip the file.
+
+    Args:
+        file: (str): write your description
+    """
     times = 0
     try:
       while True:
@@ -128,6 +148,20 @@ def Decompress(file):
     return file
 
 def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
+    """
+    Download a file from a url.
+
+    Args:
+        url: (str): write your description
+        filename: (str): write your description
+        directory: (str): write your description
+        cache: (bool): write your description
+        constants: (todo): write your description
+        DefaultCache: (str): write your description
+        timeout: (int): write your description
+        constants: (todo): write your description
+        DefaultTimeout: (str): write your description
+    """
     Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
     #try:
@@ -159,6 +193,16 @@ def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, t
     return None
     
 def LoadFile(filename="", directory="", cache=constants.DefaultCache):  
+    """
+    Loads a file from disk.
+
+    Args:
+        filename: (str): write your description
+        directory: (str): write your description
+        cache: (str): write your description
+        constants: (str): write your description
+        DefaultCache: (str): write your description
+    """
     filename = os.path.join(str(constants.CacheDirectory), str(directory), str(filename)) 
     result = None
     if filename and Data.Exists(filename):       
@@ -170,6 +214,15 @@ def LoadFile(filename="", directory="", cache=constants.DefaultCache):
     return result                
 
 def SaveFile(file, filename="", directory="", export=False):   
+    """
+    Saves the given filename to a file.
+
+    Args:
+        file: (str): write your description
+        filename: (str): write your description
+        directory: (str): write your description
+        export: (bool): write your description
+    """
     absoDirectory = os.path.join(constants.CachePath if export == False else constants.BundleExportPath, directory)
     directory = os.path.join(constants.CacheDirectory if export == False else constants.BundleExportDirectory, directory)
     filename = os.path.join(directory, filename) 
@@ -179,9 +232,23 @@ def SaveFile(file, filename="", directory="", export=False):
     Data.Save(filename, file)
     
 def GetAnimeTitleByID(Tree, Id):    
+    """
+    Retrieve the child of a given tree item.
+
+    Args:
+        Tree: (str): write your description
+        Id: (str): write your description
+    """
     return Tree.xpath("""/animetitles/anime[@aid="%s"]/*""" % Id)
     
 def GetAnimeTitleByName(Tree, Name): 
+    """
+    Retrieves the best match of - based on the input tree.
+
+    Args:
+        Tree: (str): write your description
+        Name: (str): write your description
+    """
     logging.Log_Milestone("GetAnimeTitleByName_" + Name)
     Name = Name.lower()
      
@@ -205,6 +272,14 @@ def GetAnimeTitleByName(Tree, Name):
     return result
 
 def SequenceMatch(word, matcher, cutoff=0.6):
+    """
+    Returns true if the sequence matches the same length.
+
+    Args:
+        word: (todo): write your description
+        matcher: (todo): write your description
+        cutoff: (float): write your description
+    """
     result = False
     s = difflib.SequenceMatcher()
     s.set_seq2(word)
@@ -217,6 +292,12 @@ def SequenceMatch(word, matcher, cutoff=0.6):
     return result
     
 def GetPreferedTitle(titles):    
+    """
+    Gets the title for a list.
+
+    Args:
+        titles: (str): write your description
+    """
     #for title in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + constants.SERIES_TYPE_PRIORITY.index(x.get('type')), constants.SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
     #    for x in titles if x.get('{http://www.w3.org/XML/1998/namespace}lang') in constants.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1], x[2])):
     #    Log.Debug("AniDBTitle() - type: '%s', pri: '%s', sec: '%s'" % (title[0], title[1], title[2]))
@@ -232,6 +313,12 @@ def GetPreferedTitle(titles):
     return title
    
 def GetPreferedTitleNoType(titles):    
+    """
+    Returns the title for the given titles.
+
+    Args:
+        titles: (str): write your description
+    """
     title = None
     
     #for i in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get("{http://www.w3.org/XML/1998/namespace}lang"))] for x in titles if x.get("{http://www.w3.org/XML/1998/namespace}lang") in constants.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1])):
@@ -247,6 +334,13 @@ def GetPreferedTitleNoType(titles):
     return title
    
 def CleanTitle(title, filter = False):
+    """
+    Remove all occurrences of a title from title.
+
+    Args:
+        title: (str): write your description
+        filter: (str): write your description
+    """
     if filter: title = re.sub(constants.Filter_Regex, "", title.lower())
     title = re.sub(r'\[(tvdb\d?|anidb\d?).*\]', "", title.lower())
     title = re.sub(r'[^A-Za-z0-9 ]+', ' ', title)
@@ -256,9 +350,26 @@ def CleanTitle(title, filter = False):
     return str(unicodedata.normalize('NFKD', safe_unicode(title)).strip())
     
 def GetElementText(el, xp, default=None):
+    """
+    Return an element from an element
+
+    Args:
+        el: (todo): write your description
+        xp: (todo): write your description
+        default: (todo): write your description
+    """
     return el.xpath(xp)[0].text if el is not None and el.xpath(xp) and el.xpath(xp)[0].text else ("" if default == None else default)  
     
 def GetByPriority(metaList, priorityList, metaType, secondType=None):
+    """
+    Return the list of the elements. *
+
+    Args:
+        metaList: (list): write your description
+        priorityList: (list): write your description
+        metaType: (str): write your description
+        secondType: (str): write your description
+    """
     try:
         if metaType is list:
             return ast.literal_eval(sorted(filter(lambda i: i.text != None and i.text != "None", metaList), key=lambda x: priorityList.index(x.tag.lower()),  reverse=False)[0].text)
@@ -287,6 +398,16 @@ def GetByPriority(metaList, priorityList, metaType, secondType=None):
         return ""               
     
 def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None):
+    """
+    Delete all meta data from meta - data has been deleted. * meta *.
+
+    Args:
+        map: (todo): write your description
+        metaType: (str): write your description
+        priorityList: (list): write your description
+        metaList: (todo): write your description
+        secondType: (todo): write your description
+    """
     if map:
         data = GetByPriority(map, priorityList, metaType, secondType)
         if data:
@@ -318,9 +439,23 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                 if secondType == "Images":
                     @parallelize
                     def Image_Par():
+                        """
+                        Returns a list of the images
+
+                        Args:
+                        """
                         for image in sorted(data, key=lambda x: int(x.get("id")),  reverse=False):
                             @task
                             def Image_Task(image=image, metaList=metaList):
+                                """
+                                Returns a list of all available in a given image.
+
+                                Args:
+                                    image: (dict): write your description
+                                    image: (dict): write your description
+                                    metaList: (list): write your description
+                                    metaList: (list): write your description
+                                """
                                 #Log("Poster 1: %s, %s, %s" % (image.get("id"), image.get("mainLocalPath"), image.getparent().tag.lower()))
                                 if len(image.get("thumbUrl")) > 0:
                                     FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
@@ -333,9 +468,23 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                 elif secondType == "Themes":
                     @parallelize
                     def Theme_Par():
+                        """
+                        List all theme
+
+                        Args:
+                        """
                         for theme in sorted(data, key=lambda x: x.get("id"),  reverse=False):
                             @task
                             def Theme_Task(theme=theme, metaList=metaList):
+                                """
+                                List all meta files
+
+                                Args:
+                                    theme: (dict): write your description
+                                    theme: (dict): write your description
+                                    metaList: (list): write your description
+                                    metaList: (list): write your description
+                                """
                                 FileFromURL(theme.get("url"), os.path.basename(theme.get("localPath")), os.path.dirname(theme.get("localPath")), CACHE_1HOUR * 24)
                                 metaList[theme.get("url")] = Proxy.Media(Data.Load(theme.get("localPath")), sort_order=theme.get("id"))
                 return metaList
@@ -343,6 +492,15 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                 return (metaType)(data)   
 
 def ParseImage(imagePath, baseURL, baseFolder, thumbPath = None):
+    """
+    Parses an image path.
+
+    Args:
+        imagePath: (str): write your description
+        baseURL: (str): write your description
+        baseFolder: (todo): write your description
+        thumbPath: (str): write your description
+    """
     #Log("ParseImage: %s, %s, %s, %s" % (imagePath, baseURL, baseFolder, thumbPath))
     mainUrl = os.path.join(baseURL, imagePath)
     mainFilename = os.path.join(constants.CacheDirectory, baseFolder, os.path.basename(mainUrl))
@@ -357,6 +515,13 @@ def ParseImage(imagePath, baseURL, baseFolder, thumbPath = None):
     return mainUrl, thumbUrl, mainLocalPath, thumbLocalPath
   
 def lev_ratio(s1, s2):
+    """
+    Calculate ratio between two strings.
+
+    Args:
+        s1: (todo): write your description
+        s2: (todo): write your description
+    """
     distance = Util.LevenshteinDistance(safe_unicode(s1), safe_unicode(s2))
     max_len = float(max([ len(s1), len(s2) ]))
 
@@ -369,6 +534,13 @@ def lev_ratio(s1, s2):
     return ratio  
     
 def safe_unicode(s, encoding='utf-8'):
+    """
+    Safely convert string to unicode string.
+
+    Args:
+        s: (todo): write your description
+        encoding: (str): write your description
+    """
     if s is None:
         return None
     if isinstance(s, basestring):
@@ -380,6 +552,13 @@ def safe_unicode(s, encoding='utf-8'):
         return str(s).decode(encoding)
 
 def downloadfile(name,url):
+    """
+    Download a file
+
+    Args:
+        name: (str): write your description
+        url: (str): write your description
+    """
     response=requests.get(url,stream=True)
     absoDirectory = os.path.join(constants.CachePath, name)
     with io.open(absoDirectory, 'wb') as out_file:
@@ -387,6 +566,13 @@ def downloadfile(name,url):
     del response
 
 def GetStreamInfo(key, part_id=None):
+    """
+    Retrieves information about a video.
+
+    Args:
+        key: (str): write your description
+        part_id: (str): write your description
+    """
     try:
         item_id = int(key)
     except ValueError:
@@ -451,9 +637,21 @@ class plexRequestObject(object):
     method = None
 
     def prepare(self):
+        """
+        Returns a new data structure.
+
+        Args:
+            self: (todo): write your description
+        """
         return self
 
     def send(self):
+        """
+        Send http response.
+
+        Args:
+            self: (todo): write your description
+        """
         data = None
         status_code = 200
         try:

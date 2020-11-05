@@ -29,17 +29,51 @@ else:
 
 class Headers(object):
     def __init__(self, res):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            res: (todo): write your description
+        """
         self.headers = res.headers
 
     def get_all(self, name, failobj=None):
+        """
+        Returns a list of all of the values.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            failobj: (str): write your description
+        """
         return self.getheaders(name)
 
     def getheaders(self, name):
+        """
+        Return the headers.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         return [self.headers.get(name)]
 
 
 def response(status_code=200, content='', headers=None, reason=None, elapsed=0,
              request=None, stream=False):
+    """
+    Return a response object.
+
+    Args:
+        status_code: (int): write your description
+        content: (todo): write your description
+        headers: (dict): write your description
+        reason: (str): write your description
+        elapsed: (todo): write your description
+        request: (todo): write your description
+        stream: (str): write your description
+    """
     res = requests.Response()
     res.status_code = status_code
     if isinstance(content, (dict, list)):
@@ -72,16 +106,50 @@ def response(status_code=200, content='', headers=None, reason=None, elapsed=0,
 
 
 def all_requests(func):
+    """
+    Decorator for all requests that all requests in the request.
+
+    Args:
+        func: (callable): write your description
+    """
     @wraps(func)
     def inner(*args, **kwargs):
+        """
+        Decorator for the wrapped function.
+
+        Args:
+        """
         return func(*args, **kwargs)
     return inner
 
 
 def urlmatch(scheme=None, netloc=None, path=None, method=None, query=None):
+    """
+    Decorate a url scheme.
+
+    Args:
+        scheme: (todo): write your description
+        netloc: (todo): write your description
+        path: (str): write your description
+        method: (str): write your description
+        query: (str): write your description
+    """
     def decorator(func):
+        """
+        Decorator for adding a function to request url.
+
+        Args:
+            func: (todo): write your description
+        """
         @wraps(func)
         def inner(self_or_url, url_or_request, *args, **kwargs):
+            """
+            Check if url_or_or.
+
+            Args:
+                self_or_url: (str): write your description
+                url_or_request: (str): write your description
+            """
             if isinstance(self_or_url, urlparse.SplitResult):
                 url = self_or_url
                 request = url_or_request
@@ -104,6 +172,12 @@ def urlmatch(scheme=None, netloc=None, path=None, method=None, query=None):
 
 
 def handler_init_call(handler):
+    """
+    Add a handler to call to callable to the handler.
+
+    Args:
+        handler: (todo): write your description
+    """
     setattr(handler, 'call', {
         'count': 0,
         'called': False
@@ -111,6 +185,12 @@ def handler_init_call(handler):
 
 
 def handler_clean_call(handler):
+    """
+    Called when a handler is removed.
+
+    Args:
+        handler: (todo): write your description
+    """
     if hasattr(handler, 'call'):
         handler.call.update({
             'count': 0,
@@ -119,6 +199,12 @@ def handler_clean_call(handler):
 
 
 def handler_called(handler, *args, **kwargs):
+    """
+    Decorator to handle_called.
+
+    Args:
+        handler: (todo): write your description
+    """
     try:
         return handler(*args, **kwargs)
     finally:
@@ -127,15 +213,32 @@ def handler_called(handler, *args, **kwargs):
 
 
 def remember_called(func):
+    """
+    Decorator to make a function.
+
+    Args:
+        func: (callable): write your description
+    """
     handler_init_call(func)
 
     @wraps(func)
     def inner(*args, **kwargs):
+        """
+        Decorator for the wrapped function.
+
+        Args:
+        """
         return handler_called(func, *args, **kwargs)
     return inner
 
 
 def first_of(handlers, *args, **kwargs):
+    """
+    Returns the first matching handler.
+
+    Args:
+        handlers: (todo): write your description
+    """
     for handler in handlers:
         res = handler(*args, **kwargs)
         if res is not None:
@@ -149,9 +252,22 @@ class HTTMock(object):
     STATUS_CODE = 200
 
     def __init__(self, *handlers):
+        """
+        Initialize the given handler.
+
+        Args:
+            self: (todo): write your description
+            handlers: (todo): write your description
+        """
         self.handlers = handlers
 
     def __enter__(self):
+        """
+        Handles requests session.
+
+        Args:
+            self: (todo): write your description
+        """
         self._real_session_send = requests.Session.send
         self._real_session_prepare_request = requests.Session.prepare_request
 
@@ -159,6 +275,13 @@ class HTTMock(object):
             handler_clean_call(handler)
 
         def _fake_send(session, request, **kwargs):
+            """
+            Handles a http session.
+
+            Args:
+                session: (todo): write your description
+                request: (todo): write your description
+            """
             response = self.intercept(request, **kwargs)
 
             if isinstance(response, requests.Response):
@@ -212,10 +335,26 @@ class HTTMock(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Called when an exception.
+
+        Args:
+            self: (todo): write your description
+            exc_type: (todo): write your description
+            exc_val: (todo): write your description
+            exc_tb: (todo): write your description
+        """
         requests.Session.send = self._real_session_send
         requests.Session.prepare_request = self._real_session_prepare_request
 
     def intercept(self, request, **kwargs):
+        """
+        Intercept the request.
+
+        Args:
+            self: (todo): write your description
+            request: (todo): write your description
+        """
         url = urlparse.urlsplit(request.url)
         res = first_of(self.handlers, url, request)
 
@@ -239,11 +378,28 @@ class HTTMock(object):
 
 
 def with_httmock(*handlers):
+    """
+    Decorator to use with a decorator.
+
+    Args:
+        handlers: (todo): write your description
+    """
     mock = HTTMock(*handlers)
 
     def decorator(func):
+        """
+        Decorator to add a decorator.
+
+        Args:
+            func: (todo): write your description
+        """
         @wraps(func)
         def inner(*args, **kwargs):
+            """
+            Decorator that wraps the wrapped in the given args.
+
+            Args:
+            """
             with mock:
                 return func(*args, **kwargs)
         return inner

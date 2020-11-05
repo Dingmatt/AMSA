@@ -242,6 +242,13 @@ class OrderedDict(dict):
         return dict.__eq__(self, other)
 
     def __ne__(self, other):
+        """
+        Determine if self objects.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not self == other
 
     # -- the following methods are only used in Python 2.7 --

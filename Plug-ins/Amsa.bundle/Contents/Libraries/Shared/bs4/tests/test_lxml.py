@@ -36,9 +36,21 @@ class LXMLTreeBuilderSmokeTest(SoupTest, HTMLTreeBuilderSmokeTest):
 
     @property
     def default_builder(self):
+        """
+        Returns the default lxml. lX
+
+        Args:
+            self: (todo): write your description
+        """
         return LXMLTreeBuilder()
 
     def test_out_of_range_entity(self):
+        """
+        Set the out_out_out_entity_entity_entity_range.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertSoupEquals(
             "<p>foo&#10000000000000;bar</p>", "<p>foobar</p>")
         self.assertSoupEquals(
@@ -53,11 +65,23 @@ class LXMLTreeBuilderSmokeTest(SoupTest, HTMLTreeBuilderSmokeTest):
         not LXML_PRESENT or LXML_VERSION < (2,3,5,0),
         "Skipping doctype test for old version of lxml to avoid segfault.")
     def test_empty_doctype(self):
+        """
+        Test if empty empty empty empty empty empty string.
+
+        Args:
+            self: (todo): write your description
+        """
         soup = self.soup("<!DOCTYPE>")
         doctype = soup.contents[0]
         self.assertEqual("", doctype.strip())
 
     def test_beautifulstonesoup_is_xml_parser(self):
+        """
+        Check if the test is alive.
+
+        Args:
+            self: (todo): write your description
+        """
         # Make sure that the deprecated BSS class uses an xml builder
         # if one is installed.
         with warnings.catch_warnings(record=True) as w:
@@ -73,4 +97,10 @@ class LXMLXMLTreeBuilderSmokeTest(SoupTest, XMLTreeBuilderSmokeTest):
 
     @property
     def default_builder(self):
+        """
+        Returns the default lX builder
+
+        Args:
+            self: (todo): write your description
+        """
         return LXMLTreeBuilderForXML()

@@ -20,6 +20,13 @@ class Track(Directory, Metadata, SessionMixin, ScrobbleMixin):
 
     @staticmethod
     def construct_artist(client, node):
+        """
+        Construct a artist object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'key':          'grandparentKey',
             'ratingKey':    'grandparentRatingKey',
@@ -33,6 +40,13 @@ class Track(Directory, Metadata, SessionMixin, ScrobbleMixin):
 
     @staticmethod
     def construct_album(client, node):
+        """
+        Constructs a album.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index':        'parentIndex',
             'key':          'parentKey',

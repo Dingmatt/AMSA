@@ -9,9 +9,21 @@ class Artist(Directory, Metadata, RateMixin):
     index = Property(type=int)
 
     def all_leaves(self):
+        """
+        Return all leaves.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].all_leaves(self.rating_key)
 
     def children(self):
+        """
+        Return the child node
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].children(self.rating_key)
 
 
@@ -23,6 +35,13 @@ class ArtistChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_artist(client, node):
+        """
+        Construct a artist object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
             'title': 'parentTitle'
@@ -31,6 +50,12 @@ class ArtistChildrenContainer(ChildrenContainer):
         return Artist.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over the artist s artist.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(ChildrenContainer, self).__iter__():
             item.artist = self.artist
 
@@ -44,6 +69,13 @@ class ArtistLeavesContainer(LeavesContainer):
 
     @staticmethod
     def construct_artist(client, node):
+        """
+        Construct a artist object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
             'title': 'parentTitle'
@@ -52,6 +84,12 @@ class ArtistLeavesContainer(LeavesContainer):
         return Artist.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over the artist s artist.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(LeavesContainer, self).__iter__():
             item.artist = self.artist
 

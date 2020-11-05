@@ -121,6 +121,12 @@ class JapaneseContextAnalysis(object):
     MINIMUM_DATA_THRESHOLD = 4
 
     def __init__(self):
+        """
+        Reset the internal state.
+
+        Args:
+            self: (todo): write your description
+        """
         self._total_rel = None
         self._rel_sample = None
         self._need_to_skip_char_num = None
@@ -129,6 +135,12 @@ class JapaneseContextAnalysis(object):
         self.reset()
 
     def reset(self):
+        """
+        Reset the order.
+
+        Args:
+            self: (todo): write your description
+        """
         self._total_rel = 0  # total sequence received
         # category counters, each integer counts sequence in its category
         self._rel_sample = [0] * self.NUM_OF_CATEGORY
@@ -141,6 +153,14 @@ class JapaneseContextAnalysis(object):
         self._done = False
 
     def feed(self, byte_str, num_bytes):
+        """
+        Feeds a byte string
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+            num_bytes: (int): write your description
+        """
         if self._done:
             return
 
@@ -168,9 +188,21 @@ class JapaneseContextAnalysis(object):
                 self._last_char_order = order
 
     def got_enough_data(self):
+        """
+        The total number of the activity.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._total_rel > self.ENOUGH_REL_THRESHOLD
 
     def get_confidence(self):
+        """
+        Returns the confidence confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         # This is just one way to calculate confidence. It works well for me.
         if self._total_rel > self.MINIMUM_DATA_THRESHOLD:
             return (self._total_rel - self._rel_sample[0]) / self._total_rel
@@ -178,18 +210,44 @@ class JapaneseContextAnalysis(object):
             return self.DONT_KNOW
 
     def get_order(self, byte_str):
+        """
+        Return the order of a byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         return -1, 1
 
 class SJISContextAnalysis(JapaneseContextAnalysis):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SJISContextAnalysis, self).__init__()
         self._charset_name = "SHIFT_JIS"
 
     @property
     def charset_name(self):
+        """
+        Returns the name of the character.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._charset_name
 
     def get_order(self, byte_str):
+        """
+        Parse order from the string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         if not byte_str:
             return -1, 1
         # find out current char's byte length
@@ -211,6 +269,13 @@ class SJISContextAnalysis(JapaneseContextAnalysis):
 
 class EUCJPContextAnalysis(JapaneseContextAnalysis):
     def get_order(self, byte_str):
+        """
+        Get the order of a byte string.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         if not byte_str:
             return -1, 1
         # find out current char's byte length

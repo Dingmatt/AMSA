@@ -29,9 +29,22 @@ def intranges_from_list(list_):
     return tuple(ranges)
 
 def _encode_range(start, end):
+    """
+    Encode a range of bytes.
+
+    Args:
+        start: (todo): write your description
+        end: (todo): write your description
+    """
     return (start << 32) | end
 
 def _decode_range(r):
+    """
+    Decode a 32 - bit integer.
+
+    Args:
+        r: (todo): write your description
+    """
     return (r >> 32), (r & ((1 << 32) - 1))
 
 

@@ -64,32 +64,68 @@ class TestProcess(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets the pid of the process.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.pid = get_test_subprocess([PYTHON, "-E", "-O"],
                                       stdin=subprocess.PIPE).pid
         wait_for_pid(cls.pid)
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down class for the given class.
+
+        Args:
+            cls: (todo): write your description
+        """
         reap_children()
 
     # for ps -o arguments see: http://unixhelp.ed.ac.uk/CGI/man-cgi?ps
 
     def test_ppid(self):
+        """
+        Test if the pid of a test.
+
+        Args:
+            self: (todo): write your description
+        """
         ppid_ps = ps("ps --no-headers -o ppid -p %s" % self.pid)
         ppid_psutil = psutil.Process(self.pid).ppid()
         self.assertEqual(ppid_ps, ppid_psutil)
 
     def test_uid(self):
+        """
+        Test the pid of the pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         uid_ps = ps("ps --no-headers -o uid -p %s" % self.pid)
         uid_psutil = psutil.Process(self.pid).uids().real
         self.assertEqual(uid_ps, uid_psutil)
 
     def test_gid(self):
+        """
+        Test if a pid of the pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         gid_ps = ps("ps --no-headers -o rgid -p %s" % self.pid)
         gid_psutil = psutil.Process(self.pid).gids().real
         self.assertEqual(gid_ps, gid_psutil)
 
     def test_username(self):
+        """
+        Test if username is_username.
+
+        Args:
+            self: (todo): write your description
+        """
         username_ps = ps("ps --no-headers -o user -p %s" % self.pid)
         username_psutil = psutil.Process(self.pid).username()
         self.assertEqual(username_ps, username_psutil)
@@ -97,6 +133,12 @@ class TestProcess(unittest.TestCase):
     @skip_on_access_denied()
     @retry_before_failing()
     def test_rss_memory(self):
+        """
+        Test if the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # give python interpreter some time to properly initialize
         # so that the results are the same
         time.sleep(0.1)
@@ -107,6 +149,12 @@ class TestProcess(unittest.TestCase):
     @skip_on_access_denied()
     @retry_before_failing()
     def test_vsz_memory(self):
+        """
+        Test for zz memory pid.
+
+        Args:
+            self: (todo): write your description
+        """
         # give python interpreter some time to properly initialize
         # so that the results are the same
         time.sleep(0.1)
@@ -115,6 +163,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(vsz_ps, vsz_psutil)
 
     def test_name(self):
+        """
+        Set the pid of the pid file.
+
+        Args:
+            self: (todo): write your description
+        """
         # use command + arg since "comm" keyword not supported on all platforms
         name_ps = ps("ps --no-headers -o command -p %s" % (
             self.pid)).split(' ')[0]
@@ -125,6 +179,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipIf(OSX or BSD, 'ps -o start not available')
     def test_create_time(self):
+        """
+        Create a new test.
+
+        Args:
+            self: (todo): write your description
+        """
         time_ps = ps("ps --no-headers -o start -p %s" % self.pid).split(' ')[0]
         time_psutil = psutil.Process(self.pid).create_time()
         time_psutil_tstamp = datetime.datetime.fromtimestamp(
@@ -137,6 +197,12 @@ class TestProcess(unittest.TestCase):
         self.assertIn(time_ps, [time_psutil_tstamp, round_time_psutil_tstamp])
 
     def test_exe(self):
+        """
+        Test if the executable is running.
+
+        Args:
+            self: (todo): write your description
+        """
         ps_pathname = ps("ps --no-headers -o command -p %s" %
                          self.pid).split(' ')[0]
         psutil_pathname = psutil.Process(self.pid).exe()
@@ -153,6 +219,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(ps_pathname, adjusted_ps_pathname)
 
     def test_cmdline(self):
+        """
+        Test if pid is a pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         ps_cmdline = ps("ps --no-headers -o command -p %s" % self.pid)
         psutil_cmdline = " ".join(psutil.Process(self.pid).cmdline())
         if SUNOS:
@@ -161,14 +233,33 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(ps_cmdline, psutil_cmdline)
 
     def test_nice(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         ps_nice = ps("ps --no-headers -o nice -p %s" % self.pid)
         psutil_nice = psutil.Process().nice()
         self.assertEqual(ps_nice, psutil_nice)
 
     def test_num_fds(self):
+        """
+        Return the number of fds.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: this fails from time to time; I'm keen on thinking
         # it doesn't mean something is broken
         def call(p, attr):
+            """
+            Calls an attribute with the given attribute.
+
+            Args:
+                p: (array): write your description
+                attr: (str): write your description
+            """
             args = ()
             attr = getattr(p, name, None)
             if attr is not None and callable(attr):
@@ -208,6 +299,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(os.path.islink("/proc/%s/cwd" % os.getpid()),
                          "/proc fs not available")
     def test_cwd(self):
+        """
+        Test if the pid of the pid file exists.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertEqual(os.readlink("/proc/%s/cwd" % os.getpid()),
                          psutil.Process().cwd())
 
@@ -218,6 +315,12 @@ class TestSystemAPIs(unittest.TestCase):
 
     @retry_before_failing()
     def test_pids(self):
+        """
+        Test if pids.
+
+        Args:
+            self: (todo): write your description
+        """
         # Note: this test might fail if the OS is starting/killing
         # other processes in the meantime
         if SUNOS:
@@ -254,6 +357,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipIf(SUNOS, "unreliable on SUNOS")
     @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")
     def test_nic_names(self):
+        """
+        Test if nic name
+
+        Args:
+            self: (todo): write your description
+        """
         p = subprocess.Popen("ifconfig -a", shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()
         if p.returncode != 0:
@@ -274,6 +383,12 @@ class TestSystemAPIs(unittest.TestCase):
                      "unreliable on APPVEYOR or TRAVIS")
     @retry_before_failing()
     def test_users(self):
+        """
+        Test for users
+
+        Args:
+            self: (todo): write your description
+        """
         out = sh("who")
         lines = out.split('\n')
         users = [x.split()[0] for x in lines]
@@ -284,6 +399,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertTrue(u.terminal in terminals, u.terminal)
 
     def test_pid_exists_let_raise(self):
+        """
+        Check if the pid pid exists.
+
+        Args:
+            self: (todo): write your description
+        """
         # According to "man 2 kill" possible error values for kill
         # are (EINVAL, EPERM, ESRCH). Test that any other errno
         # results in an exception.
@@ -293,6 +414,12 @@ class TestSystemAPIs(unittest.TestCase):
             assert m.called
 
     def test_os_waitpid_let_raise(self):
+        """
+        Perform the os os os os os. os. os.
+
+        Args:
+            self: (todo): write your description
+        """
         # os.waitpid() is supposed to catch EINTR and ECHILD only.
         # Test that any other errno results in an exception.
         with mock.patch("psutil._psposix.os.waitpid",
@@ -301,6 +428,12 @@ class TestSystemAPIs(unittest.TestCase):
             assert m.called
 
     def test_os_waitpid_eintr(self):
+        """
+        Test if the pid of the os.
+
+        Args:
+            self: (todo): write your description
+        """
         # os.waitpid() is supposed to "retry" on EINTR.
         with mock.patch("psutil._psposix.os.waitpid",
                         side_effect=OSError(errno.EINTR, "")) as m:
@@ -310,6 +443,12 @@ class TestSystemAPIs(unittest.TestCase):
             assert m.called
 
     def test_os_waitpid_bad_ret_status(self):
+        """
+        Return a boolean indicatingpid status of the given operation.
+
+        Args:
+            self: (todo): write your description
+        """
         # Simulate os.waitpid() returning a bad status.
         with mock.patch("psutil._psposix.os.waitpid",
                         return_value=(1, -1)) as m:
@@ -318,7 +457,19 @@ class TestSystemAPIs(unittest.TestCase):
             assert m.called
 
     def test_disk_usage(self):
+        """
+        Return disk usage of a disk
+
+        Args:
+            self: (todo): write your description
+        """
         def df(device):
+            """
+            Parse a single device
+
+            Args:
+                device: (todo): write your description
+            """
             out = sh("df -k %s" % device).strip()
             line = out.split('\n')[1]
             fields = line.split()

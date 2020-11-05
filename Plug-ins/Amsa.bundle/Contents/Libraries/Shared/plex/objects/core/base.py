@@ -12,17 +12,45 @@ class Property(object):
     helpers = Interface.helpers
 
     def __init__(self, name=None, type=None, resolver=None):
+        """
+        Initialize the resolver.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            type: (str): write your description
+            resolver: (todo): write your description
+        """
         self.name = name
         self.type = type
         self.resolver = resolver
 
     def value(self, client, key, node, keys_used):
+        """
+        Get the value of a node.
+
+        Args:
+            self: (todo): write your description
+            client: (todo): write your description
+            key: (str): write your description
+            node: (todo): write your description
+            keys_used: (str): write your description
+        """
         if self.resolver is not None:
             return self.value_func(client, node, keys_used)
 
         return self.value_node(key, node, keys_used)
 
     def value_node(self, key, node, keys_used):
+        """
+        Return the value of a given key.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            node: (todo): write your description
+            keys_used: (list): write your description
+        """
         value = self.helpers.get(node, key)
         keys_used.append(key.lower())
 
@@ -32,6 +60,13 @@ class Property(object):
         return self.value_convert(value)
 
     def value_convert(self, value):
+        """
+        Convert the value to the given type.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         if not self.type:
             return value
 
@@ -47,6 +82,15 @@ class Property(object):
         return result
 
     def value_func(self, client, node, keys_used):
+        """
+        Execute the value.
+
+        Args:
+            self: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+            keys_used: (todo): write your description
+        """
         func = self.resolver()
 
         try:
@@ -61,6 +105,15 @@ class Property(object):
 
 class DescriptorMeta(type):
     def __init__(self, name, bases, attrs):
+        """
+        Initialize the field.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            bases: (float): write your description
+            attrs: (dict): write your description
+        """
         super(DescriptorMeta, self).__init__(name, bases, attrs)
 
         Interface.object_map[self.__name__] = self
@@ -71,6 +124,14 @@ class Descriptor(Interface):
     attribute_map = None
 
     def __init__(self, client, path):
+        """
+        Initialize the client.
+
+        Args:
+            self: (todo): write your description
+            client: (todo): write your description
+            path: (str): write your description
+        """
         super(Descriptor, self).__init__(client)
         self.path = path
 
@@ -78,6 +139,12 @@ class Descriptor(Interface):
 
     @classmethod
     def properties(cls):
+        """
+        Return an iterator over all the properties of the class.
+
+        Args:
+            cls: (todo): write your description
+        """
         keys = [k for k in dir(cls) if not k.startswith('_')]
 
         #log.debug('%s - keys: %s', self, keys)
@@ -95,6 +162,17 @@ class Descriptor(Interface):
 
     @classmethod
     def construct(cls, client, node, attribute_map=None, path=None, child=False):
+        """
+        Construct a key object from a node.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+            attribute_map: (dict): write your description
+            path: (str): write your description
+            child: (todo): write your description
+        """
         if node is None:
             return [], None
 
@@ -143,15 +221,38 @@ class Descriptor(Interface):
         return keys_used, obj
 
     def __transform__(self):
+        """
+        Returns the : py : param transform.
+
+        Args:
+            self: (array): write your description
+        """
         pass
 
     def __iter__(self):
+        """
+        Returns an iterator over all children of this node.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._children or []
 
     def __getstate__(self):
+        """
+        Return a generator of ( key / value pairs.
+
+        Args:
+            self: (todo): write your description
+        """
         data = self.__dict__
 
         def build():
+            """
+            Builds a list of key value pairs.
+
+            Args:
+            """
             for key, value in data.items():
                 if isinstance(value, types.GeneratorType):
                     value = list(value)

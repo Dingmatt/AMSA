@@ -33,6 +33,12 @@ from .mbcssm import CP949_SM_MODEL
 
 class CP949Prober(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(CP949Prober, self).__init__()
         self.coding_sm = CodingStateMachine(CP949_SM_MODEL)
         # NOTE: CP949 is a superset of EUC-KR, so the distribution should be
@@ -42,8 +48,20 @@ class CP949Prober(MultiByteCharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "CP949"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Korean"

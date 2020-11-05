@@ -21,9 +21,21 @@ if PY3:
     basestring = str
 
     def u(s):
+        """
+        Convert a list of the string.
+
+        Args:
+            s: (int): write your description
+        """
         return s
 
     def b(s):
+        """
+        : param s : class : bytes.
+
+        Args:
+            s: (todo): write your description
+        """
         return s.encode("latin-1")
 else:
     long = long
@@ -32,9 +44,21 @@ else:
     basestring = basestring
 
     def u(s):
+        """
+        Unescape version of s.
+
+        Args:
+            s: (int): write your description
+        """
         return unicode(s, "unicode_escape")
 
     def b(s):
+        """
+        Returns a b
+
+        Args:
+            s: (int): write your description
+        """
         return s
 
 
@@ -43,6 +67,12 @@ try:
     callable = callable
 except NameError:
     def callable(obj):
+        """
+        Return true if obj is a callable.
+
+        Args:
+            obj: (todo): write your description
+        """
         return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
 
 
@@ -67,16 +97,54 @@ except ImportError:
         __slots__ = 'hashvalue'
 
         def __init__(self, tup, hash=hash):
+            """
+            Initialize hashvalue.
+
+            Args:
+                self: (todo): write your description
+                tup: (int): write your description
+                hash: (todo): write your description
+                hash: (todo): write your description
+            """
             self[:] = tup
             self.hashvalue = hash(tup)
 
         def __hash__(self):
+            """
+            Returns the hashvalue
+
+            Args:
+                self: (todo): write your description
+            """
             return self.hashvalue
 
     def _make_key(args, kwds, typed,
                   kwd_mark=(object(), ),
                   fasttypes=set((int, str, frozenset, type(None))),
                   sorted=sorted, tuple=tuple, type=type, len=len):
+        """
+        Make a key for the given kwd.
+
+        Args:
+            kwds: (dict): write your description
+            typed: (todo): write your description
+            kwd_mark: (todo): write your description
+            object: (todo): write your description
+            fasttypes: (str): write your description
+            set: (todo): write your description
+            int: (todo): write your description
+            str: (todo): write your description
+            frozenset: (todo): write your description
+            type: (str): write your description
+            sorted: (bool): write your description
+            sorted: (bool): write your description
+            tuple: (todo): write your description
+            tuple: (todo): write your description
+            type: (str): write your description
+            type: (str): write your description
+            len: (todo): write your description
+            len: (todo): write your description
+        """
         key = args
         if kwds:
             sorted_items = sorted(kwds.items())
@@ -96,6 +164,12 @@ except ImportError:
         http://docs.python.org/3/library/functools.html#functools.lru_cache
         """
         def decorating_function(user_function):
+            """
+            Decorator for functions functions.
+
+            Args:
+                user_function: (todo): write your description
+            """
             cache = dict()
             stats = [0, 0]
             HITS, MISSES = 0, 1
@@ -109,11 +183,23 @@ except ImportError:
             PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
             if maxsize == 0:
                 def wrapper(*args, **kwds):
+                    """
+                    Decorator to convert ().
+
+                    Args:
+                        kwds: (todo): write your description
+                    """
                     result = user_function(*args, **kwds)
                     stats[MISSES] += 1
                     return result
             elif maxsize is None:
                 def wrapper(*args, **kwds):
+                    """
+                    Decor for the cache.
+
+                    Args:
+                        kwds: (todo): write your description
+                    """
                     key = make_key(args, kwds, typed)
                     result = cache_get(key, root)
                     if result is not root:
@@ -125,6 +211,12 @@ except ImportError:
                     return result
             else:
                 def wrapper(*args, **kwds):
+                    """
+                    Wrapper around a function that can be used ascii.
+
+                    Args:
+                        kwds: (todo): write your description
+                    """
                     if kwds or typed:
                         key = make_key(args, kwds, typed)
                     else:
@@ -211,6 +303,13 @@ except ImportError:
         path.
         """
         def _access_check(fn, mode):
+            """
+            Return true if the given file exists.
+
+            Args:
+                fn: (todo): write your description
+                mode: (str): write your description
+            """
             return (os.path.exists(fn) and os.access(fn, mode) and
                     not os.path.isdir(fn))
 

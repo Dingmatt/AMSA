@@ -40,6 +40,13 @@ class EscCharSetProber(CharSetProber):
     """
 
     def __init__(self, lang_filter=None):
+        """
+        Initialize the language.
+
+        Args:
+            self: (todo): write your description
+            lang_filter: (str): write your description
+        """
         super(EscCharSetProber, self).__init__(lang_filter=lang_filter)
         self.coding_sm = []
         if self.lang_filter & LanguageFilter.CHINESE_SIMPLIFIED:
@@ -56,6 +63,12 @@ class EscCharSetProber(CharSetProber):
         self.reset()
 
     def reset(self):
+        """
+        Reset the language data.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EscCharSetProber, self).reset()
         for coding_sm in self.coding_sm:
             if not coding_sm:
@@ -68,19 +81,44 @@ class EscCharSetProber(CharSetProber):
 
     @property
     def charset_name(self):
+        """
+        : return : class : attr : return :
+
+        Args:
+            self: (todo): write your description
+        """
         return self._detected_charset
 
     @property
     def language(self):
+        """
+        The language of the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._detected_language
 
     def get_confidence(self):
+        """
+        Get confidence confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._detected_charset:
             return 0.99
         else:
             return 0.00
 
     def feed(self, byte_str):
+        """
+        Feed the state of the given byte.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for c in byte_str:
             for coding_sm in self.coding_sm:
                 if not coding_sm or not coding_sm.active:

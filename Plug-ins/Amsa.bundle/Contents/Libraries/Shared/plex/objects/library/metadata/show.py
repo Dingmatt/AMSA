@@ -26,9 +26,21 @@ class Show(Directory, Metadata, RateMixin):
     view_count = Property('viewCount', int)
 
     def all_leaves(self):
+        """
+        Return all leaves.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].all_leaves(self.rating_key)
 
     def children(self):
+        """
+        Return the child node
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].children(self.rating_key)
 
 
@@ -43,6 +55,13 @@ class ShowChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_show(client, node):
+        """
+        Construct a node
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
 
@@ -53,6 +72,12 @@ class ShowChildrenContainer(ChildrenContainer):
         return Show.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over all items in this item.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(ChildrenContainer, self).__iter__():
             item.show = self.show
 
@@ -69,6 +94,13 @@ class ShowLeavesContainer(LeavesContainer):
 
     @staticmethod
     def construct_show(client, node):
+        """
+        Construct a node
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
 
@@ -79,6 +111,12 @@ class ShowLeavesContainer(LeavesContainer):
         return Show.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over all items.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(LeavesContainer, self).__iter__():
             item.show = self.show
 

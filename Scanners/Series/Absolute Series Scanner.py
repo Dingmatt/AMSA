@@ -102,6 +102,13 @@ FileListLogger.setLevel(logging.DEBUG)
 LogFileList = FileListLogger.info
 
 def set_logging(instance, filename):
+    """
+    Add a file logger.
+
+    Args:
+        instance: (todo): write your description
+        filename: (str): write your description
+    """
   global RootLogger, RootHandler, RootFormatting, FileListLogger, FileListHandler, FileListFormatting
   logger, handler, formatting, backup_count = [RootLogger, RootHandler, RootFormatting, 9] if instance=="Root" else [FileListLogger, FileListHandler, FileListFormatting, 1]
   if handler: logger.removeHandler(handler)
@@ -135,20 +142,49 @@ except:  Log.info("Place correct Plex token in X-Plex-Token.id file in logs fold
 
 ### replace a string by another while retaining original string case ##############################################################################################
 def replace_insensitive (ep, word, sep=" "):
+    """
+    Replace occurrences of the next word in the string.
+
+    Args:
+        ep: (str): write your description
+        word: (str): write your description
+        sep: (todo): write your description
+    """
   if ep.lower()==word.lower(): return ""
   position = ep.lower().find(word.lower())
   if position > -1 and len(ep)>len(word):  return (""  if position==0 else ep[:position].lstrip()) + (sep if len(ep) < position+len(word) else ep[position+len(word):].lstrip())
 
 ### Turn a string into a list of string and number chunks  "z23a" -> ["z", 23, "a"] ###############################################################################
+"""
+Sort a natural natural natural natural natural natural key.
+
+Args:
+    s: (array): write your description
+    _nsre: (todo): write your description
+    re: (str): write your description
+    compile: (str): write your description
+"""
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):  return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
 
 ### Return number of bytes of Unicode characters ########################################################
 def unicodeCharLen (char):                                           # count consecutive 1 bits since it represents the byte numbers-1, less than 1 consecutive bit (128) is 1 byte , less than 23 bytes is 1
+    """
+    Unicode a character.
+
+    Args:
+        char: (todo): write your description
+    """
   for x in range(1,6):                                           # start at 1, 6 times 
     if ord(char) < 256-pow(2, 7-x)+(2 if x==6 else 0): return x  # 256-2pow(x) with x(7->0) = 128 192 224 240 248 252 254 255 = 1 to 8 bits at 1 from the left, 256-2pow(7-x) starts form left
   #og.info("ord(char): '%d'" % ord(char))
 
 def unicodeLen (string):                                           # count consecutive 1 bits since it represents the byte numbers-1, less than 1 consecutive bit (128) is 1 byte , less than 23 bytes is 1
+    """
+    Returns a unicode string with the given character.
+
+    Args:
+        string: (str): write your description
+    """
   length=0
   for char in string:
     length += unicodeCharLen(char)
@@ -156,6 +192,13 @@ def unicodeLen (string):                                           # count conse
   
 ### Decode string back to Unicode ###   #Unicodize in utils?? #fixEncoding in unicodehelper
 def encodeASCII(string, language=None): #from Unicodize and plex scanner and other sources
+    """
+    Encode string using the encoding.
+
+    Args:
+        string: (str): write your description
+        language: (str): write your description
+    """
   import unicodedata                                      # normalize
   if string=="": return ""
   ranges = [ {"from": u"\u3300" , "to": u"\u33ff" },
@@ -206,6 +249,15 @@ def encodeASCII(string, language=None): #from Unicodize and plex scanner and oth
 
 ### Allow to display ints even if equal to None at times ################################################
 def clean_string(string, no_parenthesis=False, no_whack=False, no_dash=False):
+    """
+    Strip all string.
+
+    Args:
+        string: (str): write your description
+        no_parenthesis: (todo): write your description
+        no_whack: (todo): write your description
+        no_dash: (bool): write your description
+    """
   if not string: return ""                                                                                                                                    # if empty return empty string
   if no_parenthesis:                                                                                                                                          # delete parts between parenthesis if needed
     while re.match(".*\([^\(\)]*?\).*", string):                 string = re.sub(r'\([^\(\)]*?\)', ' ', string)                                               #   support imbricated parrenthesis like: "Cyborg 009 - The Cyborg Soldier ((Cyborg) 009 (2001))"
@@ -230,6 +282,28 @@ def clean_string(string, no_parenthesis=False, no_whack=False, no_dash=False):
 
 ### Add files into Plex database ########################################################################
 def add_episode_into_plex(mediaList, file, root, path, show, season=1, ep=1, title="", year=None, ep2="", rx="", length=0, tvdb_mapping={}, unknown_series_length=False, offset_season=0, offset_episode=0, mappingList={}):
+    """
+    Add episode information to episode.
+
+    Args:
+        mediaList: (list): write your description
+        file: (str): write your description
+        root: (todo): write your description
+        path: (str): write your description
+        show: (bool): write your description
+        season: (todo): write your description
+        ep: (str): write your description
+        title: (str): write your description
+        year: (todo): write your description
+        ep2: (todo): write your description
+        rx: (todo): write your description
+        length: (int): write your description
+        tvdb_mapping: (todo): write your description
+        unknown_series_length: (todo): write your description
+        offset_season: (todo): write your description
+        offset_episode: (todo): write your description
+        mappingList: (list): write your description
+    """
   import Media                                            # Episode
   # Mapping List 
   ep_orig, ep_orig_padded = "s%de%d%s" % (season, ep, "" if not ep2 or ep==ep2 else "-%s" % ep2), "s%02de%02d%s" % (season, ep, "" if not ep2 or ep==ep2 else "-%02d" % ep2)
@@ -269,6 +343,13 @@ def add_episode_into_plex(mediaList, file, root, path, show, season=1, ep=1, tit
   
 ### Get the tvdbId from the AnimeId #######################################################################################################################
 def anidbTvdbMapping(AniDB_TVDB_mapping_tree, anidbid):
+    """
+    : return : class : mapping
+
+    Args:
+        AniDB_TVDB_mapping_tree: (todo): write your description
+        anidbid: (int): write your description
+    """
   mappingList                  = {}
   for anime in AniDB_TVDB_mapping_tree.iter('anime') if AniDB_TVDB_mapping_tree else []:
     if anime.get("anidbid") == anidbid and anime.get('tvdbid').isdigit():
@@ -285,6 +366,17 @@ def anidbTvdbMapping(AniDB_TVDB_mapping_tree, anidbid):
 
 ### Look for episodes ###################################################################################
 def Scan(path, files, mediaList, subdirs, language=None, root=None, **kwargs): #get called for root and each root folder
+    """
+    .. versionadded ::
+
+    Args:
+        path: (str): write your description
+        files: (list): write your description
+        mediaList: (list): write your description
+        subdirs: (str): write your description
+        language: (str): write your description
+        root: (str): write your description
+    """
   global LOG_FILE_LIBRARY
   LOG_FILE_LIBRARY = LOG_FILE[:-4] + " - " + PLEX_LIBRARY[root] + LOG_FILE[-4:] if root in PLEX_LIBRARY else LOG_FILE  ### Rename log file with library name if XML file can be accessed or token file present in log folder. LOG_FILE stays un-touched, and is used to custom update LOG_FILE_LIBRARY with the library name
   if LOG_FILE_LIBRARY != LOG_FILE:  set_logging("Root", LOG_FILE_LIBRARY)

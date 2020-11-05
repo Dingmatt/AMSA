@@ -35,6 +35,11 @@ INTERFACES = [
 
 
 def get_interfaces():
+    """
+    Return a list of interfaces
+
+    Args:
+    """
     for interface in INTERFACES:
         if interface.path:
             path = interface.path.strip('/')
@@ -50,6 +55,14 @@ def get_interfaces():
 
 
 def construct_map(client, d=None, interfaces=None):
+    """
+    Construct a map from a map
+
+    Args:
+        client: (todo): write your description
+        d: (dict): write your description
+        interfaces: (str): write your description
+    """
     if d is None:
         d = {}
 

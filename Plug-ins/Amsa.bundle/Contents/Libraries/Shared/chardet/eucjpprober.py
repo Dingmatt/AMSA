@@ -35,6 +35,12 @@ from .mbcssm import EUCJP_SM_MODEL
 
 class EUCJPProber(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCJPProber, self).__init__()
         self.coding_sm = CodingStateMachine(EUCJP_SM_MODEL)
         self.distribution_analyzer = EUCJPDistributionAnalysis()
@@ -42,18 +48,43 @@ class EUCJPProber(MultiByteCharSetProber):
         self.reset()
 
     def reset(self):
+        """
+        Reset the context.
+
+        Args:
+            self: (todo): write your description
+        """
         super(EUCJPProber, self).reset()
         self.context_analyzer.reset()
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "EUC-JP"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Japanese"
 
     def feed(self, byte_str):
+        """
+        Feeds the input.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for i in range(len(byte_str)):
             # PY3K: byte_str is a byte array, so byte_str[i] is an int, not a byte
             coding_state = self.coding_sm.next_state(byte_str[i])
@@ -87,6 +118,12 @@ class EUCJPProber(MultiByteCharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Returns the confidence intervals.
+
+        Args:
+            self: (todo): write your description
+        """
         context_conf = self.context_analyzer.get_confidence()
         distrib_conf = self.distribution_analyzer.get_confidence()
         return max(context_conf, distrib_conf)

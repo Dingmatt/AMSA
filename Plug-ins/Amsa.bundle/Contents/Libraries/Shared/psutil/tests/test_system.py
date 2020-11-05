@@ -57,12 +57,30 @@ class TestSystemAPIs(unittest.TestCase):
     """Tests for system-related APIs."""
 
     def setUp(self):
+        """
+        Èi̇¥è¯¢åįĸ¹è½¬æŀ
+
+        Args:
+            self: (todo): write your description
+        """
         safe_rmpath(TESTFN)
 
     def tearDown(self):
+        """
+        Tear down all children.
+
+        Args:
+            self: (todo): write your description
+        """
         reap_children()
 
     def test_process_iter(self):
+        """
+        Iterate over the processes.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertIn(os.getpid(), [x.pid for x in psutil.process_iter()])
         sproc = get_test_subprocess()
         self.assertIn(sproc.pid, [x.pid for x in psutil.process_iter()])
@@ -80,7 +98,19 @@ class TestSystemAPIs(unittest.TestCase):
                 list(psutil.process_iter())
 
     def test_wait_procs(self):
+        """
+        Wait for the subprocess to complete.
+
+        Args:
+            self: (todo): write your description
+        """
         def callback(p):
+            """
+            Callback for pids
+
+            Args:
+                p: (array): write your description
+            """
             pids.append(p.pid)
 
         pids = []
@@ -102,6 +132,13 @@ class TestSystemAPIs(unittest.TestCase):
 
         @retry_before_failing(30)
         def test(procs, callback):
+            """
+            Perform a callback.
+
+            Args:
+                procs: (int): write your description
+                callback: (todo): write your description
+            """
             gone, alive = psutil.wait_procs(procs, timeout=0.03,
                                             callback=callback)
             self.assertEqual(len(gone), 1)
@@ -121,6 +158,13 @@ class TestSystemAPIs(unittest.TestCase):
 
         @retry_before_failing(30)
         def test(procs, callback):
+            """
+            Perform a callback.
+
+            Args:
+                procs: (int): write your description
+                callback: (todo): write your description
+            """
             gone, alive = psutil.wait_procs(procs, timeout=0.03,
                                             callback=callback)
             self.assertEqual(len(gone), 3)
@@ -135,6 +179,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertTrue(hasattr(p, 'returncode'))
 
     def test_wait_procs_no_timeout(self):
+        """
+        Terminate the test process to test to complete.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc1 = get_test_subprocess()
         sproc2 = get_test_subprocess()
         sproc3 = get_test_subprocess()
@@ -144,6 +194,12 @@ class TestSystemAPIs(unittest.TestCase):
         gone, alive = psutil.wait_procs(procs)
 
     def test_boot_time(self):
+        """
+        Change the boot time.
+
+        Args:
+            self: (todo): write your description
+        """
         bt = psutil.boot_time()
         self.assertIsInstance(bt, float)
         self.assertGreater(bt, 0)
@@ -151,6 +207,12 @@ class TestSystemAPIs(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, 'POSIX only')
     def test_PAGESIZE(self):
+        """
+        Test if the test tests
+
+        Args:
+            self: (todo): write your description
+        """
         # pagesize is used internally to perform different calculations
         # and it's determined by using SC_PAGE_SIZE; make sure
         # getpagesize() returns the same value.
@@ -158,6 +220,12 @@ class TestSystemAPIs(unittest.TestCase):
         self.assertEqual(os.sysconf("SC_PAGE_SIZE"), resource.getpagesize())
 
     def test_virtual_memory(self):
+        """
+        Test if the memory memory for this virtual machine.
+
+        Args:
+            self: (todo): write your description
+        """
         mem = psutil.virtual_memory()
         assert mem.total > 0, mem
         assert mem.available > 0, mem
@@ -176,6 +244,12 @@ class TestSystemAPIs(unittest.TestCase):
                               % (name, mem.total, name, value))
 
     def test_swap_memory(self):
+        """
+        Swap memory memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         mem = psutil.swap_memory()
         assert mem.total >= 0, mem
         assert mem.used >= 0, mem
@@ -189,6 +263,12 @@ class TestSystemAPIs(unittest.TestCase):
         assert mem.sout >= 0, mem
 
     def test_pid_exists(self):
+        """
+        Check if pid pid exists.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         self.assertTrue(psutil.pid_exists(sproc.pid))
         p = psutil.Process(sproc.pid)
@@ -201,6 +281,12 @@ class TestSystemAPIs(unittest.TestCase):
         psutil.pid_exists(0) == 0 in psutil.pids()
 
     def test_pid_exists_2(self):
+        """
+        Test if pid pid pid pid pid pid pid exists.
+
+        Args:
+            self: (todo): write your description
+        """
         reap_children()
         pids = psutil.pids()
         for pid in pids:
@@ -217,6 +303,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertFalse(psutil.pid_exists(pid), msg=pid)
 
     def test_pids(self):
+        """
+        Test if any pids.
+
+        Args:
+            self: (todo): write your description
+        """
         plist = [x.pid for x in psutil.process_iter()]
         pidlist = psutil.pids()
         self.assertEqual(plist.sort(), pidlist.sort())
@@ -224,6 +316,12 @@ class TestSystemAPIs(unittest.TestCase):
         self.assertEqual(len(pidlist), len(set(pidlist)))
 
     def test_test(self):
+        """
+        Perform test.
+
+        Args:
+            self: (todo): write your description
+        """
         # test for psutil.test() function
         stdout = sys.stdout
         sys.stdout = DEVNULL
@@ -233,6 +331,12 @@ class TestSystemAPIs(unittest.TestCase):
             sys.stdout = stdout
 
     def test_cpu_count(self):
+        """
+        * count the cpu count *
+
+        Args:
+            self: (todo): write your description
+        """
         logical = psutil.cpu_count()
         self.assertEqual(logical, len(psutil.cpu_times(percpu=True)))
         self.assertGreaterEqual(logical, 1)
@@ -247,6 +351,12 @@ class TestSystemAPIs(unittest.TestCase):
         self.assertGreaterEqual(logical, physical)
 
     def test_cpu_times(self):
+        """
+        Calculate the total number of times.
+
+        Args:
+            self: (todo): write your description
+        """
         # Check type, value >= 0, str().
         total = 0
         times = psutil.cpu_times()
@@ -276,6 +386,12 @@ class TestSystemAPIs(unittest.TestCase):
         #         last = new
 
     def test_cpu_times_time_increases(self):
+        """
+        Return the number of the cpu statistics
+
+        Args:
+            self: (todo): write your description
+        """
         # Make sure time increases between calls.
         t1 = sum(psutil.cpu_times())
         time.sleep(0.1)
@@ -285,6 +401,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.fail("difference %s" % difference)
 
     def test_per_cpu_times(self):
+        """
+        Calculate the total number of times per cpu times.
+
+        Args:
+            self: (todo): write your description
+        """
         # Check type, value >= 0, str().
         for times in psutil.cpu_times(percpu=True):
             total = 0
@@ -318,6 +440,12 @@ class TestSystemAPIs(unittest.TestCase):
         #     last = new
 
     def test_per_cpu_times_2(self):
+        """
+        Returns the total number of the cpu
+
+        Args:
+            self: (todo): write your description
+        """
         # Simulate some work load then make sure time have increased
         # between calls.
         tot1 = psutil.cpu_times(percpu=True)
@@ -334,6 +462,12 @@ class TestSystemAPIs(unittest.TestCase):
         self.fail()
 
     def test_cpu_times_comparison(self):
+        """
+        Calculate the total number of times.
+
+        Args:
+            self: (todo): write your description
+        """
         # Make sure the sum of all per cpu times is almost equal to
         # base "one cpu" times.
         base = psutil.cpu_times()
@@ -344,6 +478,15 @@ class TestSystemAPIs(unittest.TestCase):
                 getattr(base, field), getattr(summed_values, field), delta=1)
 
     def _test_cpu_percent(self, percent, last_ret, new_ret):
+        """
+        Perform a percent of a new percentage.
+
+        Args:
+            self: (todo): write your description
+            percent: (float): write your description
+            last_ret: (str): write your description
+            new_ret: (todo): write your description
+        """
         try:
             self.assertIsInstance(percent, float)
             self.assertGreaterEqual(percent, 0.0)
@@ -354,6 +497,12 @@ class TestSystemAPIs(unittest.TestCase):
                 err, pprint.pformat(last_ret), pprint.pformat(new_ret)))
 
     def test_cpu_percent(self):
+        """
+        Test the cpu statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         last = psutil.cpu_percent(interval=0.001)
         for x in range(100):
             new = psutil.cpu_percent(interval=None)
@@ -363,6 +512,12 @@ class TestSystemAPIs(unittest.TestCase):
             psutil.cpu_percent(interval=-1)
 
     def test_per_cpu_percent(self):
+        """
+        Calculate the cpu statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         last = psutil.cpu_percent(interval=0.001, percpu=True)
         self.assertEqual(len(last), psutil.cpu_count())
         for x in range(100):
@@ -374,6 +529,12 @@ class TestSystemAPIs(unittest.TestCase):
             psutil.cpu_percent(interval=-1, percpu=True)
 
     def test_cpu_times_percent(self):
+        """
+        Calculate the cpu statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         last = psutil.cpu_times_percent(interval=0.001)
         for x in range(100):
             new = psutil.cpu_times_percent(interval=None)
@@ -383,6 +544,12 @@ class TestSystemAPIs(unittest.TestCase):
             last = new
 
     def test_per_cpu_times_percent(self):
+        """
+        Calculate the total amount.
+
+        Args:
+            self: (todo): write your description
+        """
         last = psutil.cpu_times_percent(interval=0.001, percpu=True)
         self.assertEqual(len(last), psutil.cpu_count())
         for x in range(100):
@@ -394,6 +561,12 @@ class TestSystemAPIs(unittest.TestCase):
             last = new
 
     def test_per_cpu_times_percent_negative(self):
+        """
+        Return the number of all psutil
+
+        Args:
+            self: (todo): write your description
+        """
         # see: https://github.com/giampaolo/psutil/issues/645
         psutil.cpu_times_percent(percpu=True)
         zero_times = [x._make([0 for x in range(len(x._fields))])
@@ -406,6 +579,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipIf(POSIX and not hasattr(os, 'statvfs'),
                      "os.statvfs() not available")
     def test_disk_usage(self):
+        """
+        Calculate disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         usage = psutil.disk_usage(os.getcwd())
         assert usage.total > 0, usage
         assert usage.used > 0, usage
@@ -437,6 +616,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipIf(POSIX and not hasattr(os, 'statvfs'),
                      "os.statvfs() not available")
     def test_disk_usage_unicode(self):
+        """
+        Gets the disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         # see: https://github.com/giampaolo/psutil/issues/416
         safe_rmpath(TESTFN_UNICODE)
         self.addCleanup(safe_rmpath, TESTFN_UNICODE)
@@ -447,6 +632,12 @@ class TestSystemAPIs(unittest.TestCase):
                      "os.statvfs() not available")
     @unittest.skipIf(LINUX and TRAVIS, "unknown failure on travis")
     def test_disk_partitions(self):
+        """
+        List all partitions on the disk.
+
+        Args:
+            self: (todo): write your description
+        """
         # all = False
         ls = psutil.disk_partitions(all=False)
         # on travis we get:
@@ -497,6 +688,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertIsInstance(disk.opts, str)
 
         def find_mount_point(path):
+            """
+            Find the mount point that mount point.
+
+            Args:
+                path: (str): write your description
+            """
             path = os.path.abspath(path)
             while not os.path.ismount(path):
                 path = os.path.dirname(path)
@@ -510,7 +707,21 @@ class TestSystemAPIs(unittest.TestCase):
 
     @skip_on_access_denied()
     def test_net_connections(self):
+        """
+        Test if the network connections have been established.
+
+        Args:
+            self: (todo): write your description
+        """
         def check(cons, families, types_):
+            """
+            Check if the connection is in - memory.
+
+            Args:
+                cons: (todo): write your description
+                families: (todo): write your description
+                types_: (todo): write your description
+            """
             for conn in cons:
                 self.assertIn(conn.family, families, msg=conn)
                 if conn.family != getattr(socket, 'AF_UNIX', object()):
@@ -527,7 +738,19 @@ class TestSystemAPIs(unittest.TestCase):
             check(cons, families, types_)
 
     def test_net_io_counters(self):
+        """
+        Test for net net net net net_io.
+
+        Args:
+            self: (todo): write your description
+        """
         def check_ntuple(nt):
+            """
+            Check that the ntp packet is valid.
+
+            Args:
+                nt: (todo): write your description
+            """
             self.assertEqual(nt[0], nt.bytes_sent)
             self.assertEqual(nt[1], nt.bytes_recv)
             self.assertEqual(nt[2], nt.packets_sent)
@@ -555,6 +778,12 @@ class TestSystemAPIs(unittest.TestCase):
             check_ntuple(ret[key])
 
     def test_net_if_addrs(self):
+        """
+        Test if the interface.
+
+        Args:
+            self: (todo): write your description
+        """
         nics = psutil.net_if_addrs()
         assert nics, nics
 
@@ -615,6 +844,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertEqual(psutil.AF_LINK, -1)
 
     def test_net_if_addrs_mac_null_bytes(self):
+        """
+        Test if interface is_net interface.
+
+        Args:
+            self: (todo): write your description
+        """
         # Simulate that the underlying C function returns an incomplete
         # MAC address. psutil is supposed to fill it with null bytes.
         # https://github.com/giampaolo/psutil/issues/786
@@ -633,6 +868,12 @@ class TestSystemAPIs(unittest.TestCase):
 
     @unittest.skipIf(TRAVIS, "unreliable on TRAVIS")  # raises EPERM
     def test_net_if_stats(self):
+        """
+        Test if the network statistics are present.
+
+        Args:
+            self: (todo): write your description
+        """
         nics = psutil.net_if_stats()
         assert nics, nics
         all_duplexes = (psutil.NIC_DUPLEX_FULL,
@@ -650,7 +891,19 @@ class TestSystemAPIs(unittest.TestCase):
                      '/proc/diskstats not available on this linux version')
     @unittest.skipIf(APPVEYOR, "unreliable on APPVEYOR")  # no visible disks
     def test_disk_io_counters(self):
+        """
+        Test if disk statistics.
+
+        Args:
+            self: (todo): write your description
+        """
         def check_ntuple(nt):
+            """
+            Check if the ntp ntp attributes of the ntp.
+
+            Args:
+                nt: (todo): write your description
+            """
             self.assertEqual(nt[0], nt.read_count)
             self.assertEqual(nt[1], nt.write_count)
             self.assertEqual(nt[2], nt.read_bytes)
@@ -686,6 +939,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipIf(APPVEYOR or TRAVIS and not psutil.users(),
                      "unreliable on APPVEYOR or TRAVIS")
     def test_users(self):
+        """
+        Test if the user has been run.
+
+        Args:
+            self: (todo): write your description
+        """
         users = psutil.users()
         self.assertNotEqual(users, [])
         for user in users:
@@ -700,6 +959,12 @@ class TestSystemAPIs(unittest.TestCase):
             datetime.datetime.fromtimestamp(user.started)
 
     def test_cpu_stats(self):
+        """
+        Test the cpu stats.
+
+        Args:
+            self: (todo): write your description
+        """
         # Tested more extensively in per-platform test modules.
         infos = psutil.cpu_stats()
         for name in infos._fields:
@@ -711,7 +976,19 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil, "cpu_freq"),
                          "platform not suported")
     def test_cpu_freq(self):
+        """
+        Returns the cpu of the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         def check_ls(ls):
+            """
+            Check that all nthqual.
+
+            Args:
+                ls: (todo): write your description
+            """
             for nt in ls:
                 self.assertLessEqual(nt.current, nt.max)
                 for name in nt._fields:
@@ -730,6 +1007,12 @@ class TestSystemAPIs(unittest.TestCase):
             self.assertEqual(len(ls), psutil.cpu_count())
 
     def test_os_constants(self):
+        """
+        Return a list of constants
+
+        Args:
+            self: (todo): write your description
+        """
         names = ["POSIX", "WINDOWS", "LINUX", "OSX", "FREEBSD", "OPENBSD",
                  "NETBSD", "BSD", "SUNOS"]
         for name in names:
@@ -769,6 +1052,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil, "sensors_temperatures"),
                          "platform not supported")
     def test_sensors_temperatures(self):
+        """
+        Assign sensors to sensors.
+
+        Args:
+            self: (todo): write your description
+        """
         temps = psutil.sensors_temperatures()
         for name, entries in temps.items():
             self.assertIsInstance(name, (str, unicode))
@@ -784,6 +1073,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil, "sensors_battery"),
                          "platform not supported")
     def test_sensors_battery(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         ret = psutil.sensors_battery()
         if ret is None:
             return  # no battery
@@ -800,6 +1095,12 @@ class TestSystemAPIs(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil, "sensors_fans"),
                          "platform not supported")
     def test_sensors_fans(self):
+        """
+        Assign sensors to all sensors.
+
+        Args:
+            self: (todo): write your description
+        """
         fans = psutil.sensors_fans()
         for name, entries in fans.items():
             self.assertIsInstance(name, (str, unicode))

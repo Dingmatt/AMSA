@@ -148,12 +148,24 @@ class ThreadTask(threading.Thread):
     """A thread object used for running process thread tests."""
 
     def __init__(self):
+        """
+        Initialize the thread.
+
+        Args:
+            self: (todo): write your description
+        """
         threading.Thread.__init__(self)
         self._running = False
         self._interval = None
         self._flag = threading.Event()
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         name = self.__class__.__name__
         return '<%s running=%s at %#x>' % (name, self._running, id(self))
 
@@ -168,6 +180,12 @@ class ThreadTask(threading.Thread):
         self._flag.wait()
 
     def run(self):
+        """
+        Starts the main loop.
+
+        Args:
+            self: (todo): write your description
+        """
         self._running = True
         self._flag.set()
         while self._running:
@@ -321,6 +339,11 @@ def reap_children(recursive=False):
 
 if not POSIX:
     def get_kernel_version():
+        """
+        Get the kernel version.
+
+        Args:
+        """
         return ()
 else:
     def get_kernel_version():
@@ -353,9 +376,19 @@ else:
 
 if not WINDOWS:
     def get_winver():
+        """
+        Return the windows windows windows windows.
+
+        Args:
+        """
         raise NotImplementedError("not a Windows OS")
 else:
     def get_winver():
+        """
+        Return the current windows windows.
+
+        Args:
+        """
         wv = sys.getwindowsversion()
         if hasattr(wv, 'service_pack_major'):  # python >= 2.7
             sp = wv.service_pack_major or 0
@@ -383,6 +416,24 @@ class retry(object):
                  interval=0.001,
                  logfun=lambda s: print(s, file=sys.stderr),
                  ):
+        """
+        Initialize the exception.
+
+        Args:
+            self: (todo): write your description
+            exception: (todo): write your description
+            Exception: (todo): write your description
+            timeout: (int): write your description
+            retries: (todo): write your description
+            interval: (int): write your description
+            logfun: (todo): write your description
+            s: (int): write your description
+            print: (todo): write your description
+            s: (int): write your description
+            file: (str): write your description
+            sys: (todo): write your description
+            stderr: (todo): write your description
+        """
         if timeout and retries:
             raise ValueError("timeout and retries args are mutually exclusive")
         self.exception = exception
@@ -392,6 +443,12 @@ class retry(object):
         self.logfun = logfun
 
     def __iter__(self):
+        """
+        Iterate over the results of the query.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.timeout:
             stop_at = time.time() + self.timeout
             while time.time() < stop_at:
@@ -404,12 +461,30 @@ class retry(object):
                 yield
 
     def sleep(self):
+        """
+        Sleep the interval todo.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.interval is not None:
             time.sleep(self.interval)
 
     def __call__(self, fun):
+        """
+        Wrap a function call with a function callable.
+
+        Args:
+            self: (todo): write your description
+            fun: (callable): write your description
+        """
         @functools.wraps(fun)
         def wrapper(*args, **kwargs):
+            """
+            Wrap the given function and raise the exception.
+
+            Args:
+            """
             exc = None
             for _ in self:
                 try:
@@ -544,6 +619,12 @@ def create_exe(outpath, c_code=None):
 class TestCase(unittest.TestCase):
 
     def __str__(self):
+        """
+        Returns a string representation of this class.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s.%s.%s" % (
             self.__class__.__module__, self.__class__.__name__,
             self._testMethodName)
@@ -562,6 +643,12 @@ def retry_before_failing(retries=NO_RETRIES):
 
 
 def run_test_module_by_name(name):
+    """
+    Run a test suite of a module.
+
+    Args:
+        name: (str): write your description
+    """
     # testmodules = [os.path.splitext(x)[0] for x in os.listdir(HERE)
     #                if x.endswith('.py') and x.startswith('test_')]
     name = os.path.splitext(os.path.basename(name))[0]
@@ -575,8 +662,19 @@ def run_test_module_by_name(name):
 def skip_on_access_denied(only_if=None):
     """Decorator to Ignore AccessDenied exceptions."""
     def decorator(fun):
+        """
+        Decorator for decorates the wrapped function is called.
+
+        Args:
+            fun: (todo): write your description
+        """
         @functools.wraps(fun)
         def wrapper(*args, **kwargs):
+            """
+            Decorator to wrap a function.
+
+            Args:
+            """
             try:
                 return fun(*args, **kwargs)
             except psutil.AccessDenied:
@@ -593,8 +691,19 @@ def skip_on_access_denied(only_if=None):
 def skip_on_not_implemented(only_if=None):
     """Decorator to Ignore NotImplementedError exceptions."""
     def decorator(fun):
+        """
+        Decorator to mark functions.
+
+        Args:
+            fun: (todo): write your description
+        """
         @functools.wraps(fun)
         def wrapper(*args, **kwargs):
+            """
+            Decorator to wrap the decorated function.
+
+            Args:
+            """
             try:
                 return fun(*args, **kwargs)
             except NotImplementedError:
@@ -694,6 +803,11 @@ def check_connection_ntuple(conn):
 
 
 def cleanup():
+    """
+    Cleanup all rmp directories.
+
+    Args:
+    """
     for name in os.listdir('.'):
         if name.startswith(TESTFILE_PREFIX):
             try:
@@ -721,6 +835,12 @@ def warn(msg):
 # In Python 3 paths are unicode objects by default.  Surrogate escapes
 # are used to handle non-character data.
 def encode_path(path):
+    """
+    Encode a filesystem path.
+
+    Args:
+        path: (str): write your description
+    """
     if PY3:
         return path.encode(sys.getfilesystemencoding(),
                            errors="surrogateescape")
@@ -729,6 +849,12 @@ def encode_path(path):
 
 
 def decode_path(path):
+    """
+    Decode a filesystem path.
+
+    Args:
+        path: (str): write your description
+    """
     if PY3:
         return path.decode(sys.getfilesystemencoding(),
                            errors="surrogateescape")

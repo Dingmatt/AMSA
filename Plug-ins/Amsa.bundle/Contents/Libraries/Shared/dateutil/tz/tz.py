@@ -37,13 +37,34 @@ class tzutc(datetime.tzinfo):
     This is a tzinfo object that represents the UTC time zone.
     """
     def utcoffset(self, dt):
+        """
+        Returns a new datetime *
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return ZERO
 
     def dst(self, dt):
+        """
+        Returns the dst of the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return ZERO
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        Returns a string representation of the given datetime object.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return "UTC"
 
     def is_ambiguous(self, dt):
@@ -63,6 +84,13 @@ class tzutc(datetime.tzinfo):
         return False
 
     def __eq__(self, other):
+        """
+        Return true if other is a timezone.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, (tzutc, tzoffset)):
             return NotImplemented
 
@@ -72,9 +100,22 @@ class tzutc(datetime.tzinfo):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s()" % self.__class__.__name__
 
     __reduce__ = object.__reduce__
@@ -92,6 +133,14 @@ class tzoffset(datetime.tzinfo):
         as a :py:class:`datetime.timedelta` object.
     """
     def __init__(self, name, offset):
+        """
+        Initialize a timedelta.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            offset: (int): write your description
+        """
         self._name = name
         
         try:
@@ -102,9 +151,23 @@ class tzoffset(datetime.tzinfo):
         self._offset = datetime.timedelta(seconds=offset)
 
     def utcoffset(self, dt):
+        """
+        Convert datetime object to the specified offset.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return self._offset
 
     def dst(self, dt):
+        """
+        Returns the dst of the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return ZERO
 
     def is_ambiguous(self, dt):
@@ -125,9 +188,23 @@ class tzoffset(datetime.tzinfo):
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        Return the timezone name for the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return self._name
 
     def __eq__(self, other):
+        """
+        Returns true if two timeindex objects.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, tzoffset):
             return NotImplemented
 
@@ -136,9 +213,22 @@ class tzoffset(datetime.tzinfo):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s(%s, %s)" % (self.__class__.__name__,
                                repr(self._name),
                                int(_total_seconds(self._offset)))
@@ -151,6 +241,12 @@ class tzlocal(_tzinfo):
     A :class:`tzinfo` subclass built around the ``time`` timezone functions.
     """
     def __init__(self):
+        """
+        Initialize datetime.
+
+        Args:
+            self: (todo): write your description
+        """
         super(tzlocal, self).__init__()
 
         self._std_offset = datetime.timedelta(seconds=-time.timezone)
@@ -163,6 +259,13 @@ class tzlocal(_tzinfo):
         self._hasdst = bool(self._dst_saved)
 
     def utcoffset(self, dt):
+        """
+        Set the utc offset from utc offset.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if dt is None and self._hasdst:
             return None
 
@@ -172,6 +275,13 @@ class tzlocal(_tzinfo):
             return self._std_offset
 
     def dst(self, dt):
+        """
+        Return the offset in dst.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if dt is None and self._hasdst:
             return None
 
@@ -182,6 +292,13 @@ class tzlocal(_tzinfo):
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        Returns a datetime object for the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return time.tzname[self._isdst(dt)]
 
     def is_ambiguous(self, dt):
@@ -203,10 +320,25 @@ class tzlocal(_tzinfo):
                 (naive_dst != self._naive_is_dst(dt - self._dst_saved)))
 
     def _naive_is_dst(self, dt):
+        """
+        Determine if the given a datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         timestamp = _datetime_to_timestamp(dt)
         return time.localtime(timestamp + time.timezone).tm_isdst
 
     def _isdst(self, dt, fold_naive=True):
+        """
+        Checks if dt is within dt.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+            fold_naive: (todo): write your description
+        """
         # We can't use mktime here. It is unstable when deciding if
         # the hour near to a change is DST or not.
         #
@@ -247,6 +379,13 @@ class tzlocal(_tzinfo):
         return dstval
 
     def __eq__(self, other):
+        """
+        Determine if two timeindex objects are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, tzlocal):
             return NotImplemented
 
@@ -256,9 +395,22 @@ class tzlocal(_tzinfo):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s()" % self.__class__.__name__
 
     __reduce__ = object.__reduce__
@@ -269,10 +421,22 @@ class _ttinfo(object):
                  "isstd", "isgmt", "dstoffset"]
 
     def __init__(self):
+        """
+        Initialize this class s attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         for attr in self.__slots__:
             setattr(self, attr, None)
 
     def __repr__(self):
+        """
+        Return a string representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         l = []
         for attr in self.__slots__:
             value = getattr(self, attr)
@@ -281,6 +445,13 @@ class _ttinfo(object):
         return "%s(%s)" % (self.__class__.__name__, ", ".join(l))
 
     def __eq__(self, other):
+        """
+        Determine if two values are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, _ttinfo):
             return NotImplemented
 
@@ -295,15 +466,35 @@ class _ttinfo(object):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __getstate__(self):
+        """
+        Get the state of the state.
+
+        Args:
+            self: (todo): write your description
+        """
         state = {}
         for name in self.__slots__:
             state[name] = getattr(self, name, None)
         return state
 
     def __setstate__(self, state):
+        """
+        Set the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         for name in self.__slots__:
             if name in state:
                 setattr(self, name, state[name])
@@ -318,6 +509,12 @@ class _tzfile(object):
              'ttinfo_std', 'ttinfo_dst', 'ttinfo_before', 'ttinfo_first']
 
     def __init__(self, **kwargs):
+        """
+        Initialize an attribute.
+
+        Args:
+            self: (todo): write your description
+        """
         for attr in self.attrs:
             setattr(self, attr, kwargs.get(attr, None))
 
@@ -345,6 +542,14 @@ class tzfile(_tzinfo):
     """
 
     def __init__(self, fileobj, filename=None):
+        """
+        Initialize a datetime object.
+
+        Args:
+            self: (todo): write your description
+            fileobj: (str): write your description
+            filename: (str): write your description
+        """
         super(tzfile, self).__init__()
 
         file_opened_here = False
@@ -375,6 +580,13 @@ class tzfile(_tzinfo):
             setattr(self, '_' + attr, getattr(tzobj, attr))
 
     def _read_tzfile(self, fileobj):
+        """
+        Read a tzfile object.
+
+        Args:
+            self: (str): write your description
+            fileobj: (todo): write your description
+        """
         out = _tzfile()
 
         # From tzfile(5):
@@ -594,6 +806,13 @@ class tzfile(_tzinfo):
         return out
 
     def _find_last_transition(self, dt):
+        """
+        Find the last occurrence of a date.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         # If there's no list, there are no transitions to find
         if not self._trans_list:
             return None
@@ -608,6 +827,13 @@ class tzfile(_tzinfo):
         return idx - 1
 
     def _get_ttinfo(self, idx):
+        """
+        Return the instance of the transaction.
+
+        Args:
+            self: (todo): write your description
+            idx: (int): write your description
+        """
         # For no list or after the last transition, default to _ttinfo_std
         if idx is None or (idx + 1) == len(self._trans_list):
             return self._ttinfo_std
@@ -619,6 +845,13 @@ class tzfile(_tzinfo):
         return self._trans_idx[idx]
 
     def _find_ttinfo(self, dt):
+        """
+        Find the timezone information for a given dtinfo.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         idx = self._resolve_ambiguous_time(dt)
 
         return self._get_ttinfo(idx)
@@ -653,6 +886,13 @@ class tzfile(_tzinfo):
         return timestamp < tt + od
 
     def _resolve_ambiguous_time(self, dt):
+        """
+        Resolve time offset of the offset.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         idx = self._find_last_transition(dt)
 
         # If we have no transitions, return the index
@@ -666,6 +906,13 @@ class tzfile(_tzinfo):
         return idx - idx_offset
 
     def utcoffset(self, dt):
+        """
+        Returns the utc time of utc.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if dt is None:
             return None
 
@@ -675,6 +922,13 @@ class tzfile(_tzinfo):
         return self._find_ttinfo(dt).delta
 
     def dst(self, dt):
+        """
+        Return dstoffset in dstoffset.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if dt is None:
             return None
 
@@ -692,11 +946,25 @@ class tzfile(_tzinfo):
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        Return the tzinfo object.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if not self._ttinfo_std or dt is None:
             return None
         return self._find_ttinfo(dt).abbr
 
     def __eq__(self, other):
+        """
+        Returns true if two time series are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, tzfile):
             return NotImplemented
         return (self._trans_list == other._trans_list and
@@ -706,15 +974,41 @@ class tzfile(_tzinfo):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Returns true if self is a and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not (self == other)
 
     def __repr__(self):
+        """
+        Return a repr string representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s(%s)" % (self.__class__.__name__, repr(self._filename))
 
     def __reduce__(self):
+        """
+        Reduce the stream.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__reduce_ex__(None)
 
     def __reduce_ex__(self, protocol):
+        """
+        Reduce the given protocol.
+
+        Args:
+            self: (todo): write your description
+            protocol: (todo): write your description
+        """
         return (self.__class__, (None, self._filename), self.__dict__)
 
 
@@ -795,6 +1089,18 @@ class tzrange(tzrangebase):
     def __init__(self, stdabbr, stdoffset=None,
                  dstabbr=None, dstoffset=None,
                  start=None, end=None):
+        """
+        Initialize standard day.
+
+        Args:
+            self: (todo): write your description
+            stdabbr: (todo): write your description
+            stdoffset: (int): write your description
+            dstabbr: (todo): write your description
+            dstoffset: (int): write your description
+            start: (int): write your description
+            end: (int): write your description
+        """
 
         global relativedelta
         from dateutil import relativedelta
@@ -864,6 +1170,13 @@ class tzrange(tzrangebase):
         return (start, end)
 
     def __eq__(self, other):
+        """
+        Determine if two timeindex objects are equal.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, tzrange):
             return NotImplemented
 
@@ -876,6 +1189,12 @@ class tzrange(tzrangebase):
 
     @property
     def _dst_base_offset(self):
+        """
+        Return the offset of the dst.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._dst_base_offset_
 
 
@@ -909,6 +1228,14 @@ class tzstr(tzrange):
         https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
     """
     def __init__(self, s, posix_offset=False):
+        """
+        Initialize date.
+
+        Args:
+            self: (todo): write your description
+            s: (int): write your description
+            posix_offset: (int): write your description
+        """
         global parser
         from dateutil import parser
 
@@ -941,6 +1268,14 @@ class tzstr(tzrange):
         self.hasdst = bool(self._start_delta)
 
     def _delta(self, x, isend=0):
+        """
+        Return a timedelta object.
+
+        Args:
+            self: (todo): write your description
+            x: (array): write your description
+            isend: (todo): write your description
+        """
         from dateutil import relativedelta
         kwargs = {}
         if x.month is not None:
@@ -982,12 +1317,29 @@ class tzstr(tzrange):
         return relativedelta.relativedelta(**kwargs)
 
     def __repr__(self):
+        """
+        Return a repr representation of - repr string.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s(%s)" % (self.__class__.__name__, repr(self._s))
 
 
 class _tzicalvtzcomp(object):
     def __init__(self, tzoffsetfrom, tzoffsetto, isdst,
                  tzname=None, rrule=None):
+        """
+        Create a new timezone instance.
+
+        Args:
+            self: (todo): write your description
+            tzoffsetfrom: (int): write your description
+            tzoffsetto: (int): write your description
+            isdst: (todo): write your description
+            tzname: (str): write your description
+            rrule: (str): write your description
+        """
         self.tzoffsetfrom = datetime.timedelta(seconds=tzoffsetfrom)
         self.tzoffsetto = datetime.timedelta(seconds=tzoffsetto)
         self.tzoffsetdiff = self.tzoffsetto - self.tzoffsetfrom
@@ -998,6 +1350,14 @@ class _tzicalvtzcomp(object):
 
 class _tzicalvtz(_tzinfo):
     def __init__(self, tzid, comps=[]):
+        """
+        Initialize the cache.
+
+        Args:
+            self: (todo): write your description
+            tzid: (str): write your description
+            comps: (todo): write your description
+        """
         super(_tzicalvtz, self).__init__()
 
         self._tzid = tzid
@@ -1006,6 +1366,13 @@ class _tzicalvtz(_tzinfo):
         self._cachecomp = []
 
     def _find_comp(self, dt):
+        """
+        Find the first occurrence of the datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (str): write your description
+        """
         if len(self._comps) == 1:
             return self._comps[0]
 
@@ -1049,6 +1416,14 @@ class _tzicalvtz(_tzinfo):
         return lastcomp
 
     def _find_compdt(self, comp, dt):
+        """
+        Find the difference between the given datetime.
+
+        Args:
+            self: (todo): write your description
+            comp: (str): write your description
+            dt: (todo): write your description
+        """
         if comp.tzoffsetdiff < ZERO and self._fold(dt):
             dt -= comp.tzoffsetdiff
 
@@ -1057,12 +1432,26 @@ class _tzicalvtz(_tzinfo):
         return compdt
 
     def utcoffset(self, dt):
+        """
+        Return a date to utc.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         if dt is None:
             return None
 
         return self._find_comp(dt).tzoffsetto
 
     def dst(self, dt):
+        """
+        Return a datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         comp = self._find_comp(dt)
         if comp.isdst:
             return comp.tzoffsetdiff
@@ -1071,9 +1460,22 @@ class _tzicalvtz(_tzinfo):
 
     @tzname_in_python2
     def tzname(self, dt):
+        """
+        Return the timezone name for the given datetime.
+
+        Args:
+            self: (todo): write your description
+            dt: (todo): write your description
+        """
         return self._find_comp(dt).tzname
 
     def __repr__(self):
+        """
+        Return a human - readable representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return "<tzicalvtz %s>" % repr(self._tzid)
 
     __reduce__ = object.__reduce__
@@ -1091,6 +1493,13 @@ class tzical(object):
     .. _`RFC 2445`: https://www.ietf.org/rfc/rfc2445.txt
     """
     def __init__(self, fileobj):
+        """
+        Initialize the rrule object.
+
+        Args:
+            self: (todo): write your description
+            fileobj: (str): write your description
+        """
         global rrule
         from dateutil import rrule
 
@@ -1142,6 +1551,13 @@ class tzical(object):
         return self._vtz.get(tzid)
 
     def _parse_offset(self, s):
+        """
+        Parses offset to the string.
+
+        Args:
+            self: (todo): write your description
+            s: (str): write your description
+        """
         s = s.strip()
         if not s:
             raise ValueError("empty offset")
@@ -1158,6 +1574,13 @@ class tzical(object):
             raise ValueError("invalid offset: " + s)
 
     def _parse_rfc(self, s):
+        """
+        Parse a rfc 2822 formatted string.
+
+        Args:
+            self: (todo): write your description
+            s: (str): write your description
+        """
         lines = s.splitlines()
         if not lines:
             raise ValueError("empty string")
@@ -1276,6 +1699,12 @@ class tzical(object):
                 invtz = True
 
     def __repr__(self):
+        """
+        Return a repr representation of - repr string.
+
+        Args:
+            self: (todo): write your description
+        """
         return "%s(%s)" % (self.__class__.__name__, repr(self._s))
 
 if sys.platform != "win32":
@@ -1290,6 +1719,12 @@ else:
 
 
 def gettz(name=None):
+    """
+    Return the timezone object.
+
+    Args:
+        name: (str): write your description
+    """
     tz = None
     if not name:
         try:
@@ -1453,12 +1888,30 @@ class _ContextWrapper(object):
     with statement.
     """
     def __init__(self, context):
+        """
+        Initialize the context.
+
+        Args:
+            self: (todo): write your description
+            context: (str): write your description
+        """
         self.context = context
 
     def __enter__(self):
+        """
+        Returns the current context.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.context
 
     def __exit__(*args, **kwargs):
+        """
+        Wraps wrapper.
+
+        Args:
+        """
         pass
 
 # vim:ts=4:sw=4:et

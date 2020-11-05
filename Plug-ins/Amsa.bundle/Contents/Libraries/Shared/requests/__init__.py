@@ -47,6 +47,13 @@ from .exceptions import RequestsDependencyWarning
 
 
 def check_compatibility(urllib3_version, chardet_version):
+    """
+    Checks that the major major minor version.
+
+    Args:
+        urllib3_version: (str): write your description
+        chardet_version: (str): write your description
+    """
     urllib3_version = urllib3_version.split('.')
     assert urllib3_version != ['dev']  # Verify urllib3 isn't installed from git.
 
@@ -113,6 +120,13 @@ try:  # Python 2.7+
 except ImportError:
     class NullHandler(logging.Handler):
         def emit(self, record):
+            """
+            Emit a record.
+
+            Args:
+                self: (todo): write your description
+                record: (todo): write your description
+            """
             pass
 
 logging.getLogger(__name__).addHandler(NullHandler())

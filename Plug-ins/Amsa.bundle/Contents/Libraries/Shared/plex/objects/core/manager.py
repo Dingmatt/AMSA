@@ -22,6 +22,12 @@ class ObjectManager(object):
 
     @classmethod
     def discover(cls):
+        """
+        Discover all available directories.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls.objects_dir = os.path.join(cls.base_dir, 'plex', 'objects')
 
         # Walk plex/objects directory
@@ -53,6 +59,12 @@ class ObjectManager(object):
 
     @classmethod
     def load(cls):
+        """
+        Recursively load all classes.
+
+        Args:
+            cls: (todo): write your description
+        """
         for path, name in cls.discover():
             try:
                 mod = __import__(name, fromlist=['*'])
@@ -76,6 +88,12 @@ class ObjectManager(object):
 
     @classmethod
     def construct(cls):
+        """
+        Construct all objects from the objects.
+
+        Args:
+            cls: (todo): write your description
+        """
         log.debug('Loading descriptors...')
 
         cls.base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../', '..'))

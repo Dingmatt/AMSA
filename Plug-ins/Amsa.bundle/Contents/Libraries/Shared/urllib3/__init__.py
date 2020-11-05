@@ -28,6 +28,13 @@ try:  # Python 2.7+
 except ImportError:
     class NullHandler(logging.Handler):
         def emit(self, record):
+            """
+            Emit a record.
+
+            Args:
+                self: (todo): write your description
+                record: (todo): write your description
+            """
             pass
 
 __author__ = 'Andrey Petrov (andrey.petrov@shazow.net)'

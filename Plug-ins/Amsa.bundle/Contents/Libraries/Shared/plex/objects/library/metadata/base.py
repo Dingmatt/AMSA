@@ -28,6 +28,13 @@ class Metadata(Descriptor):
 
     @staticmethod
     def construct_section(client, node):
+        """
+        Construct a section for a node.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'key': 'librarySectionID',
             'uuid': 'librarySectionUUID',

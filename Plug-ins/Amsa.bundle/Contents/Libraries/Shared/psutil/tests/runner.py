@@ -14,6 +14,11 @@ from psutil.tests import VERBOSITY
 
 
 def get_suite():
+    """
+    Get test suite of modules.
+
+    Args:
+    """
     HERE = os.path.abspath(os.path.dirname(__file__))
     testmodules = [os.path.splitext(x)[0] for x in os.listdir(HERE)
                    if x.endswith('.py') and x.startswith('test_') and not
@@ -27,6 +32,11 @@ def get_suite():
 
 
 def main():
+    """
+    Main entry point.
+
+    Args:
+    """
     # run tests
     result = unittest.TextTestRunner(verbosity=VERBOSITY).run(get_suite())
     success = result.wasSuccessful()

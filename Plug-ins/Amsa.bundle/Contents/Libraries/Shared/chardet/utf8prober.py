@@ -36,25 +36,56 @@ class UTF8Prober(CharSetProber):
     ONE_CHAR_PROB = 0.5
 
     def __init__(self):
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+        """
         super(UTF8Prober, self).__init__()
         self.coding_sm = CodingStateMachine(UTF8_SM_MODEL)
         self._num_mb_chars = None
         self.reset()
 
     def reset(self):
+        """
+        Reset the stream.
+
+        Args:
+            self: (todo): write your description
+        """
         super(UTF8Prober, self).reset()
         self.coding_sm.reset()
         self._num_mb_chars = 0
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "utf-8"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return ""
 
     def feed(self, byte_str):
+        """
+        Feeds the next byte.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         for c in byte_str:
             coding_state = self.coding_sm.next_state(c)
             if coding_state == MachineState.ERROR:
@@ -74,6 +105,12 @@ class UTF8Prober(CharSetProber):
         return self.state
 
     def get_confidence(self):
+        """
+        Get confidence confidence interval.
+
+        Args:
+            self: (todo): write your description
+        """
         unlike = 0.99
         if self._num_mb_chars < 6:
             unlike *= self.ONE_CHAR_PROB ** self._num_mb_chars

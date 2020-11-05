@@ -152,6 +152,12 @@ class HebrewProber(CharSetProber):
     LOGICAL_HEBREW_NAME = "windows-1255"
 
     def __init__(self):
+        """
+        Initialize all runs.
+
+        Args:
+            self: (todo): write your description
+        """
         super(HebrewProber, self).__init__()
         self._final_char_logical_score = None
         self._final_char_visual_score = None
@@ -162,6 +168,12 @@ class HebrewProber(CharSetProber):
         self.reset()
 
     def reset(self):
+        """
+        Reset the score.
+
+        Args:
+            self: (todo): write your description
+        """
         self._final_char_logical_score = 0
         self._final_char_visual_score = 0
         # The two last characters seen in the previous buffer,
@@ -172,14 +184,36 @@ class HebrewProber(CharSetProber):
         # These probers are owned by the group prober.
 
     def set_model_probers(self, logicalProber, visualProber):
+        """
+        Set the model abstract probabilities of model.
+
+        Args:
+            self: (todo): write your description
+            logicalProber: (todo): write your description
+            visualProber: (todo): write your description
+        """
         self._logical_prober = logicalProber
         self._visual_prober = visualProber
 
     def is_final(self, c):
+        """
+        Returns true if the image is final finalization.
+
+        Args:
+            self: (todo): write your description
+            c: (array): write your description
+        """
         return c in [self.FINAL_KAF, self.FINAL_MEM, self.FINAL_NUN,
                      self.FINAL_PE, self.FINAL_TSADI]
 
     def is_non_final(self, c):
+        """
+        Return true if this is a non - non - zero.
+
+        Args:
+            self: (todo): write your description
+            c: (todo): write your description
+        """
         # The normal Tsadi is not a good Non-Final letter due to words like
         # 'lechotet' (to chat) containing an apostrophe after the tsadi. This
         # apostrophe is converted to a space in FilterWithoutEnglishLetters
@@ -194,6 +228,13 @@ class HebrewProber(CharSetProber):
                      self.NORMAL_NUN, self.NORMAL_PE]
 
     def feed(self, byte_str):
+        """
+        Feed the score.
+
+        Args:
+            self: (todo): write your description
+            byte_str: (str): write your description
+        """
         # Final letter analysis for logical-visual decision.
         # Look for evidence that the received buffer is either logical Hebrew
         # or visual Hebrew.
@@ -254,6 +295,12 @@ class HebrewProber(CharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Returns the name of the score.
+
+        Args:
+            self: (todo): write your description
+        """
         # Make the decision: is it Logical or Visual?
         # If the final letter score distance is dominant enough, rely on it.
         finalsub = self._final_char_logical_score - self._final_char_visual_score
@@ -281,10 +328,22 @@ class HebrewProber(CharSetProber):
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return 'Hebrew'
 
     @property
     def state(self):
+        """
+        Return the state.
+
+        Args:
+            self: (todo): write your description
+        """
         # Remain active as long as any of the model probers are active.
         if (self._logical_prober.state == ProbingState.NOT_ME) and \
            (self._visual_prober.state == ProbingState.NOT_ME):

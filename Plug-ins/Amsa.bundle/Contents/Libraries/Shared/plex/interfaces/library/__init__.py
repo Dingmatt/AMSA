@@ -6,6 +6,13 @@ class LibraryInterface(Interface):
     path = 'library'
 
     def metadata(self, rating_key):
+        """
+        Get the metadata dictionary.
+
+        Args:
+            self: (todo): write your description
+            rating_key: (str): write your description
+        """
         response = self.http.get('metadata', rating_key)
 
         return self.parse(response, idict({
@@ -28,6 +35,12 @@ class LibraryInterface(Interface):
         }))
 
     def on_deck(self):
+        """
+        The deck
+
+        Args:
+            self: (todo): write your description
+        """
         response = self.http.get('onDeck')
 
         return self.parse(response, idict({
@@ -40,6 +53,12 @@ class LibraryInterface(Interface):
         }))
 
     def recently_added(self):
+        """
+        Returns a dictionary of the most recent recent recent.
+
+        Args:
+            self: (todo): write your description
+        """
         response = self.http.get('recentlyAdded')
 
         return self.parse(response, idict({
@@ -55,6 +74,12 @@ class LibraryInterface(Interface):
         }))
 
     def sections(self):
+        """
+        Returns a dictionary.
+
+        Args:
+            self: (todo): write your description
+        """
         response = self.http.get('sections')
 
         return self.parse(response, idict({
@@ -70,6 +95,14 @@ class LibraryInterface(Interface):
     #
 
     def rate(self, key, rating):
+        """
+        The rate. rate
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            rating: (int): write your description
+        """
         response = self.http.get(
             '/:/rate',
             query={
@@ -82,6 +115,13 @@ class LibraryInterface(Interface):
         return response.status_code == 200
 
     def scrobble(self, key):
+        """
+        Retrieve a scrobble
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         response = self.http.get(
             '/:/scrobble',
             query={
@@ -93,6 +133,13 @@ class LibraryInterface(Interface):
         return response.status_code == 200
 
     def unscrobble(self, key):
+        """
+        Removes a scrobble
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         response = self.http.get(
             '/:/unscrobble',
             query={

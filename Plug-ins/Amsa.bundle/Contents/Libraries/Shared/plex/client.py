@@ -16,6 +16,12 @@ class PlexClient(object):
     __interfaces = None
 
     def __init__(self):
+        """
+        Initialize the configuration.
+
+        Args:
+            self: (todo): write your description
+        """
         # Construct interfaces
         self.http = HttpClient(self)
         self.configuration = ConfigurationManager()
@@ -27,12 +33,25 @@ class PlexClient(object):
 
     @property
     def base_url(self):
+        """
+        The base url.
+
+        Args:
+            self: (todo): write your description
+        """
         host = self.configuration.get('server.host', '127.0.0.1')
         port = self.configuration.get('server.port', 32400)
 
         return 'http://%s:%s' % (host, port)
 
     def __getitem__(self, path):
+        """
+        Gets an item from a path.
+
+        Args:
+            self: (todo): write your description
+            path: (str): write your description
+        """
         parts = path.strip('/').split('/')
 
         cur = self.__interfaces
@@ -66,6 +85,13 @@ class PlexClient(object):
         return cur
 
     def __getattr__(self, name):
+        """
+        Returns an attribute of an attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         interface = self.__interfaces.get(None)
 
         if not interface:
@@ -77,12 +103,25 @@ class PlexClient(object):
 class PlexMeta(type):
     @property
     def client(cls):
+        """
+        Return a : class.
+
+        Args:
+            cls: (todo): write your description
+        """
         if cls._client is None:
             cls.construct()
 
         return cls._client
 
     def __getattr__(self, name):
+        """
+        Returns the attribute of an attribute.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         if has_attribute(self, name):
             return super(PlexMeta, self).__getattribute__(name)
 
@@ -92,6 +131,14 @@ class PlexMeta(type):
         return getattr(self.client, name)
 
     def __setattr__(self, name, value):
+        """
+        Sets the value of an object.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            value: (todo): write your description
+        """
         if has_attribute(self, name):
             return super(PlexMeta, self).__setattr__(name, value)
 
@@ -101,6 +148,13 @@ class PlexMeta(type):
         setattr(self.client, name, value)
 
     def __getitem__(self, key):
+        """
+        Returns the value from the key.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         if self.client is None:
             self.construct()
 
@@ -113,4 +167,10 @@ class Plex(object):
 
     @classmethod
     def construct(cls):
+        """
+        Construct a new client.
+
+        Args:
+            cls: (todo): write your description
+        """
         cls._client = PlexClient()

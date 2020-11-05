@@ -5,6 +5,14 @@ from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 
 def ParseNoFromSeason(season, episode, default):
+    """
+    Convert season to episode.
+
+    Args:
+        season: (todo): write your description
+        episode: (todo): write your description
+        default: (todo): write your description
+    """
     #if season == 0 and episode == 0:
     #    return "S" + str(default).zfill(2) + "E00"
     #else:
@@ -12,6 +20,13 @@ def ParseNoFromSeason(season, episode, default):
         
 class TvDB(constants.Series):
     def __init__(self, id):
+        """
+        Initialize a github service.
+
+        Args:
+            self: (todo): write your description
+            id: (str): write your description
+        """
         logging.Log_Milestone("TvDB" + "_" + id)
         self.ID = id
         
@@ -147,6 +162,14 @@ class TvDB(constants.Series):
         
     class Episode(constants.Episode):
         def __init__(self, data, id):
+            """
+            Initialize text.
+
+            Args:
+                self: (todo): write your description
+                data: (todo): write your description
+                id: (str): write your description
+            """
             ##--------------------------------Title--------------------------------##
             if GetElementText(data, "EpisodeName"):
                 self.Title = str(GetElementText(data, "EpisodeName")).encode('utf-8').strip().translate(constants.ReplaceChars)

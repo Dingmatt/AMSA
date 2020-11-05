@@ -20,10 +20,23 @@ class Album(Directory, Metadata, RateMixin):
     viewed_track_count = Property('viewedLeafCount', int)
 
     def children(self):
+        """
+        Return the child node
+
+        Args:
+            self: (todo): write your description
+        """
         return self.client['library/metadata'].children(self.rating_key)
 
     @staticmethod
     def construct_artist(client, node):
+        """
+        Construct a artist object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'key':          'parentKey',
             'ratingKey':    'parentRatingKey',
@@ -43,6 +56,13 @@ class AlbumChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_artist(client, node):
+        """
+        Construct a artist object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'title': 'grandparentTitle'
         }
@@ -51,6 +71,13 @@ class AlbumChildrenContainer(ChildrenContainer):
 
     @staticmethod
     def construct_album(client, node):
+        """
+        Construct an album.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         attribute_map = {
             'index': 'parentIndex',
 
@@ -61,6 +88,12 @@ class AlbumChildrenContainer(ChildrenContainer):
         return Album.construct(client, node, attribute_map, child=True)
 
     def __iter__(self):
+        """
+        Iterate over artist s artist.
+
+        Args:
+            self: (todo): write your description
+        """
         for item in super(ChildrenContainer, self).__iter__():
             item.artist = self.artist
             item.album = self.album

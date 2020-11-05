@@ -32,6 +32,12 @@ from .mbcssm import GB2312_SM_MODEL
 
 class GB2312Prober(MultiByteCharSetProber):
     def __init__(self):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(GB2312Prober, self).__init__()
         self.coding_sm = CodingStateMachine(GB2312_SM_MODEL)
         self.distribution_analyzer = GB2312DistributionAnalysis()
@@ -39,8 +45,20 @@ class GB2312Prober(MultiByteCharSetProber):
 
     @property
     def charset_name(self):
+        """
+        Return the name of the name.
+
+        Args:
+            self: (todo): write your description
+        """
         return "GB2312"
 
     @property
     def language(self):
+        """
+        Returns the language.
+
+        Args:
+            self: (todo): write your description
+        """
         return "Chinese"

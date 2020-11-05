@@ -9,6 +9,13 @@ class SessionMixin(DescriptorMixin):
 
     @staticmethod
     def construct_session(client, node):
+        """
+        Construct a session object.
+
+        Args:
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return Session.construct(client, node, child=True)
 
 
@@ -21,12 +28,36 @@ class Session(Descriptor):
 
     @classmethod
     def construct_user(cls, client, node):
+        """
+        Construct a user object.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return User.construct(client, cls.helpers.find(node, 'User'), child=True)
 
     @classmethod
     def construct_player(cls, client, node):
+        """
+        Construct a node object : class.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return Player.construct(client, cls.helpers.find(node, 'Player'), child=True)
 
     @classmethod
     def construct_transcode_session(cls, client, node):
+        """
+        Construct a transcode.
+
+        Args:
+            cls: (todo): write your description
+            client: (todo): write your description
+            node: (todo): write your description
+        """
         return TranscodeSession.construct(client, cls.helpers.find(node, 'TranscodeSession'), child=True)

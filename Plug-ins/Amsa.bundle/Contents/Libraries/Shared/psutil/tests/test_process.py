@@ -86,12 +86,30 @@ class TestProcess(unittest.TestCase):
     """Tests for psutil.Process class."""
 
     def setUp(self):
+        """
+        Èi̇¥è¯¢åįĸ¹è½¬æŀ
+
+        Args:
+            self: (todo): write your description
+        """
         safe_rmpath(TESTFN)
 
     def tearDown(self):
+        """
+        Tear down all children.
+
+        Args:
+            self: (todo): write your description
+        """
         reap_children()
 
     def test_pid(self):
+        """
+        Perform pid pid pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         self.assertEqual(p.pid, os.getpid())
         sproc = get_test_subprocess()
@@ -100,6 +118,12 @@ class TestProcess(unittest.TestCase):
             p.pid = 33
 
     def test_kill(self):
+        """
+        Kills a process.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         test_pid = sproc.pid
         p = psutil.Process(test_pid)
@@ -110,6 +134,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(sig, -signal.SIGKILL)
 
     def test_terminate(self):
+        """
+        Terminate the pid of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         test_pid = sproc.pid
         p = psutil.Process(test_pid)
@@ -120,6 +150,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(sig, -signal.SIGTERM)
 
     def test_send_signal(self):
+        """
+        Send signal to the signal.
+
+        Args:
+            self: (todo): write your description
+        """
         sig = signal.SIGKILL if POSIX else signal.SIGTERM
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
@@ -152,6 +188,12 @@ class TestProcess(unittest.TestCase):
                 self.assertRaises(ValueError, p.send_signal, signal.SIGTERM)
 
     def test_wait(self):
+        """
+        Waits a subprocess.
+
+        Args:
+            self: (todo): write your description
+        """
         # check exit code signal
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
@@ -201,6 +243,12 @@ class TestProcess(unittest.TestCase):
     # XXX why is this skipped on Windows?
     @unittest.skipUnless(POSIX, 'skipped on Windows')
     def test_wait_non_children(self):
+        """
+        Wait for children of the children.
+
+        Args:
+            self: (todo): write your description
+        """
         # test wait() against processes which are not our children
         code = "import sys;"
         code += "from subprocess import Popen, PIPE;"
@@ -220,6 +268,12 @@ class TestProcess(unittest.TestCase):
             reap_children(recursive=True)
 
     def test_wait_timeout_0(self):
+        """
+        Waits for the process to complete.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         self.assertRaises(psutil.TimeoutExpired, p.wait, 0)
@@ -240,6 +294,12 @@ class TestProcess(unittest.TestCase):
         self.assertFalse(p.is_running())
 
     def test_cpu_percent(self):
+        """
+        Reset the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         p.cpu_percent(interval=0.001)
         p.cpu_percent(interval=0.001)
@@ -255,6 +315,12 @@ class TestProcess(unittest.TestCase):
             p.cpu_percent(interval=-1)
 
     def test_cpu_times(self):
+        """
+        This function to see : return the total number of the virtual machine.
+
+        Args:
+            self: (todo): write your description
+        """
         times = psutil.Process().cpu_times()
         assert (times.user > 0.0) or (times.system > 0.0), times
         assert (times.children_user >= 0.0), times
@@ -272,6 +338,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(sys.version_info > (2, 6, 1) and not OSX,
                          'os.times() broken on OSX + PY2.6.1')
     def test_cpu_times_2(self):
+        """
+        Determine the cpu times in the cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         user_time, kernel_time = psutil.Process().cpu_times()[:2]
         utime, ktime = os.times()[:2]
 
@@ -287,6 +359,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil.Process, "cpu_num"),
                          "platform not supported")
     def test_cpu_num(self):
+        """
+        Returns the cpu number.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         num = p.cpu_num()
         self.assertGreaterEqual(num, 0)
@@ -295,6 +373,12 @@ class TestProcess(unittest.TestCase):
         self.assertIn(p.cpu_num(), range(psutil.cpu_count()))
 
     def test_create_time(self):
+        """
+        Create a new test record.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         now = time.time()
         p = psutil.Process(sproc.pid)
@@ -314,6 +398,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(POSIX, 'POSIX only')
     @unittest.skipIf(TRAVIS, 'not reliable on TRAVIS')
     def test_terminal(self):
+        """
+        Test if terminal.
+
+        Args:
+            self: (todo): write your description
+        """
         terminal = psutil.Process().terminal()
         if sys.stdin.isatty() or sys.stdout.isatty():
             tty = os.path.realpath(sh('tty'))
@@ -325,6 +415,12 @@ class TestProcess(unittest.TestCase):
                          'platform not supported')
     @skip_on_not_implemented(only_if=LINUX)
     def test_io_counters(self):
+        """
+        Test for the i / o counters.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
 
         # test reads
@@ -370,6 +466,12 @@ class TestProcess(unittest.TestCase):
                          'platform not supported')
     @unittest.skipIf(LINUX and TRAVIS, "unknown failure on travis")
     def test_ionice(self):
+        """
+        Assign the ticker for the ticker
+
+        Args:
+            self: (todo): write your description
+        """
         if LINUX:
             from psutil import (IOPRIO_CLASS_NONE, IOPRIO_CLASS_RT,
                                 IOPRIO_CLASS_BE, IOPRIO_CLASS_IDLE)
@@ -433,6 +535,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_get(self):
+        """
+        Test for rlimit rlimit.
+
+        Args:
+            self: (todo): write your description
+        """
         import resource
         p = psutil.Process(os.getpid())
         names = [x for x in dir(psutil) if x.startswith('RLIMIT')]
@@ -456,6 +564,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_set(self):
+        """
+        Test for pid pid pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         p.rlimit(psutil.RLIMIT_NOFILE, (5, 5))
@@ -469,6 +583,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit(self):
+        """
+        Test if you have_rlimit
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         soft, hard = p.rlimit(psutil.RLIMIT_FSIZE)
         try:
@@ -488,6 +608,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_infinity(self):
+        """
+        Test if the softutil.
+
+        Args:
+            self: (todo): write your description
+        """
         # First set a limit, then re-set it by specifying INFINITY
         # and assume we overridden the previous limit.
         p = psutil.Process()
@@ -503,6 +629,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(LINUX and RLIMIT_SUPPORT, "LINUX >= 2.6.36 only")
     def test_rlimit_infinity_value(self):
+        """
+        Test if the rlimit limit.
+
+        Args:
+            self: (todo): write your description
+        """
         # RLIMIT_FSIZE should be RLIM_INFINITY, which will be a really
         # big number on a platform with large file support.  On these
         # platforms we need to test that the get/setrlimit functions
@@ -514,6 +646,12 @@ class TestProcess(unittest.TestCase):
         p.rlimit(psutil.RLIMIT_FSIZE, (soft, hard))
 
     def test_num_threads(self):
+        """
+        Determine the number of threads.
+
+        Args:
+            self: (todo): write your description
+        """
         # on certain platforms such as Linux we might test for exact
         # thread number, since we always have with 1 thread per process,
         # but this does not apply across all platforms (OSX, Windows)
@@ -536,11 +674,23 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(WINDOWS, 'WINDOWS only')
     def test_num_handles(self):
+        """
+        Test if num_num_handles.
+
+        Args:
+            self: (todo): write your description
+        """
         # a better test is done later into test/_windows.py
         p = psutil.Process()
         self.assertGreater(p.num_handles(), 0)
 
     def test_threads(self):
+        """
+        Test for threads. threads.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         if OPENBSD:
             try:
@@ -571,6 +721,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipIf(OSX and TRAVIS, "fails on TRAVIS + OSX")
     @skip_on_access_denied(only_if=OSX)
     def test_threads_2(self):
+        """
+        Test if the number of threads have been modified.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         if OPENBSD:
@@ -587,6 +743,12 @@ class TestProcess(unittest.TestCase):
             sum([x.system_time for x in p.threads()]), delta=0.1)
 
     def test_memory_info(self):
+        """
+        Return memory information about memory.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
 
         # step 1 - get a base value to compare our results
@@ -617,6 +779,12 @@ class TestProcess(unittest.TestCase):
             self.assertGreaterEqual(getattr(mem, name), 0)
 
     def test_memory_full_info(self):
+        """
+        Return information about the memory usage. memory.
+
+        Args:
+            self: (todo): write your description
+        """
         total = psutil.virtual_memory().total
         mem = psutil.Process().memory_full_info()
         for name in mem._fields:
@@ -631,6 +799,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipIf(OPENBSD or NETBSD, "platfform not supported")
     def test_memory_maps(self):
+        """
+        Test if all memory maps exist.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         maps = p.memory_maps()
         paths = [x for x in maps]
@@ -671,6 +845,12 @@ class TestProcess(unittest.TestCase):
                     assert value >= 0, value
 
     def test_memory_percent(self):
+        """
+        Return memory memory memory memory.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         ret = p.memory_percent()
         assert 0 <= ret <= 100, ret
@@ -684,6 +864,12 @@ class TestProcess(unittest.TestCase):
             assert 0 <= ret <= 100, ret
 
     def test_is_running(self):
+        """
+        Check if the subprocess is running.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         assert p.is_running()
@@ -694,6 +880,12 @@ class TestProcess(unittest.TestCase):
         assert not p.is_running()
 
     def test_exe(self):
+        """
+        Test for a new test test.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         exe = psutil.Process(sproc.pid).exe()
         try:
@@ -724,6 +916,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(out.strip(), b'hey')
 
     def test_cmdline(self):
+        """
+        Test for a pid command.
+
+        Args:
+            self: (todo): write your description
+        """
         cmdline = [PYTHON, "-c", "import time; time.sleep(60)"]
         sproc = get_test_subprocess(cmdline)
         try:
@@ -741,6 +939,12 @@ class TestProcess(unittest.TestCase):
                 raise
 
     def test_name(self):
+        """
+        Test if the name of the process is running.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess(PYTHON)
         name = psutil.Process(sproc.pid).name().lower()
         pyexe = os.path.basename(os.path.realpath(sys.executable)).lower()
@@ -749,6 +953,12 @@ class TestProcess(unittest.TestCase):
     # XXX
     @unittest.skipIf(SUNOS, "broken on SUNOS")
     def test_prog_w_funky_name(self):
+        """
+        Test if we have_prog_name.
+
+        Args:
+            self: (todo): write your description
+        """
         # Test that name(), exe() and cmdline() correctly handle programs
         # with funky chars such as spaces and ")", see:
         # https://github.com/giampaolo/psutil/issues/628
@@ -770,6 +980,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, 'POSIX only')
     def test_uids(self):
+        """
+        Test if uids of the uids
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         real, effective, saved = p.uids()
         # os.getuid() refers to "real" uid
@@ -784,6 +1000,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, 'POSIX only')
     def test_gids(self):
+        """
+        Test if gids are present in the gids.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         real, effective, saved = p.gids()
         # os.getuid() refers to "real" uid
@@ -797,6 +1019,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(os.getresgid(), p.gids())
 
     def test_nice(self):
+        """
+        Initialize the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         self.assertRaises(TypeError, p.nice, "str")
         if WINDOWS:
@@ -838,10 +1066,22 @@ class TestProcess(unittest.TestCase):
                     pass
 
     def test_status(self):
+        """
+        Set the status of the test.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         self.assertEqual(p.status(), psutil.STATUS_RUNNING)
 
     def test_username(self):
+        """
+        Test if username is_username.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         if POSIX:
@@ -862,11 +1102,23 @@ class TestProcess(unittest.TestCase):
             p.username()
 
     def test_cwd(self):
+        """
+        Test if the process is running.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         self.assertEqual(p.cwd(), os.getcwd())
 
     def test_cwd_2(self):
+        """
+        Perform a test test is run bytest.
+
+        Args:
+            self: (todo): write your description
+        """
         cmd = [PYTHON, "-c", "import os, time; os.chdir('..'); time.sleep(60)"]
         sproc = get_test_subprocess(cmd)
         p = psutil.Process(sproc.pid)
@@ -875,6 +1127,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(WINDOWS or LINUX or FREEBSD, 'platform not supported')
     @unittest.skipIf(LINUX and TRAVIS, "unreliable on TRAVIS")
     def test_cpu_affinity(self):
+        """
+        Compute cpu cpu.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         initial = p.cpu_affinity()
         assert initial, initial
@@ -926,6 +1184,12 @@ class TestProcess(unittest.TestCase):
     # can't find any process file on Appveyor
     @unittest.skipIf(APPVEYOR, "unreliable on APPVEYOR")
     def test_open_files(self):
+        """
+        Return a list of files in a set of files.
+
+        Args:
+            self: (todo): write your description
+        """
         # current process
         p = psutil.Process()
         files = p.open_files()
@@ -965,6 +1229,12 @@ class TestProcess(unittest.TestCase):
     # can't find any process file on Appveyor
     @unittest.skipIf(APPVEYOR, "unreliable on APPVEYOR")
     def test_open_files_2(self):
+        """
+        Test for files todo mode.
+
+        Args:
+            self: (todo): write your description
+        """
         # test fd and path fields
         with open(TESTFN, 'w') as fileobj:
             p = psutil.Process()
@@ -986,6 +1256,14 @@ class TestProcess(unittest.TestCase):
             self.assertTrue(fileobj.name not in p.open_files())
 
     def compare_proc_sys_cons(self, pid, proc_cons):
+        """
+        Compares the pid of the pid.
+
+        Args:
+            self: (todo): write your description
+            pid: (int): write your description
+            proc_cons: (todo): write your description
+        """
         from psutil._common import pconn
         sys_cons = [c[:-1] for c in psutil.net_connections(kind='all')
                     if c.pid == pid]
@@ -996,7 +1274,26 @@ class TestProcess(unittest.TestCase):
 
     @skip_on_access_denied(only_if=OSX)
     def test_connections(self):
+        """
+        Return a connection connections.
+
+        Args:
+            self: (todo): write your description
+        """
         def check_conn(proc, conn, family, type, laddr, raddr, status, kinds):
+            """
+            Check for a connection.
+
+            Args:
+                proc: (todo): write your description
+                conn: (todo): write your description
+                family: (str): write your description
+                type: (todo): write your description
+                laddr: (str): write your description
+                raddr: (todo): write your description
+                status: (str): write your description
+                kinds: (todo): write your description
+            """
             all_kinds = ("all", "inet", "inet4", "inet6", "tcp", "tcp4",
                          "tcp6", "udp", "udp4", "udp6")
             check_connection_ntuple(conn)
@@ -1092,7 +1389,19 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(hasattr(socket, 'AF_UNIX'), 'AF_UNIX not supported')
     @skip_on_access_denied(only_if=OSX)
     def test_connections_unix(self):
+        """
+        Test to the connection.
+
+        Args:
+            self: (todo): write your description
+        """
         def check(type):
+            """
+            Check if the connection is valid.
+
+            Args:
+                type: (todo): write your description
+            """
             safe_rmpath(TESTFN)
             tfile = tempfile.mktemp(prefix=TESTFILE_PREFIX) if OSX else TESTFN
             sock = socket.socket(AF_UNIX, type)
@@ -1119,6 +1428,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipIf(WINDOWS or SUNOS,
                      'connection fd not available on this platform')
     def test_connection_fromfd(self):
+        """
+        Test if the socket.
+
+        Args:
+            self: (todo): write your description
+        """
         with contextlib.closing(socket.socket()) as sock:
             sock.bind(('localhost', 0))
             sock.listen(1)
@@ -1134,6 +1449,12 @@ class TestProcess(unittest.TestCase):
                 self.assertNotEqual(sock.fileno(), dupsock.fileno())
 
     def test_connection_constants(self):
+        """
+        Test for all connection constants in the same.
+
+        Args:
+            self: (todo): write your description
+        """
         ints = []
         strs = []
         for name in dir(psutil):
@@ -1153,6 +1474,12 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, 'POSIX only')
     def test_num_fds(self):
+        """
+        Reads the number of samples in fds.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         start = p.num_fds()
         file = open(TESTFN, 'w')
@@ -1168,6 +1495,12 @@ class TestProcess(unittest.TestCase):
     @skip_on_not_implemented(only_if=LINUX)
     @unittest.skipIf(OPENBSD or NETBSD, "not reliable on OPENBSD & NETBSD")
     def test_num_ctx_switches(self):
+        """
+        Returns the number of runs in the number of the test.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         before = sum(p.num_ctx_switches())
         for x in range(500000):
@@ -1177,6 +1510,12 @@ class TestProcess(unittest.TestCase):
         self.fail("num ctx switches still the same after 50.000 iterations")
 
     def test_ppid(self):
+        """
+        Test if the pid of a pid.
+
+        Args:
+            self: (todo): write your description
+        """
         if hasattr(os, 'getppid'):
             self.assertEqual(psutil.Process().ppid(), os.getppid())
         this_parent = os.getpid()
@@ -1198,6 +1537,12 @@ class TestProcess(unittest.TestCase):
             self.assertNotEqual(p.ppid(), this_parent, msg=p)
 
     def test_children(self):
+        """
+        Test for children of children.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         self.assertEqual(p.children(), [])
         self.assertEqual(p.children(recursive=True), [])
@@ -1210,6 +1555,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(children[0].ppid(), os.getpid())
 
     def test_children_recursive(self):
+        """
+        Test for children of children.
+
+        Args:
+            self: (todo): write your description
+        """
         # here we create a subprocess which creates another one as in:
         # A (parent) -> B (child) -> C (grandchild)
         s = "import subprocess, os, sys, time;"
@@ -1231,6 +1582,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(children[1].ppid(), children[0].pid)
 
     def test_children_duplicates(self):
+        """
+        Return a set of children have children.
+
+        Args:
+            self: (todo): write your description
+        """
         # find the process which has the highest number of children
         table = collections.defaultdict(int)
         for p in psutil.process_iter():
@@ -1249,6 +1606,12 @@ class TestProcess(unittest.TestCase):
             self.assertEqual(len(c), len(set(c)))
 
     def test_suspend_resume(self):
+        """
+        Test if the pid of the subprocess.
+
+        Args:
+            self: (todo): write your description
+        """
         sproc = get_test_subprocess()
         p = psutil.Process(sproc.pid)
         p.suspend()
@@ -1260,10 +1623,22 @@ class TestProcess(unittest.TestCase):
         self.assertNotEqual(p.status(), psutil.STATUS_STOPPED)
 
     def test_invalid_pid(self):
+        """
+        Assign the pid.
+
+        Args:
+            self: (todo): write your description
+        """
         self.assertRaises(TypeError, psutil.Process, "1")
         self.assertRaises(ValueError, psutil.Process, -1)
 
     def test_as_dict(self):
+        """
+        Return a dict representation of the test attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         d = p.as_dict(attrs=['exe', 'name'])
         self.assertEqual(sorted(d.keys()), ['exe', 'name'])
@@ -1310,6 +1685,12 @@ class TestProcess(unittest.TestCase):
             p.as_dict(['foo', 'bar'])
 
     def test_oneshot(self):
+        """
+        Test if the number of the machine.
+
+        Args:
+            self: (todo): write your description
+        """
         with mock.patch("psutil._psplatform.Process.cpu_times") as m:
             p = psutil.Process()
             with p.oneshot():
@@ -1323,6 +1704,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(m.call_count, 2)
 
     def test_oneshot_twice(self):
+        """
+        Test if the cpu times of the cpu hashed.
+
+        Args:
+            self: (todo): write your description
+        """
         # Test the case where the ctx manager is __enter__ed twice.
         # The second __enter__ is supposed to resut in a NOOP.
         with mock.patch("psutil._psplatform.Process.cpu_times") as m1:
@@ -1343,6 +1730,12 @@ class TestProcess(unittest.TestCase):
         self.assertEqual(m.call_count, 2)
 
     def test_halfway_terminated_process(self):
+        """
+        Terminate the pid is running.
+
+        Args:
+            self: (todo): write your description
+        """
         # Test that NoSuchProcess exception gets raised in case the
         # process dies after we create the Process object.
         # Example:
@@ -1408,7 +1801,19 @@ class TestProcess(unittest.TestCase):
 
     @unittest.skipUnless(POSIX, 'POSIX only')
     def test_zombie_process(self):
+        """
+        Execute a zombie.
+
+        Args:
+            self: (todo): write your description
+        """
         def succeed_or_zombie_p_exc(fun, *args, **kwargs):
+            """
+            Execute a p_or_or_zombie_p_p_p_p_p_p_exc ( * args kw
+
+            Args:
+                fun: (callable): write your description
+            """
             try:
                 return fun(*args, **kwargs)
             except (psutil.ZombieProcess, psutil.AccessDenied):
@@ -1502,6 +1907,12 @@ class TestProcess(unittest.TestCase):
                 reap_children(recursive=True)
 
     def test_pid_0(self):
+        """
+        Test if pid pid pid pid pid.
+
+        Args:
+            self: (todo): write your description
+        """
         # Process(0) is supposed to work on all platforms except Linux
         if 0 not in psutil.pids():
             self.assertRaises(psutil.NoSuchProcess, psutil.Process, 0)
@@ -1541,6 +1952,12 @@ class TestProcess(unittest.TestCase):
             self.assertTrue(psutil.pid_exists(0))
 
     def test_Popen(self):
+        """
+        Execute a subprocess. pty.
+
+        Args:
+            self: (todo): write your description
+        """
         # XXX this test causes a ResourceWarning on Python 3 because
         # psutil.__subproc instance doesn't get propertly freed.
         # Not sure what to do though.
@@ -1558,6 +1975,12 @@ class TestProcess(unittest.TestCase):
             proc.wait()
 
     def test_Popen_ctx_manager(self):
+        """
+        Test if a new test manager.
+
+        Args:
+            self: (todo): write your description
+        """
         with psutil.Popen([PYTHON, "-V"],
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE,
@@ -1570,6 +1993,12 @@ class TestProcess(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil.Process, "environ"),
                          "platform not supported")
     def test_environ(self):
+        """
+        Test for environment variables.
+
+        Args:
+            self: (todo): write your description
+        """
         self.maxDiff = None
         p = psutil.Process()
         d = p.environ()
@@ -1595,6 +2024,12 @@ class TestProcess(unittest.TestCase):
                          "platform not supported")
     @unittest.skipUnless(POSIX, "posix only")
     def test_weird_environ(self):
+        """
+        Create a websocket process.
+
+        Args:
+            self: (todo): write your description
+        """
         # environment variables can contain values without an equals sign
         code = textwrap.dedent("""
         #include <unistd.h>
@@ -1635,6 +2070,12 @@ class TestFetchAllProcesses(unittest.TestCase):
     """
 
     def setUp(self):
+        """
+        Sets the usernames for this user.
+
+        Args:
+            self: (todo): write your description
+        """
         if POSIX:
             import pwd
             import grp
@@ -1645,6 +2086,12 @@ class TestFetchAllProcesses(unittest.TestCase):
             self.all_gids = set([x.gr_gid for x in groups])
 
     def test_fetch_all(self):
+        """
+        Fetch all of all attributes.
+
+        Args:
+            self: (todo): write your description
+        """
         valid_procs = 0
         excluded_names = set([
             'send_signal', 'suspend', 'resume', 'terminate', 'kill', 'wait',
@@ -1715,9 +2162,25 @@ class TestFetchAllProcesses(unittest.TestCase):
         self.assertTrue(valid_procs > 0)
 
     def cmdline(self, ret, proc):
+        """
+        Execute a command.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         pass
 
     def exe(self, ret, proc):
+        """
+        Runs the given executable.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         if not ret:
             self.assertEqual(ret, '')
         else:
@@ -1731,13 +2194,37 @@ class TestFetchAllProcesses(unittest.TestCase):
                     self.assertTrue(os.access(ret, os.X_OK))
 
     def ppid(self, ret, proc):
+        """
+        Emit a memory id.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret >= 0)
 
     def name(self, ret, proc):
+        """
+        Specify the name.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (str): write your description
+        """
         self.assertIsInstance(ret, (str, unicode))
         self.assertTrue(ret)
 
     def create_time(self, ret, proc):
+        """
+        Create a new : py : param ret : a given procedure.
+
+        Args:
+            self: (todo): write your description
+            ret: (str): write your description
+            proc: (str): write your description
+        """
         try:
             self.assertGreaterEqual(ret, 0)
         except AssertionError:
@@ -1752,11 +2239,27 @@ class TestFetchAllProcesses(unittest.TestCase):
         time.strftime("%Y %m %d %H:%M:%S", time.localtime(ret))
 
     def uids(self, ret, proc):
+        """
+        Uids. uids of the process.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         for uid in ret:
             self.assertGreaterEqual(uid, 0)
             self.assertIn(uid, self.all_uids)
 
     def gids(self, ret, proc):
+        """
+        Return all gids for all gids.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         # note: testing all gids as above seems not to be reliable for
         # gid == 30 (nodoby); not sure why.
         for gid in ret:
@@ -1765,21 +2268,53 @@ class TestFetchAllProcesses(unittest.TestCase):
                 self.assertIn(gid, self.all_gids)
 
     def username(self, ret, proc):
+        """
+        Check if the given user.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (str): write your description
+        """
         self.assertTrue(ret)
         if POSIX:
             self.assertIn(ret, self.all_usernames)
 
     def status(self, ret, proc):
+        """
+        Status of the status of the job.
+
+        Args:
+            self: (todo): write your description
+            ret: (todo): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret != "")
         self.assertTrue(ret != '?')
         self.assertIn(ret, VALID_PROC_STATUSES)
 
     def io_counters(self, ret, proc):
+        """
+        Called when a message has been received.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         for field in ret:
             if field != -1:
                 self.assertTrue(field >= 0)
 
     def ionice(self, ret, proc):
+        """
+        Set the result of the operation.
+
+        Args:
+            self: (todo): write your description
+            ret: (todo): write your description
+            proc: (todo): write your description
+        """
         if LINUX:
             self.assertTrue(ret.ioclass >= 0)
             self.assertTrue(ret.value >= 0)
@@ -1788,25 +2323,65 @@ class TestFetchAllProcesses(unittest.TestCase):
             self.assertIn(ret, (0, 1, 2))
 
     def num_threads(self, ret, proc):
+        """
+        Waits the number of threads.
+
+        Args:
+            self: (todo): write your description
+            ret: (todo): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret >= 1)
 
     def threads(self, ret, proc):
+        """
+        Set threads.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         for t in ret:
             self.assertTrue(t.id >= 0)
             self.assertTrue(t.user_time >= 0)
             self.assertTrue(t.system_time >= 0)
 
     def cpu_times(self, ret, proc):
+        """
+        Set the cpu times.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret.user >= 0)
         self.assertTrue(ret.system >= 0)
 
     def cpu_num(self, ret, proc):
+        """
+        Search the number of the cpu.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertGreaterEqual(ret, 0)
         if psutil.cpu_count() == 1:
             self.assertEqual(ret, 0)
         self.assertIn(ret, range(psutil.cpu_count()))
 
     def memory_info(self, ret, proc):
+        """
+        Return memory information.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         for name in ret._fields:
             self.assertGreaterEqual(getattr(ret, name), 0)
         if POSIX and ret.vms != 0:
@@ -1822,6 +2397,14 @@ class TestFetchAllProcesses(unittest.TestCase):
             assert ret.peak_pagefile >= ret.pagefile, ret
 
     def memory_full_info(self, ret, proc):
+        """
+        Return memory information about a virtual memory.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         total = psutil.virtual_memory().total
         for name in ret._fields:
             value = getattr(ret, name)
@@ -1832,6 +2415,14 @@ class TestFetchAllProcesses(unittest.TestCase):
             self.assertGreaterEqual(ret.pss, ret.uss)
 
     def open_files(self, ret, proc):
+        """
+        Open file for reading.
+
+        Args:
+            self: (todo): write your description
+            ret: (str): write your description
+            proc: (str): write your description
+        """
         for f in ret:
             if WINDOWS:
                 assert f.fd == -1, f
@@ -1849,14 +2440,38 @@ class TestFetchAllProcesses(unittest.TestCase):
             assert os.path.isfile(f.path), f
 
     def num_fds(self, ret, proc):
+        """
+        Return the number of num_fds.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret >= 0)
 
     def connections(self, ret, proc):
+        """
+        Connects to all connections.
+
+        Args:
+            self: (todo): write your description
+            ret: (str): write your description
+            proc: (todo): write your description
+        """
         self.assertEqual(len(ret), len(set(ret)))
         for conn in ret:
             check_connection_ntuple(conn)
 
     def cwd(self, ret, proc):
+        """
+        Return the cwd of a file.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         if ret is not None:  # BSD may return None
             assert os.path.isabs(ret), ret
             try:
@@ -1872,23 +2487,63 @@ class TestFetchAllProcesses(unittest.TestCase):
                 self.assertTrue(stat.S_ISDIR(st.st_mode))
 
     def memory_percent(self, ret, proc):
+        """
+        Sets memory memory memory memory.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         assert 0 <= ret <= 100, ret
 
     def is_running(self, ret, proc):
+        """
+        Return true if the given call is running.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertTrue(ret)
 
     def cpu_affinity(self, ret, proc):
+        """
+        Perform the number of the cpu.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         assert ret != [], ret
         cpus = range(psutil.cpu_count())
         for n in ret:
             self.assertIn(n, cpus)
 
     def terminal(self, ret, proc):
+        """
+        Check if the given path exists.
+
+        Args:
+            self: (todo): write your description
+            ret: (int): write your description
+            proc: (todo): write your description
+        """
         if ret is not None:
             assert os.path.isabs(ret), ret
             assert os.path.exists(ret), ret
 
     def memory_maps(self, ret, proc):
+        """
+        Set memory maps.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         for nt in ret:
             for fname in nt._fields:
                 value = getattr(nt, fname)
@@ -1905,12 +2560,28 @@ class TestFetchAllProcesses(unittest.TestCase):
                     assert value >= 0, value
 
     def num_handles(self, ret, proc):
+        """
+        Equal the number of events.
+
+        Args:
+            self: (todo): write your description
+            ret: (todo): write your description
+            proc: (todo): write your description
+        """
         if WINDOWS:
             self.assertGreaterEqual(ret, 0)
         else:
             self.assertGreaterEqual(ret, 0)
 
     def nice(self, ret, proc):
+        """
+        Retrieve prior todo.
+
+        Args:
+            self: (todo): write your description
+            ret: (todo): write your description
+            proc: (todo): write your description
+        """
         if POSIX:
             assert -20 <= ret <= 20, ret
         else:
@@ -1919,15 +2590,39 @@ class TestFetchAllProcesses(unittest.TestCase):
             self.assertIn(ret, priorities)
 
     def num_ctx_switches(self, ret, proc):
+        """
+        Switches num_switches.
+
+        Args:
+            self: (todo): write your description
+            ret: (int): write your description
+            proc: (todo): write your description
+        """
         self.assertGreaterEqual(ret.voluntary, 0)
         self.assertGreaterEqual(ret.involuntary, 0)
 
     def rlimit(self, ret, proc):
+        """
+        Perform a rlimit.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertEqual(len(ret), 2)
         self.assertGreaterEqual(ret[0], -1)
         self.assertGreaterEqual(ret[1], -1)
 
     def environ(self, ret, proc):
+        """
+        Execute a new environ.
+
+        Args:
+            self: (todo): write your description
+            ret: (bool): write your description
+            proc: (todo): write your description
+        """
         self.assertIsInstance(ret, dict)
 
 
@@ -1948,6 +2643,12 @@ if POSIX and os.getuid() == 0:
             PROCESS_GID = os.getgid()
 
         def __init__(self, *args, **kwargs):
+            """
+            Initialize a set of - loading of the class.
+
+            Args:
+                self: (todo): write your description
+            """
             TestProcess.__init__(self, *args, **kwargs)
             # re-define all existent test methods in order to
             # ignore AccessDenied exceptions
@@ -1955,6 +2656,12 @@ if POSIX and os.getuid() == 0:
                 meth = getattr(self, attr)
 
                 def test_(self):
+                    """
+                    Test if a test.
+
+                    Args:
+                        self: (todo): write your description
+                    """
                     try:
                         meth()
                     except psutil.AccessDenied:
@@ -1962,17 +2669,35 @@ if POSIX and os.getuid() == 0:
                 setattr(self, attr, types.MethodType(test_, self))
 
         def setUp(self):
+            """
+            Sets the rmpath.
+
+            Args:
+                self: (todo): write your description
+            """
             safe_rmpath(TESTFN)
             TestProcess.setUp(self)
             os.setegid(1000)
             os.seteuid(1000)
 
         def tearDown(self):
+            """
+            Moves the set of the thread.
+
+            Args:
+                self: (todo): write your description
+            """
             os.setegid(self.PROCESS_UID)
             os.seteuid(self.PROCESS_GID)
             TestProcess.tearDown(self)
 
         def test_nice(self):
+            """
+            Test if a test.
+
+            Args:
+                self: (todo): write your description
+            """
             try:
                 psutil.Process().nice(-1)
             except psutil.AccessDenied:
@@ -1981,6 +2706,12 @@ if POSIX and os.getuid() == 0:
                 self.fail("exception not raised")
 
         def test_zombie_process(self):
+            """
+            Test if the process is running.
+
+            Args:
+                self: (todo): write your description
+            """
             # causes problems if test test suite is run as root
             pass
 
@@ -2000,6 +2731,12 @@ class TestUnicode(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
+        Dynamically built - in the working directory.
+
+        Args:
+            cls: (todo): write your description
+        """
         safe_rmpath(cls.uexe)
         safe_rmpath(cls.udir)
         create_exe(cls.uexe)
@@ -2007,16 +2744,34 @@ class TestUnicode(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down the rmp class.
+
+        Args:
+            cls: (todo): write your description
+        """
         if not APPVEYOR:
             safe_rmpath(cls.uexe)
             safe_rmpath(cls.udir)
 
     def setUp(self):
+        """
+        Sets the children of this node.
+
+        Args:
+            self: (todo): write your description
+        """
         reap_children()
 
     tearDown = setUp
 
     def test_proc_exe(self):
+        """
+        Test for the subprocess.
+
+        Args:
+            self: (todo): write your description
+        """
         subp = get_test_subprocess(cmd=[self.uexe])
         p = psutil.Process(subp.pid)
         self.assertIsInstance(p.name(), str)
@@ -2026,6 +2781,12 @@ class TestUnicode(unittest.TestCase):
             p.exe()
 
     def test_proc_name(self):
+        """
+        Test for a process name.
+
+        Args:
+            self: (todo): write your description
+        """
         subp = get_test_subprocess(cmd=[self.uexe])
         if WINDOWS:
             # XXX: why is this like this?
@@ -2037,6 +2798,12 @@ class TestUnicode(unittest.TestCase):
             self.assertEqual(name, os.path.basename(self.uexe))
 
     def test_proc_cmdline(self):
+        """
+        Test if the subprocess command
+
+        Args:
+            self: (todo): write your description
+        """
         subp = get_test_subprocess(cmd=[self.uexe])
         p = psutil.Process(subp.pid)
         self.assertIsInstance("".join(p.cmdline()), str)
@@ -2046,6 +2813,12 @@ class TestUnicode(unittest.TestCase):
             p.cmdline()
 
     def test_proc_cwd(self):
+        """
+        Test if a working directory.
+
+        Args:
+            self: (todo): write your description
+        """
         with chdir(self.udir):
             p = psutil.Process()
             self.assertIsInstance(p.cwd(), str)
@@ -2056,6 +2829,12 @@ class TestUnicode(unittest.TestCase):
 
     # @unittest.skipIf(APPVEYOR, "unreliable on APPVEYOR")
     def test_proc_open_files(self):
+        """
+        Test for open files that have open.
+
+        Args:
+            self: (todo): write your description
+        """
         p = psutil.Process()
         start = set(p.open_files())
         with open(self.uexe, 'rb'):
@@ -2073,6 +2852,12 @@ class TestUnicode(unittest.TestCase):
     @unittest.skipUnless(hasattr(psutil.Process, "environ"),
                          "platform not supported")
     def test_proc_environ(self):
+        """
+        Perform a new process.
+
+        Args:
+            self: (todo): write your description
+        """
         env = os.environ.copy()
         env['FUNNY_ARG'] = self.uexe
         sproc = get_test_subprocess(env=env)
@@ -2087,6 +2872,12 @@ class TestUnicode(unittest.TestCase):
             p.environ()
 
     def test_disk_usage(self):
+        """
+        Test if the disk usage.
+
+        Args:
+            self: (todo): write your description
+        """
         psutil.disk_usage(self.udir)
 
 

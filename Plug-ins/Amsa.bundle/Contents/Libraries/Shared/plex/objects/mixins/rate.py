@@ -7,4 +7,11 @@ class RateMixin(DescriptorMixin):
     user_rating = Property('userRating', type=float)
 
     def rate(self, value):
+        """
+        Return the rate.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         return Plex['library'].rate(self.rating_key, value)

@@ -16,28 +16,71 @@ class ExtensionImporter(object):
     """
 
     def __init__(self, module_choices, wrapper_module):
+        """
+        Initialize the module.
+
+        Args:
+            self: (todo): write your description
+            module_choices: (todo): write your description
+            wrapper_module: (todo): write your description
+        """
         self.module_choices = module_choices
         self.wrapper_module = wrapper_module
         self.prefix = wrapper_module + '.'
         self.prefix_cutoff = wrapper_module.count('.') + 1
 
     def __eq__(self, other):
+        """
+        Determine if other is a __module__.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return self.__class__.__module__ == other.__class__.__module__ and \
                self.__class__.__name__ == other.__class__.__name__ and \
                self.wrapper_module == other.wrapper_module and \
                self.module_choices == other.module_choices
 
     def __ne__(self, other):
+        """
+        Determine if self and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not self.__eq__(other)
 
     def install(self):
+        """
+        Install meta_path
+
+        Args:
+            self: (todo): write your description
+        """
         sys.meta_path[:] = [x for x in sys.meta_path if self != x] + [self]
 
     def find_module(self, fullname, path=None):
+        """
+        Find a module by fullname.
+
+        Args:
+            self: (todo): write your description
+            fullname: (str): write your description
+            path: (list): write your description
+        """
         if fullname.startswith(self.prefix):
             return self
 
     def load_module(self, fullname):
+        """
+        Loads the module.
+
+        Args:
+            self: (todo): write your description
+            fullname: (str): write your description
+        """
         if fullname in sys.modules:
             return sys.modules[fullname]
         modname = fullname.split('.', self.prefix_cutoff)[self.prefix_cutoff]

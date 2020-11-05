@@ -94,6 +94,33 @@ class relativedelta(object):
                  year=None, month=None, day=None, weekday=None,
                  yearday=None, nlyearday=None,
                  hour=None, minute=None, second=None, microsecond=None):
+        """
+        Initialize datetime object.
+
+        Args:
+            self: (todo): write your description
+            dt1: (float): write your description
+            dt2: (float): write your description
+            years: (list): write your description
+            months: (todo): write your description
+            days: (todo): write your description
+            leapdays: (todo): write your description
+            weeks: (todo): write your description
+            hours: (todo): write your description
+            minutes: (int): write your description
+            seconds: (int): write your description
+            microseconds: (todo): write your description
+            year: (int): write your description
+            month: (todo): write your description
+            day: (todo): write your description
+            weekday: (todo): write your description
+            yearday: (todo): write your description
+            nlyearday: (bool): write your description
+            hour: (str): write your description
+            minute: (int): write your description
+            second: (int): write your description
+            microsecond: (todo): write your description
+        """
 
         # Check for non-integer values in integer-only quantities
         if any(x is not None and x != int(x) for x in (years, months)):
@@ -216,6 +243,12 @@ class relativedelta(object):
         self._fix()
 
     def _fix(self):
+        """
+        Convert seconds of the timedelta.
+
+        Args:
+            self: (todo): write your description
+        """
         if abs(self.microseconds) > 999999:
             s = _sign(self.microseconds)
             div, mod = divmod(self.microseconds * s, 1000000)
@@ -250,12 +283,32 @@ class relativedelta(object):
 
     @property
     def weeks(self):
+        """
+        Return the number of the year.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.days // 7
     @weeks.setter
     def weeks(self, value):
+        """
+        Updates the weeks
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         self.days = self.days - (self.weeks * 7) + value * 7
 
     def _set_months(self, months):
+        """
+        Sets the months.
+
+        Args:
+            self: (todo): write your description
+            months: (todo): write your description
+        """
         self.months = months
         if abs(self.months) > 11:
             s = _sign(self.months)
@@ -301,6 +354,13 @@ class relativedelta(object):
                               microsecond=self.microsecond)
 
     def __add__(self, other):
+        """
+        Add a timedelta object to the instance.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if isinstance(other, relativedelta):
             return self.__class__(years=other.years + self.years,
                                  months=other.months + self.months,
@@ -380,12 +440,33 @@ class relativedelta(object):
         return ret
 
     def __radd__(self, other):
+        """
+        Return the set from self from self and other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return self.__add__(other)
 
     def __rsub__(self, other):
+        """
+        Return a < = b. computed by
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return self.__neg__().__radd__(other)
 
     def __sub__(self, other):
+        """
+        Return a new : class : meth : datetime.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, relativedelta):
             return NotImplemented   # In case the other object defines __rsub__
         return self.__class__(years=self.years - other.years,
@@ -406,6 +487,12 @@ class relativedelta(object):
                              microsecond=self.microsecond or other.microsecond)
 
     def __neg__(self):
+        """
+        Return a new instance of this time.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.__class__(years=-self.years,
                              months=-self.months,
                              days=-self.days,
@@ -424,6 +511,12 @@ class relativedelta(object):
                              microsecond=self.microsecond)
 
     def __bool__(self):
+        """
+        Return true if this interval is a boolean.
+
+        Args:
+            self: (todo): write your description
+        """
         return not (not self.years and
                     not self.months and
                     not self.days and
@@ -444,6 +537,13 @@ class relativedelta(object):
     __nonzero__ = __bool__
 
     def __mul__(self, other):
+        """
+        Return a new time instance : class.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         try:
             f = float(other)
         except TypeError:
@@ -469,6 +569,13 @@ class relativedelta(object):
     __rmul__ = __mul__
 
     def __eq__(self, other):
+        """
+        Determine if two dates are the same.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         if not isinstance(other, relativedelta):
             return NotImplemented
         if self.weekday or other.weekday:
@@ -498,9 +605,23 @@ class relativedelta(object):
     __hash__ = None
 
     def __ne__(self, other):
+        """
+        Determine if self and false otherwise.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return not self.__eq__(other)
 
     def __div__(self, other):
+        """
+        Divide the two - dimensional values.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         try:
             reciprocal = 1 / float(other)
         except TypeError:
@@ -511,6 +632,12 @@ class relativedelta(object):
     __truediv__ = __div__
 
     def __repr__(self):
+        """
+        Return a repr representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         l = []
         for attr in ["years", "months", "days", "leapdays",
                      "hours", "minutes", "seconds", "microseconds"]:
@@ -526,6 +653,12 @@ class relativedelta(object):
                                              attrs=", ".join(l))
 
 def _sign(x):
+    """
+    Signs an integer.
+
+    Args:
+        x: (array): write your description
+    """
     return int(copysign(1, x))
 
 # vim:ts=4:sw=4:et

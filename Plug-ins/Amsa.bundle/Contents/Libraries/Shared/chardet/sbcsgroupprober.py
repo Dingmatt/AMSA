@@ -42,6 +42,12 @@ from .langturkishmodel import Latin5TurkishModel
 
 class SBCSGroupProber(CharSetGroupProber):
     def __init__(self):
+        """
+        Initializes all the sagemaker architecture.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SBCSGroupProber, self).__init__()
         self.probers = [
             SingleByteCharSetProber(Win1251CyrillicModel),

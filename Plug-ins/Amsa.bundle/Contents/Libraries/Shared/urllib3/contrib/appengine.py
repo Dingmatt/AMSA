@@ -98,6 +98,16 @@ class AppEngineManager(RequestMethods):
 
     def __init__(self, headers=None, retries=None, validate_certificate=True,
                  urlfetch_retries=True):
+        """
+        Creates a new certificate.
+
+        Args:
+            self: (todo): write your description
+            headers: (list): write your description
+            retries: (todo): write your description
+            validate_certificate: (bool): write your description
+            urlfetch_retries: (str): write your description
+        """
         if not urlfetch:
             raise AppEnginePlatformError(
                 "URLFetch is not available in this environment.")
@@ -121,15 +131,46 @@ class AppEngineManager(RequestMethods):
         self.retries = retries or Retry.DEFAULT
 
     def __enter__(self):
+        """
+        Decor function.
+
+        Args:
+            self: (todo): write your description
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the given exception.
+
+        Args:
+            self: (todo): write your description
+            exc_type: (todo): write your description
+            exc_val: (todo): write your description
+            exc_tb: (todo): write your description
+        """
         # Return False to re-raise any potential exceptions
         return False
 
     def urlopen(self, method, url, body=None, headers=None,
                 retries=None, redirect=True, timeout=Timeout.DEFAULT_TIMEOUT,
                 **response_kw):
+        """
+        Make a url using http method.
+
+        Args:
+            self: (todo): write your description
+            method: (str): write your description
+            url: (str): write your description
+            body: (str): write your description
+            headers: (dict): write your description
+            retries: (todo): write your description
+            redirect: (str): write your description
+            timeout: (float): write your description
+            Timeout: (float): write your description
+            DEFAULT_TIMEOUT: (str): write your description
+            response_kw: (str): write your description
+        """
 
         retries = self._get_retries(retries, redirect)
 
@@ -219,6 +260,14 @@ class AppEngineManager(RequestMethods):
         return http_response
 
     def _urlfetch_response_to_http_response(self, urlfetch_resp, **response_kw):
+        """
+        Returns an : class : urllib3. urlencoded. urlencoded.
+
+        Args:
+            self: (todo): write your description
+            urlfetch_resp: (str): write your description
+            response_kw: (str): write your description
+        """
 
         if is_prod_appengine():
             # Production GAE handles deflate encoding automatically, but does
@@ -246,6 +295,13 @@ class AppEngineManager(RequestMethods):
         )
 
     def _get_absolute_timeout(self, timeout):
+        """
+        Get the absolute timeout for a request.
+
+        Args:
+            self: (todo): write your description
+            timeout: (int): write your description
+        """
         if timeout is Timeout.DEFAULT_TIMEOUT:
             return None  # Defer to URLFetch's default.
         if isinstance(timeout, Timeout):
@@ -258,6 +314,14 @@ class AppEngineManager(RequestMethods):
         return timeout
 
     def _get_retries(self, retries, redirect):
+        """
+        Return the number of retries.
+
+        Args:
+            self: (todo): write your description
+            retries: (str): write your description
+            redirect: (str): write your description
+        """
         if not isinstance(retries, Retry):
             retries = Retry.from_int(
                 retries, redirect=redirect, default=self.retries)
@@ -272,25 +336,50 @@ class AppEngineManager(RequestMethods):
 
 
 def is_appengine():
+    """
+    Return true if the given engine is engine engine.
+
+    Args:
+    """
     return (is_local_appengine() or
             is_prod_appengine() or
             is_prod_appengine_mvms())
 
 
 def is_appengine_sandbox():
+    """
+    Return true if the engine is engine engine.
+
+    Args:
+    """
     return is_appengine() and not is_prod_appengine_mvms()
 
 
 def is_local_appengine():
+    """
+    Return true if the application is running.
+
+    Args:
+    """
     return ('APPENGINE_RUNTIME' in os.environ and
             'Development/' in os.environ['SERVER_SOFTWARE'])
 
 
 def is_prod_appengine():
+    """
+    Determine application is running.
+
+    Args:
+    """
     return ('APPENGINE_RUNTIME' in os.environ and
             'Google App Engine/' in os.environ['SERVER_SOFTWARE'] and
             not is_prod_appengine_mvms())
 
 
 def is_prod_appengine_mvms():
+    """
+    Return true if the application is running.
+
+    Args:
+    """
     return os.environ.get('GAE_VM', False) == 'true'

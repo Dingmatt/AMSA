@@ -58,6 +58,12 @@ class Scheduler(object):
     jobs, keep record of scheduled jobs and handle their execution.
     """
     def __init__(self):
+        """
+        Initialize the job.
+
+        Args:
+            self: (todo): write your description
+        """
         self.jobs = []
 
     def run_pending(self):
@@ -126,6 +132,13 @@ class Scheduler(object):
         return job
 
     def _run_job(self, job):
+        """
+        Run a job.
+
+        Args:
+            self: (todo): write your description
+            job: (int): write your description
+        """
         ret = job.run()
         if isinstance(ret, CancelJob) or ret is CancelJob:
             self.cancel_job(job)
@@ -163,6 +176,13 @@ class Job(object):
     method, which also defines its `interval`.
     """
     def __init__(self, interval):
+        """
+        Initialize the job.
+
+        Args:
+            self: (todo): write your description
+            interval: (int): write your description
+        """
         self.interval = interval  # pause interval * unit between runs
         self.job_func = None  # the job job_func to run
         self.unit = None  # time units, e.g. 'minutes', 'hours', ...
@@ -181,7 +201,19 @@ class Job(object):
         return self.next_run < other.next_run
 
     def __repr__(self):
+        """
+        Return a representation of the job.
+
+        Args:
+            self: (todo): write your description
+        """
         def format_time(t):
+            """
+            Format a time ascii
+
+            Args:
+                t: (todo): write your description
+            """
             return t.strftime('%Y-%m-%d %H:%M:%S') if t else '[never]'
 
         timestats = '(last run: %s, next run: %s)' % (
@@ -209,92 +241,194 @@ class Job(object):
 
     @property
     def second(self):
+        """
+        Return the interval of the interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use seconds instead of second'
         return self.seconds
 
     @property
     def seconds(self):
+        """
+        Returns the number of seconds.
+
+        Args:
+            self: (todo): write your description
+        """
         self.unit = 'seconds'
         return self
 
     @property
     def minute(self):
+        """
+        Return the interval of the interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use minutes instead of minute'
         return self.minutes
 
     @property
     def minutes(self):
+        """
+        Returns the minimum unit.
+
+        Args:
+            self: (todo): write your description
+        """
         self.unit = 'minutes'
         return self
 
     @property
     def hour(self):
+        """
+        Return the number of hours of the interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use hours instead of hour'
         return self.hours
 
     @property
     def hours(self):
+        """
+        The number of hours in seconds.
+
+        Args:
+            self: (todo): write your description
+        """
         self.unit = 'hours'
         return self
 
     @property
     def day(self):
+        """
+        Return the day of the interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use days instead of day'
         return self.days
 
     @property
     def days(self):
+        """
+        Returns the number of days
+
+        Args:
+            self: (todo): write your description
+        """
         self.unit = 'days'
         return self
 
     @property
     def week(self):
+        """
+        Returns the week
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use weeks instead of week'
         return self.weeks
 
     @property
     def weeks(self):
+        """
+        Return the unit. date.
+
+        Args:
+            self: (todo): write your description
+        """
         self.unit = 'weeks'
         return self
 
     @property
     def monday(self):
+        """
+        Return the day.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use mondays instead of monday'
         self.start_day = 'monday'
         return self.weeks
 
     @property
     def tuesday(self):
+        """
+        Return the start day.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use tuesdays instead of tuesday'
         self.start_day = 'tuesday'
         return self.weeks
 
     @property
     def wednesday(self):
+        """
+        Return the interval of the interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use wedesdays instead of wednesday'
         self.start_day = 'wednesday'
         return self.weeks
 
     @property
     def thursday(self):
+        """
+        Return a day.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use thursday instead of thursday'
         self.start_day = 'thursday'
         return self.weeks
 
     @property
     def friday(self):
+        """
+        Return a day.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use fridays instead of friday'
         self.start_day = 'friday'
         return self.weeks
 
     @property
     def saturday(self):
+        """
+        Return the interval of this interval.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use saturdays instead of saturday'
         self.start_day = 'saturday'
         return self.weeks
 
     @property
     def sunday(self):
+        """
+        Return the day of the day.
+
+        Args:
+            self: (todo): write your description
+        """
         assert self.interval == 1, 'Use sundays instead of sunday'
         self.start_day = 'sunday'
         return self.weeks

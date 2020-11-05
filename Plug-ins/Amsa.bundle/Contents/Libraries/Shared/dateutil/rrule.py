@@ -65,6 +65,14 @@ class weekday(weekdaybase):
     This version of weekday does not allow n = 0.
     """
     def __init__(self, wkday, n=None):
+        """
+        Initialize the number of the table.
+
+        Args:
+            self: (todo): write your description
+            wkday: (todo): write your description
+            n: (int): write your description
+        """
         if n == 0:
             raise ValueError("Can't create weekday with n==0")
 
@@ -79,6 +87,12 @@ def _invalidates_cache(f):
     cached length.
     """
     def inner_func(self, *args, **kwargs):
+        """
+        Decorator for caching a function.
+
+        Args:
+            self: (todo): write your description
+        """
         rv = f(self, *args, **kwargs)
         self._invalidate_cache()
         return rv
@@ -88,6 +102,13 @@ def _invalidates_cache(f):
 
 class rrulebase(object):
     def __init__(self, cache=False):
+        """
+        Initialize the cache.
+
+        Args:
+            self: (todo): write your description
+            cache: (todo): write your description
+        """
         if cache:
             self._cache = []
             self._cache_lock = _thread.allocate_lock()
@@ -98,6 +119,12 @@ class rrulebase(object):
             self._len = None
 
     def __iter__(self):
+        """
+        Return an iterator for the cached data.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._cache_complete:
             return iter(self._cache)
         elif self._cache is None:
@@ -106,6 +133,12 @@ class rrulebase(object):
             return self._iter_cached()
 
     def _invalidate_cache(self):
+        """
+        Invalidate the cached cache.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._cache is not None:
             self._cache = []
             self._cache_complete = False
@@ -117,6 +150,12 @@ class rrulebase(object):
         self._len = None
 
     def _iter_cached(self):
+        """
+        Iterate over the cached cached cached data.
+
+        Args:
+            self: (todo): write your description
+        """
         i = 0
         gen = self._cache_gen
         cache = self._cache
@@ -142,6 +181,13 @@ class rrulebase(object):
             i += 1
 
     def __getitem__(self, item):
+        """
+        Return item from cache.
+
+        Args:
+            self: (todo): write your description
+            item: (str): write your description
+        """
         if self._cache_complete:
             return self._cache[item]
         elif isinstance(item, slice):
@@ -164,6 +210,13 @@ class rrulebase(object):
             return list(iter(self))[item]
 
     def __contains__(self, item):
+        """
+        Return true if item is contained in the cache.
+
+        Args:
+            self: (todo): write your description
+            item: (str): write your description
+        """
         if self._cache_complete:
             return item in self._cache
         else:
@@ -420,6 +473,29 @@ class rrule(rrulebase):
                  byweekno=None, byweekday=None,
                  byhour=None, byminute=None, bysecond=None,
                  cache=False):
+        """
+        Initialize dates. datetime.
+
+        Args:
+            self: (todo): write your description
+            freq: (float): write your description
+            dtstart: (todo): write your description
+            interval: (int): write your description
+            wkst: (todo): write your description
+            count: (int): write your description
+            until: (str): write your description
+            bysetpos: (todo): write your description
+            bymonth: (todo): write your description
+            bymonthday: (todo): write your description
+            byyearday: (int): write your description
+            byeaster: (todo): write your description
+            byweekno: (int): write your description
+            byweekday: (int): write your description
+            byhour: (str): write your description
+            byminute: (int): write your description
+            bysecond: (int): write your description
+            cache: (todo): write your description
+        """
         super(rrule, self).__init__(cache)
         global easter
         if not dtstart:
@@ -747,6 +823,12 @@ class rrule(rrulebase):
 
 
     def _iter(self):
+        """
+        Iterate over records.
+
+        Args:
+            self: (todo): write your description
+        """
         year, month, day, hour, minute, second, weekday, yearday, _ = \
             self._dtstart.timetuple()
 
@@ -1088,11 +1170,26 @@ class _iterinfo(object):
                  "wdaymask", "wnomask", "nwdaymask", "eastermask"]
 
     def __init__(self, rrule):
+        """
+        Initialize the rrule.
+
+        Args:
+            self: (todo): write your description
+            rrule: (str): write your description
+        """
         for attr in self.__slots__:
             setattr(self, attr, None)
         self.rrule = rrule
 
     def rebuild(self, year, month):
+        """
+        Rebuilds the week
+
+        Args:
+            self: (todo): write your description
+            year: (int): write your description
+            month: (todo): write your description
+        """
         # Every mask is 7 days longer to handle cross-year weekly periods.
         rr = self.rrule
         if year != self.lastyear:
@@ -1223,9 +1320,27 @@ class _iterinfo(object):
         self.lastmonth = month
 
     def ydayset(self, year, month, day):
+        """
+        Return a list of days in the given year.
+
+        Args:
+            self: (todo): write your description
+            year: (str): write your description
+            month: (str): write your description
+            day: (todo): write your description
+        """
         return list(range(self.yearlen)), 0, self.yearlen
 
     def mdayset(self, year, month, day):
+        """
+        Return a set of datetime objects for the given year.
+
+        Args:
+            self: (todo): write your description
+            year: (str): write your description
+            month: (str): write your description
+            day: (todo): write your description
+        """
         dset = [None]*self.yearlen
         start, end = self.mrange[month-1:month+1]
         for i in range(start, end):
@@ -1233,6 +1348,15 @@ class _iterinfo(object):
         return dset, start, end
 
     def wdayset(self, year, month, day):
+        """
+        Return a date object for the given day.
+
+        Args:
+            self: (todo): write your description
+            year: (str): write your description
+            month: (str): write your description
+            day: (todo): write your description
+        """
         # We need to handle cross-year weeks here.
         dset = [None]*(self.yearlen+7)
         i = datetime.date(year, month, day).toordinal()-self.yearordinal
@@ -1248,12 +1372,30 @@ class _iterinfo(object):
         return dset, start, i
 
     def ddayset(self, year, month, day):
+        """
+        Return a dset of the year.
+
+        Args:
+            self: (todo): write your description
+            year: (str): write your description
+            month: (str): write your description
+            day: (todo): write your description
+        """
         dset = [None] * self.yearlen
         i = datetime.date(year, month, day).toordinal() - self.yearordinal
         dset[i] = i
         return dset, i, i + 1
 
     def htimeset(self, hour, minute, second):
+        """
+        Htimeset objects representing a given day.
+
+        Args:
+            self: (todo): write your description
+            hour: (todo): write your description
+            minute: (float): write your description
+            second: (todo): write your description
+        """
         tset = []
         rr = self.rrule
         for minute in rr._byminute:
@@ -1264,6 +1406,15 @@ class _iterinfo(object):
         return tset
 
     def mtimeset(self, hour, minute, second):
+        """
+        Return a list of datetime objects for the given hour.
+
+        Args:
+            self: (todo): write your description
+            hour: (todo): write your description
+            minute: (float): write your description
+            second: (todo): write your description
+        """
         tset = []
         rr = self.rrule
         for second in rr._bysecond:
@@ -1272,6 +1423,15 @@ class _iterinfo(object):
         return tset
 
     def stimeset(self, hour, minute, second):
+        """
+        Convert a date.
+
+        Args:
+            self: (todo): write your description
+            hour: (todo): write your description
+            minute: (float): write your description
+            second: (float): write your description
+        """
         return (datetime.time(hour, minute, second,
                 tzinfo=self.rrule._tzinfo),)
 
@@ -1286,6 +1446,14 @@ class rruleset(rrulebase):
 
     class _genitem(object):
         def __init__(self, genlist, gen):
+            """
+            Initialize generator.
+
+            Args:
+                self: (todo): write your description
+                genlist: (str): write your description
+                gen: (todo): write your description
+            """
             try:
                 self.dt = advance_iterator(gen)
                 genlist.append(self)
@@ -1295,6 +1463,12 @@ class rruleset(rrulebase):
             self.gen = gen
 
         def __next__(self):
+            """
+            Remove the next item from heap.
+
+            Args:
+                self: (todo): write your description
+            """
             try:
                 self.dt = advance_iterator(self.gen)
             except StopIteration:
@@ -1307,18 +1481,53 @@ class rruleset(rrulebase):
         next = __next__
 
         def __lt__(self, other):
+            """
+            Determine if two datetimeindex objects.
+
+            Args:
+                self: (todo): write your description
+                other: (todo): write your description
+            """
             return self.dt < other.dt
 
         def __gt__(self, other):
+            """
+            Determine if other and other.
+
+            Args:
+                self: (todo): write your description
+                other: (todo): write your description
+            """
             return self.dt > other.dt
 
         def __eq__(self, other):
+            """
+            Determine if two dataset objects are equal.
+
+            Args:
+                self: (todo): write your description
+                other: (todo): write your description
+            """
             return self.dt == other.dt
 
         def __ne__(self, other):
+            """
+            Returns true if the difference between two datetime objects.
+
+            Args:
+                self: (todo): write your description
+                other: (todo): write your description
+            """
             return self.dt != other.dt
 
     def __init__(self, cache=False):
+        """
+        Initialize the cache.
+
+        Args:
+            self: (todo): write your description
+            cache: (todo): write your description
+        """
         super(rruleset, self).__init__(cache)
         self._rrule = []
         self._rdate = []
@@ -1353,6 +1562,12 @@ class rruleset(rrulebase):
         self._exdate.append(exdate)
 
     def _iter(self):
+        """
+        Iterate over an iterator.
+
+        Args:
+            self: (todo): write your description
+        """
         rlist = []
         self._rdate.sort()
         self._genitem(rlist, iter(self._rdate))
@@ -1399,9 +1614,27 @@ class _rrulestr(object):
                     "FR": 4, "SA": 5, "SU": 6}
 
     def _handle_int(self, rrkwargs, name, value, **kwargs):
+        """
+        Handle an int value.
+
+        Args:
+            self: (todo): write your description
+            rrkwargs: (dict): write your description
+            name: (str): write your description
+            value: (todo): write your description
+        """
         rrkwargs[name.lower()] = int(value)
 
     def _handle_int_list(self, rrkwargs, name, value, **kwargs):
+        """
+        Handle an int value from an integer.
+
+        Args:
+            self: (todo): write your description
+            rrkwargs: (dict): write your description
+            name: (str): write your description
+            value: (str): write your description
+        """
         rrkwargs[name.lower()] = [int(x) for x in value.split(',')]
 
     _handle_INTERVAL = _handle_int
@@ -1417,9 +1650,27 @@ class _rrulestr(object):
     _handle_BYSECOND = _handle_int_list
 
     def _handle_FREQ(self, rrkwargs, name, value, **kwargs):
+        """
+        Handle ** kwargs
+
+        Args:
+            self: (todo): write your description
+            rrkwargs: (dict): write your description
+            name: (str): write your description
+            value: (todo): write your description
+        """
         rrkwargs["freq"] = self._freq_map[value]
 
     def _handle_UNTIL(self, rrkwargs, name, value, **kwargs):
+        """
+        Parse a datetime value.
+
+        Args:
+            self: (todo): write your description
+            rrkwargs: (dict): write your description
+            name: (str): write your description
+            value: (todo): write your description
+        """
         global parser
         if not parser:
             from dateutil import parser
@@ -1431,6 +1682,15 @@ class _rrulestr(object):
             raise ValueError("invalid until date")
 
     def _handle_WKST(self, rrkwargs, name, value, **kwargs):
+        """
+        Handle ** kwargs.
+
+        Args:
+            self: (todo): write your description
+            rrkwargs: (dict): write your description
+            name: (str): write your description
+            value: (todo): write your description
+        """
         rrkwargs["wkst"] = self._weekday_map[value]
 
     def _handle_BYWEEKDAY(self, rrkwargs, name, value, **kwargs):
@@ -1466,6 +1726,17 @@ class _rrulestr(object):
                          cache=False,
                          ignoretz=False,
                          tzinfos=None):
+        """
+        Parses a rfc rfc rfc rfc rfc.
+
+        Args:
+            self: (todo): write your description
+            line: (str): write your description
+            dtstart: (todo): write your description
+            cache: (bool): write your description
+            ignoretz: (bool): write your description
+            tzinfos: (todo): write your description
+        """
         if line.find(':') != -1:
             name, value = line.split(':')
             if name != "RRULE":
@@ -1495,6 +1766,20 @@ class _rrulestr(object):
                    compatible=False,
                    ignoretz=False,
                    tzinfos=None):
+        """
+        Parse an rfc 33322 string.
+
+        Args:
+            self: (todo): write your description
+            s: (todo): write your description
+            dtstart: (todo): write your description
+            cache: (bool): write your description
+            unfold: (todo): write your description
+            forceset: (bool): write your description
+            compatible: (str): write your description
+            ignoretz: (bool): write your description
+            tzinfos: (todo): write your description
+        """
         global parser
         if compatible:
             forceset = True
@@ -1600,6 +1885,13 @@ class _rrulestr(object):
                                              tzinfos=tzinfos)
 
     def __call__(self, s, **kwargs):
+        """
+        Parse s and return the result.
+
+        Args:
+            self: (todo): write your description
+            s: (array): write your description
+        """
         return self._parse_rfc(s, **kwargs)
 
 rrulestr = _rrulestr()

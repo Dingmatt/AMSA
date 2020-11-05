@@ -93,6 +93,13 @@ except ImportError:
                                 (3, 2) <= sys.version_info)
 
         def __init__(self, protocol_version):
+            """
+            Initialize the ssl certificate.
+
+            Args:
+                self: (todo): write your description
+                protocol_version: (tuple): write your description
+            """
             self.protocol = protocol_version
             # Use default values from a real SSLContext
             self.check_hostname = False
@@ -104,16 +111,39 @@ except ImportError:
             self.ciphers = None
 
         def load_cert_chain(self, certfile, keyfile):
+            """
+            Load the certificate chain
+
+            Args:
+                self: (todo): write your description
+                certfile: (str): write your description
+                keyfile: (str): write your description
+            """
             self.certfile = certfile
             self.keyfile = keyfile
 
         def load_verify_locations(self, cafile=None, capath=None):
+            """
+            Load certificates from the given cafile.
+
+            Args:
+                self: (todo): write your description
+                cafile: (str): write your description
+                capath: (str): write your description
+            """
             self.ca_certs = cafile
 
             if capath is not None:
                 raise SSLError("CA directories not supported in older Pythons")
 
         def set_ciphers(self, cipher_suite):
+            """
+            Sets the ciphers.
+
+            Args:
+                self: (todo): write your description
+                cipher_suite: (str): write your description
+            """
             if not self.supports_set_ciphers:
                 raise TypeError(
                     'Your version of Python does not support setting '
@@ -123,6 +153,15 @@ except ImportError:
             self.ciphers = cipher_suite
 
         def wrap_socket(self, socket, server_hostname=None, server_side=False):
+            """
+            Wrap socket_socket.
+
+            Args:
+                self: (todo): write your description
+                socket: (todo): write your description
+                server_hostname: (str): write your description
+                server_side: (str): write your description
+            """
             warnings.warn(
                 'A true SSLContext object is not available. This prevents '
                 'urllib3 from configuring SSL appropriately and may cause '
