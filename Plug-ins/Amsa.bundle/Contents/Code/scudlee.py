@@ -43,35 +43,37 @@ class ScudLee():
     def __init__(self, anidbid = None, tvdbid = None):
         if anidbid != None or tvdbid != None:
             if anidbid != None: 
-                data = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (anidbid))[0]
+                data = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (anidbid))
             elif tvdbid != None: 
-                data = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))[0]
-            self.Load(data)
-            self.SeriesList = []
-            if self.TvdbId:
-                self.SeriesList = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (self.TvdbId))
-            else:
-                self.SeriesList = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (self.AnidbId))
-            visited = []
-            remove = []
-
-            for series in self.SeriesList:
-                current = series.get("anidbid")
-                if current in visited:
-                    remove.append(series)
+                data = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (tvdbid))
+				
+            if data != None:
+                self.Load(data[0])
+                self.SeriesList = []
+                if self.TvdbId:
+                    self.SeriesList = MappingTree().xpath("""./anime[@tvdbid="%s"]""" % (self.TvdbId))
                 else:
-                    visited.append(current)
+                    self.SeriesList = MappingTree().xpath("""./anime[@anidbid="%s"]""" % (self.AnidbId))
+                visited = []
+                remove = []
+
+                for series in self.SeriesList:
+                    current = series.get("anidbid")
+                    if current in visited:
+                        remove.append(series)
+                    else:
+                        visited.append(current)
                     
-            for item in remove:
-                self.SeriesList.remove(item)
+                for item in remove:
+                    self.SeriesList.remove(item)
             
-            #Log("SeriesList: %s %s %s" % (self.SeriesList, self.TvdbId, self.AnidbId))
-            self.SeriesList = sorted(self.SeriesList, key=lambda x: int(x.get("anidbid")))   
-            for series in self.SeriesList:            
-                if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
-                    self.FirstSeries = series.get("anidbid")
-            if not self.FirstSeries:
-                self.FirstSeries = anidbid
+                #Log("SeriesList: %s %s %s" % (self.SeriesList, self.TvdbId, self.AnidbId))
+                self.SeriesList = sorted(self.SeriesList, key=lambda x: int(x.get("anidbid")))   
+                for series in self.SeriesList:            
+                    if series.get("defaulttvdbseason") == "1" or (series.get("defaulttvdbseason") == "a" and series.get("episodeoffset") == ""):
+                        self.FirstSeries = series.get("anidbid")
+                if not self.FirstSeries:
+                    self.FirstSeries = anidbid
     
     def Load(self, data):
         if data.get("anidbid"):
