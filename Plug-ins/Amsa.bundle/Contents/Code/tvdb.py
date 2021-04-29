@@ -89,7 +89,7 @@ class TvDB(constants.Series):
                     bannerPath = GetElementText(banner, "BannerPath")
                     bannerThumb = GetElementText(banner, "ThumbnailPath")
                     if bannerThumb == None or bannerThumb == "":
-                        bannerThumb = "_cache" + "/" + bannerPath 
+                        bannerThumb = os.path.splitext(bannerPath)[0] + '_t' + os.path.splitext(bannerPath)[1]
                         
                     metatype = ("art"       if bannerType == "fanart" else \
                                 "posters"   if bannerType == "poster" else \
@@ -186,7 +186,7 @@ class TvDB(constants.Series):
                 root = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
                 root = XML.ElementFromString(root)
                 bannerPath = GetElementText(data, "filename")
-                bannerThumb = "_cache" + "/" + bannerPath
+                bannerThumb = os.path.splitext(bannerPath)[0] + '_t' + os.path.splitext(bannerPath)[1]
                 mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), bannerThumb)  
                 SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)                
                 self.Thumbs = root
