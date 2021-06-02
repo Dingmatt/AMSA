@@ -2,7 +2,7 @@
 A Plex anime agent using TVDB and AniDB data
 
 
-Amsa is an anime oriented Plex agent which has been designed to gather metadata from multiple sources in order to present you with the richest Plex experience available, it has been designed to allow you to store your shows in either the AniDB or TVDB standard whilst still benefiting form the input from both sites. 
+Amsa is an anime oriented Plex agent which has been designed to gather metadata from multiple sources in order to present you with the richest Plex experience available, it has been designed to allow you to store your shows in either the AniDB or TVDB standard whilst still benefitting from the input from both sites. 
 
 *TVDB standard is advised during the alpha period as the AniDB standard is still in testing*
 
@@ -12,7 +12,7 @@ The Amsa was based on Atomicstrawberry & ZeroQI's Hama (https://github.com/ZeroQ
     
 Metadata source
 ===============
-Amsa uses metadate from the following sources:
+Amsa uses metadata from the following sources:
 - AniDB (Posters, Series Info, Ratings & Tags)
 - TVDB (Posters, Background, Banner, Series Info, Episode Info)
 - Plex (Themes Songs)
@@ -54,7 +54,7 @@ Example:
 Troubleshooting:
 ================
 If files and series are showing in Plex GUI the scanner did its job
-If files that are showing correctly but do not have all metadata updating, its the agent thats at fault.
+If files that are showing correctly but do not have all metadata updating, the agent is at fault.
 If the files and series have their titles / descriptions but the posters are missing then check that all the data folders are present and the agent is where it should be.
 
 Please ensure you have the latest version of Amsa before reporting any issues, to do this please follow these steps:
