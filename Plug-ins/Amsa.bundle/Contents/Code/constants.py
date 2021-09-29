@@ -93,7 +93,7 @@ TVDB_SERIE_URL                              = "http://thetvdb.com/?tab=series&id
 ANIDB_TVDB_MAPPING                          = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-list-master.xml"                                                                                
 ANIDB_COLLECTION                            = "http://raw.githubusercontent.com/ScudLee/anime-lists/master/anime-movieset-list.xml"
 ANIDB_TVDB_MAPPING_CUSTOM                   = os.path.join(CacheDirectory, "anime-list-custom.xml")
-ANIDB_TVDB_MAPPING_CORRECTIONS              = "http://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/anime-list-corrections.xml"  
+ANIDB_TVDB_MAPPING_CORRECTIONS              = "https://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/Cache/anime-list-corrections.xml"  
 #-------------------SCUDLEE----------------#
 
 #-------------------PLEX-------------------#
