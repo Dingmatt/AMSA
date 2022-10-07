@@ -1,4 +1,4 @@
-import constants, unicodedata, ast, datetime, re, requests, StringIO, gzip, io, shutil, string, lxml, logging, difflib, heapq, plexproxy.plexrequest as plexrequest
+import constants, unicodedata, ast, datetime, re, requests, StringIO, gzip, io, shutil, string, lxml, difflib, heapq, plexproxy.plexrequest as plexrequest
 from lxml import etree
 from unidecode import unidecode
 from time import sleep
@@ -6,10 +6,8 @@ from datetime import timedelta, datetime as dt
 from string import maketrans 
 from plexproxy.plexresponse import plexResponse
 
-global AniDB_WaitUntil, queue, req_proxy, AniDB_RequestCount
+global AniDB_WaitUntil
 AniDB_WaitUntil = dt.now() 
-AniDB_RequestCount = 0
-strptime = dt.strptime
 
 ns = etree.FunctionNamespace(None)
 ns['upper-case'] = lambda context, s: str.upper(s)
@@ -19,68 +17,25 @@ ns['clean-title-filter'] = lambda context, s: CleanTitle(s, True)
 ns['is-match'] = lambda context, x,y: SequenceMatch(x, y)
     
 def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
-    Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
-    global AniDB_WaitUntil, req_proxy #, AniDB_RequestCount
-    #try:
-    #    netLock.acquire()
+    global AniDB_WaitUntil  
     result = LoadFile(filename, directory, cache) 
-    if not result:
+    
+    if not result or (result and not len(result) > 1024):
+        Log.Debug("Functions - XMLFromURL() - url: '%s', filename: '%s'" % (url, filename))
         try: 
-            if url.startswith(constants.ANIDB_HTTP_API_URL):
+            if url.startswith(constants.ANIDB_HTTP_API_URL) or url.startswith(constants.ANIDB_TITLES) or url.startswith(constants.ANIDB_PIC_BASE_URL):
                 runOnce = True
                 while AniDB_WaitUntil > dt.now():
                     if runOnce:
-                        Log("Functions - XMLFromURL() - AniDB AntiBan Delay: %s" % (AniDB_WaitUntil))#% (AniDB_RequestCount)) 
-                        #AniDB_RequestCount += 1
+                        Log("Functions - XMLFromURL() - AniDB AntiBan Delay: %s" % (AniDB_WaitUntil))
                         runOnce = False
                     sleep(0.1)
                 AniDB_WaitUntil = dt.now() + timedelta(seconds=constants.ANIDB_ANTIBAN_WAIT) 
-                # if AniDB_RequestCount >= constants.ANIDB_THROTTLE_THRESHOLD:
-                    # req_proxy.randomize_proxy()
-                    # AniDB_RequestCount = 0
-                # result = None
-                # attempts = 0
-                # while result is None:
-                    # if len(req_proxy.get_proxy_list()) == 0: RequestProxy(sustain=True)
-                    # current_proxy = req_proxy.current_proxy_ip()
-                    # request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)
-                    # if request is not None and request.status_code == 200 and len(request.text) > 1024:
-                        # result = request.text
-                    # #else:
-                        # #sleep(0.5)
-                        # #Log("Test: %s" % (proxy == req_proxy.current_proxy))
-                    # if current_proxy == req_proxy.current_proxy_ip():
-                        # req_proxy.randomize_proxy()
-                        # AniDB_RequestCount = 0
-                        # attempts = 0
-                    # Log("Attempt 1: %s, %s" % (attempts, len(req_proxy.get_proxy_list())))    
-                    # attempts +=1
-            # else:
             result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8", "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"}, cacheTime=cache, timeout=timeout))
             if url.endswith(".gz"):  result = Decompress(result)
-            if str(result).startswith("<error>"):
-                # req_proxy.randomize_proxy()
-                # AniDB_RequestCount = 0
+            if str(result).startswith("<error>") or str(result).startswith("<Element error at "):
+                Log.Debug("Functions - XMLFromURL() - Not an XML file, Possibly Ban, result: '%s'" % result)
                 result = None
-                attempts = 0
-                while result is None:
-                    if len(req_proxy.get_proxy_list()) == 0: req_proxy = RequestProxy(sustain=True)
-                    current_proxy = req_proxy.current_proxy_ip()
-                    request = req_proxy.generate_proxied_request(url, params={}, req_timeout=2)  
-                    if request is not None and request.status_code == 200 and len(request.text) > 1024:
-                        result = request.text
-                    #else:
-                        #sleep(0.5)
-                        #Log("Test: %s" % (proxy == req_proxy.current_proxy))
-                    if current_proxy == req_proxy.current_proxy_ip():
-                        req_proxy.randomize_proxy()
-                        # AniDB_RequestCount = 0
-                        attempts = 0
-                    Log("Attempt 2: %s, %s" % (attempts, len(req_proxy.get_proxy_list())))  
-                    attempts +=1
-                        
-                Log("Functions - XMLFromURL() - AniDB AntiBan Proxy") 
-            logging.Log_AniDB(url)
                
         except Exception as e: 
             result = None 
@@ -92,7 +47,7 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         elif filename and Data.Exists(filename):  # Loading locally if backup exists
             Log.Debug("Functions - XMLFromURL() - Loading locally since banned or empty file (result page <1024 bytes)")
             try: result = Data.Load(filename)
-            except: Log.Debug("Functions - XMLFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename)); return
+            except Exception as e: Log.Debug("Functions - XMLFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename))
     
     if url==constants.ANIDB_TVDB_MAPPING and Data.Exists(constants.ANIDB_TVDB_MAPPING_CUSTOM):
         if Data.Exists(constants.ANIDB_TVDB_MAPPING_CORRECTIONS):
@@ -102,18 +57,10 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         Log.Debug("Functions - XMLFromURL() - Loading local custom mapping - url: '%s'" % constants.ANIDB_TVDB_MAPPING_CUSTOM)
         result_custom = Data.Load(constants.ANIDB_TVDB_MAPPING_CUSTOM)
         result = result_custom[:result_custom.rfind("</anime-list>")-1] + result[result.find("<anime-list>")+len("<anime-list>")+1:] 
-        
-        #SaveFile(result, "Test.xml")
 
     if result:
-        result = etree.fromstring(result)
-        #result = XML.ElementFromString(result)
-        if str(result).startswith("<Element error at "):  
-            Log.Debug("Functions - XMLFromURL() - Not an XML file, AniDB banned possibly, result: '%s'" % result)
-        else:       
-            return result  
-    #finally:
-    #    netLock.release()
+        result = etree.fromstring(result) 
+        return result  
         
     return None
 
@@ -128,12 +75,10 @@ def Decompress(file):
     return file
 
 def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
-    Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
     global AniDB_WaitUntil
-    #try:
-    #    netLock.acquire()
     result = LoadFile(filename, directory, cache) 
     if not result:
+        Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
         try: 
             result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
             result = result.content
@@ -154,8 +99,6 @@ def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, t
                 Log.Debug("Functions - FileFromURL() - Loading locally failed but data present - url: '%s', filename: '%s'" % (url, filename))
     if result:     
         return result  
-    #finally:
-    #    netLock.release()     
     return None
     
 def LoadFile(filename="", directory="", cache=constants.DefaultCache):  
@@ -163,9 +106,8 @@ def LoadFile(filename="", directory="", cache=constants.DefaultCache):
     result = None
     if filename and Data.Exists(filename):       
         file = os.path.abspath(os.path.join(constants.CachePath, "..", filename))
-        Log.Debug("Functions - LoadFile() - Filename: '%s', CacheTime: '%s', Limit: '%s'" % (file, time.ctime(os.stat(file).st_mtime), time.ctime(time.time() - cache)))
         if os.path.isfile(file) and os.stat(file).st_mtime > (time.time() - cache):
-            Log.Debug("Functions - LoadFile() - Load from cache")  
+            Log.Debug("Functions - LoadFile() - Filename: '%s', CacheTime: '%s', Limit: '%s'" % (file, time.ctime(os.stat(file).st_mtime), time.ctime(time.time() - cache)))
             result = Data.Load(filename) 
     return result                
 
@@ -182,26 +124,19 @@ def GetAnimeTitleByID(Tree, Id):
     return Tree.xpath("""/animetitles/anime[@aid="%s"]/*""" % Id)
     
 def GetAnimeTitleByName(Tree, Name): 
-    logging.Log_Milestone("GetAnimeTitleByName_" + Name)
     Name = Name.lower()
      
-    #Log("Name: %s" % (Name))
     result = [] 
     
-    logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
     result = Tree.xpath(u"""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
                 [lower-case(string(clean-title(string(text()))))="%s"
                 or contains(lower-case(string(clean-title(string(text())))), "%s")]""" % (Name, Name))
-    logging.Log_Milestone("GetAnimeTitleByName_Xpath_" + Name)
     
     if not result:
-        logging.Log_Milestone("GetAnimeTitleByName_DiffLib_" + Name)
         result = Tree.xpath(u"""./anime/title
                 [@type='main' or @type='official' or @type='syn' or @type='short']
                 [is-match("%s", lower-case(string(clean-title(string(text())))))]""" % (Name))           
-        logging.Log_Milestone("GetAnimeTitleByName_DiffLib_" + Name)   
-    logging.Log_Milestone("GetAnimeTitleByName_" + Name)  
     return result
 
 def SequenceMatch(word, matcher, cutoff=0.6):
@@ -217,9 +152,6 @@ def SequenceMatch(word, matcher, cutoff=0.6):
     return result
     
 def GetPreferedTitle(titles):    
-    #for title in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get('{http://www.w3.org/XML/1998/namespace}lang')) + constants.SERIES_TYPE_PRIORITY.index(x.get('type')), constants.SERIES_TYPE_PRIORITY.index(x.get('type')) ] 
-    #    for x in titles if x.get('{http://www.w3.org/XML/1998/namespace}lang') in constants.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1], x[2])):
-    #    Log.Debug("AniDBTitle() - type: '%s', pri: '%s', sec: '%s'" % (title[0], title[1], title[2]))
     title = None
     try:
         title = sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get("{http://www.w3.org/XML/1998/namespace}lang")) + constants.SERIES_TYPE_PRIORITY.index(x.get("type")), constants.SERIES_TYPE_PRIORITY.index(x.get("type"))] 
@@ -234,8 +166,6 @@ def GetPreferedTitle(titles):
 def GetPreferedTitleNoType(titles):    
     title = None
     
-    #for i in sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get("{http://www.w3.org/XML/1998/namespace}lang"))] for x in titles if x.get("{http://www.w3.org/XML/1998/namespace}lang") in constants.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1])):
-    #    Log("GetPreferedTitleNoType - %s" % (i))
     try:
         title = sorted([[x.text, constants.SERIES_LANGUAGE_PRIORITY.index(x.get("{http://www.w3.org/XML/1998/namespace}lang"))] 
             for x in titles if x.get("{http://www.w3.org/XML/1998/namespace}lang") in constants.SERIES_LANGUAGE_PRIORITY], key=lambda x: (x[1]))[0][0]
@@ -323,9 +253,9 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                             def Image_Task(image=image, metaList=metaList):
                                 #Log("Poster 1: %s, %s, %s" % (image.get("id"), image.get("mainLocalPath"), image.getparent().tag.lower()))
                                 if len(image.get("thumbUrl")) > 0:
-                                    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24)
+                                    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24 * 2)
                                 else:
-                                    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24)
+                                    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
                                 if image.getparent().getparent().tag == "Season":
                                     metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
                                 else:
@@ -336,7 +266,7 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                         for theme in sorted(data, key=lambda x: x.get("id"),  reverse=False):
                             @task
                             def Theme_Task(theme=theme, metaList=metaList):
-                                FileFromURL(theme.get("url"), os.path.basename(theme.get("localPath")), os.path.dirname(theme.get("localPath")), CACHE_1HOUR * 24)
+                                FileFromURL(theme.get("url"), os.path.basename(theme.get("localPath")), os.path.dirname(theme.get("localPath")), CACHE_1HOUR * 24 * 2)
                                 metaList[theme.get("url")] = Proxy.Media(Data.Load(theme.get("localPath")), sort_order=theme.get("id"))
                 return metaList
             else:

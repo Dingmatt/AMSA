@@ -1,4 +1,4 @@
-import constants, functions, lxml, logging
+import constants, functions, lxml
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E
@@ -12,12 +12,11 @@ def ParseNoFromSeason(season, episode, default):
         
 class TvDB(constants.Series):
     def __init__(self, id):
-        logging.Log_Milestone("TvDB" + "_" + id)
         self.ID = id
         
         self.MetaType = "Tvdb"
         
-        data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", os.path.join("TvDB", id), CACHE_1HOUR * 24).xpath("""/Data""")
+        data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", os.path.join("TvDB", id), CACHE_1HOUR * 24 * 2).xpath("""/Data""")
         if data != None:
             data = data[0]
             ##--------------------------------Title--------------------------------##
@@ -67,7 +66,7 @@ class TvDB(constants.Series):
         
             ##--------------------------------Images-------------------------------##
             banners = []
-            bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", os.path.join("TvDB", id), CACHE_1HOUR * 24)
+            bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", os.path.join("TvDB", id), CACHE_1HOUR * 24 * 2)
             if bannersXml:
                 art = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
                 art = XML.ElementFromString(art)
@@ -144,7 +143,6 @@ class TvDB(constants.Series):
                  
             #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
             #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
-            logging.Log_Milestone("TvDB" + "_" + id)
         
     class Episode(constants.Episode):
         def __init__(self, data, id):

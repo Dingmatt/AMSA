@@ -8,16 +8,12 @@ CachePath = os.path.join(BaseDirectory, CacheDirectory)
 BundleExportDirectory = "Export"
 BundleExportPath = os.path.join(BaseDirectory, BundleExportDirectory)
 DefaultTimeout = 30
-DefaultCache = CACHE_1HOUR * 24
+DefaultCache = CACHE_1HOUR * 24 * 2
 ReplaceChars = maketrans("`", "'")
 StreamTypes = {1: "video", 2: "audio", 3: "subtitle"}
 SeriesAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Studio", "Countries", "Duration", "Genres", "Tags", "Collections", "Content_Rating", "Writers", "Directors", "Producers", "Roles", "Art", "Posters", "Banners", "Season", "Themes", "Links"]
 EpisodeAttribs = ["Title", "Summary", "Originally_Available_At", "Rating", "Absolute_Index", "Writers", "Directors", "Producers", "Thumbs"]
-MilestoneFile = "Milestones.html"
-MilestoneLogging = False
 ExportBundles = False
-AniDBFile = "AniDB.html"
-AniDBLogging = False
 FILTER_SEARCH_WORDS  = ['to', 'wa', 'ga', 'no', 'age', 'da', 'chou', 'super', 'yo', 'de', 'chan', 'hime', 'ni', 'sekai',                                                                    # Jp
                         'a',  'of', 'an', 'the', 'motion', 'picture', 'special', 'oav', 'ova', 'tv', 'special', 'eternal', 'final', 'last', 'one', 'movie', 'me',  'princess', 'theater',   # En Continued
                         'le', 'la', 'un', 'les', 'nos', 'vos', 'des', 'ses',                                                                                                                # Fr
@@ -59,7 +55,6 @@ ANIDB_TITLES                                = "http://anidb.net/api/anime-titles
 ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
 ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
 ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              
-ANIDB_SERIE_URL                             = "http://anidb.net/perl-bin/animedb.pl?show=anime&aid=%s"                                           
 
 ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
 ANIDB_RESOURCES_MAL                         = "http://myanimelist.net/anime/%s"
@@ -77,8 +72,10 @@ ANIDB_RESOURCES_HOMEAKI                     = "http://home-aki.cool.ne.jp/anime-
 MINIMUM_WEIGHT                              = Prefs["MinimumWeight"]
 SERIES_TYPE_PRIORITY                        = ["main", "official", "syn", "synonym", "short"]
 ANIDB_THROTTLE_THRESHOLD                    = 100
-ANIDB_ANTIBAN_WAIT                          = 2
+ANIDB_ANTIBAN_WAIT                          = int(Prefs["AniDbAntiBanDelay"]) if int(Prefs["AniDbAntiBanDelay"]) > 2 else 2
 ANIDB_BADTITLES                             = ["^TV Special$", "^Part . of .$", "^Episode [S]?.$", "^Special [S]?.$", "Complete Movie"]
+
+SEARCH_USE_ANIDB                             = Prefs["UseAniDBForAdvancedSearch"]
 #-------------------ANIDB------------------#
 
 #-------------------TVDB-------------------#
@@ -87,6 +84,8 @@ TVDB_BANNERS_URL                            = "http://thetvdb.com/api/DC6295EB0E
 TVDB_SERIE_SEARCH                           = "http://thetvdb.com/api/GetSeries.php?seriesname="                                                 
 TVDB_IMAGES_URL                             = "http://thetvdb.com/banners/"                                                                    
 TVDB_SERIE_URL                              = "http://thetvdb.com/?tab=series&id=%s"  
+
+SEARCH_USE_TVDB                             = Prefs["UseTVDBForAdvancedSearch"]
 #-------------------TVDB-------------------#
 
 #-------------------ANIME-LISTS------------#

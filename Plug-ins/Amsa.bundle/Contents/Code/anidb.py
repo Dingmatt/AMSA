@@ -1,9 +1,8 @@
-import constants, functions, lxml, copy, logging
+import constants, functions, lxml, copy
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
-
 
 def ParseNoFromSeason(season, episode):
     if season >= 1:
@@ -45,8 +44,7 @@ def ParseLocalNoFromType(type, episode, prefix = ""):
 class AniDB(constants.Series):
     
     def __init__(self, id):
-        logging.Log_Milestone("AniDB" + "_" + id)
-        data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", os.path.join("AniDB", id), CACHE_1HOUR * 24).xpath("""/anime""")
+        data = XMLFromURL(constants.ANIDB_HTTP_API_URL + id, id + ".xml", os.path.join("AniDB", id), CACHE_1HOUR * 24 * 2).xpath("""/anime""")
         if data != None:
             data = data[0]
             ##--------------------------------ID-----------------------------------##
@@ -229,7 +227,6 @@ class AniDB(constants.Series):
                 
             #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpCount: '%s', EdCount: '%s', Posters: '%s'"
             #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, len(self.OpList), len(self.EdList), self.Posters) )
-            logging.Log_Milestone("AniDB" + "_" + id)
         
     class Episode(constants.Episode):
         def __init__(self, data, id):

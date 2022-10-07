@@ -1,4 +1,4 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, scudlee, functions, constants, copy, logging, plex, tvdb, anidb
+import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, scudlee, functions, constants, copy, plex, tvdb, anidb
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
@@ -132,7 +132,6 @@ def GenerateEpisode(root, season, media_season, media_episode):
    
    
 def MapSeries(mappingData):
-    #logging.Log_Milestone("MapSeries")
     root = None
     existing = None
     #existing = functions.LoadFile(mappingData.FirstSeries + ".bundle.xml", "Bundles")
@@ -234,7 +233,6 @@ def MapSeries(mappingData):
                 Log("Common - MapSeries() - Unmapped: '%s', '%s' , '%s'" % (episode.getparent().get("anidbid"), episode.get("anidb"), episode.get("missing")))
                 SubElement(unmapped, "Episode", anidbid = episode.getparent().get("anidbid"), anidb = episode.get("anidb"), missing = episode.get("missing"), id = str(i))
                 i = i + 1
-    logging.Log_Milestone("MapSeries")
     return root
 
 def MapLocal(root, media):
@@ -262,7 +260,6 @@ def MapLocal(root, media):
                
             
 # def MapLocal(media, root, anidbid):
-    # logging.Log_Milestone("MapLocal")
     # @parallelize
     # def mapSeasons():
         # for media_season in sorted(media.seasons, key=lambda x: int(x),  reverse=False):
@@ -276,11 +273,8 @@ def MapLocal(root, media):
                         # @task
                         # def mapEpisode(media_season=media_season, media_episode=media_episode, season=season, episode=episode): #, guessId=guessId):
                             # MapEpisode(media, root, media_season, media_episode, anidbid, season, episode)
-    # logging.Log_Milestone("MapLocal")                                                     
-  
   
 # def MapEpisode(media, root, media_season, media_episode, anidbid, season = None, episode = None):
-    # logging.Log_Milestone("MapEpisode_S"+str(media_season)+"E"+(str(media_episode)))
     # if season == None:
         # season = GenerateSeason(root, media_season)
                     
@@ -297,11 +291,8 @@ def MapLocal(root, media):
     # mapped = SubElement(episode, "Mapped")    
     # for match in SearchMap(media_season, media_episode, filename, root, anidbid):
         # SubElement(mapped, match[0], series=match[1], episode=match[2])         
-    # logging.Log_Milestone("MapEpisode_S"+str(media_season)+"E"+(str(media_episode)))
-   
    
 def MapMeta(root):
-    logging.Log_Milestone("MapMeta")
     providerList = [["Anidb"], ["Tvdb","Plex"]]
     @parallelize
     def Providers_Par():
@@ -354,10 +345,8 @@ def MapMeta(root):
                                                     else:
                                                         elementItem = copy.copy(getattr(episode, attrib))
                                                         SubElement(map.getparent().getparent().find("""./%s""" % (attrib)), provider).text =  (u'%s' % (elementItem))
-    logging.Log_Milestone("MapMeta")                                            
 
 def SearchMap(root, media, anidbId, tvdbId):
-    logging.Log_Milestone("SearchMap")
     streamTag = []
     seasonNo = 0
     seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))
@@ -373,7 +362,6 @@ def SearchMap(root, media, anidbId, tvdbId):
         for episodeNo in media.seasons[seasonNo].episodes:
             map = root.xpath("""./Season[@num>=%s]/Episode""" % (seasonNo))
                 
-    logging.Log_Milestone("SearchMap")
     
     # data = []
     # if re.search(r".*\b(?P<season>S\d+)(?P<episode>E\d+)\b.*", filename, re.IGNORECASE) or re.search(r".*\b(?P<type>ncop|op|nced|ed)(?P<episode>\d+)\b.*", filename, re.IGNORECASE):
@@ -395,7 +383,6 @@ def SearchMap(root, media, anidbId, tvdbId):
     # return data
     
 def MapMedia(root, metadata, anidbId, tvdbId):
-    logging.Log_Milestone("MapMedia")
     streamTag = []
     seasonNo = 0
     seasonMap = root.xpath("""./Season[@AnidbId="%s" and @num!="0"]""" % (anidbId))
@@ -406,7 +393,6 @@ def MapMedia(root, metadata, anidbId, tvdbId):
         seasonNo = int(seasonMap.get("num"))   
         
     #Log("Populate Season")
-    logging.Log_Milestone("MapMedia_Season")
     metadata.title = functions.PopulateMetadata(seasonMap.xpath("""./Title/*[node()]"""), str, constants.SERIES_TITLE_PRIORITY)
     metadata.summary = functions.PopulateMetadata(seasonMap.xpath("""./Summary/*[node()]"""), str, constants.SERIES_SUMMARY_PRIORITY)
     metadata.originally_available_at = functions.PopulateMetadata(seasonMap.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.SERIES_ORIGINALLYAVAILABLEAT_PRIORITY)
@@ -424,7 +410,6 @@ def MapMedia(root, metadata, anidbId, tvdbId):
     functions.PopulateMetadata(seasonMap.xpath("""./Banners//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.banners, "Images")
     functions.PopulateMetadata(seasonMap.xpath("""./Season//Image"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_IMAGES_PRIORITY, metadata.seasons, "Images")
     functions.PopulateMetadata(seasonMap.xpath("""./Themes//Theme"""), Framework.modelling.attributes.ProxyContainerObject, constants.SERIES_THEMES_PRIORITY, metadata.themes, "Themes")
-    logging.Log_Milestone("MapMedia_Season")
                     
     @parallelize
     def Episode_Par():
@@ -437,7 +422,6 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                 episode = map.get('num')
                 #Log("Episode: '%s', '%s', %s, %s" % (season, episode, anidbId, map.getparent().get('AnidbId')))                   
                 
-                logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
                 metadata.seasons[season].episodes[episode].title = functions.PopulateMetadata(map.xpath("""./Title/*[node()]"""), str, constants.EPISODE_TITLE_PRIORITY, None, "EpisodeTitle")
                 metadata.seasons[season].episodes[episode].summary = functions.PopulateMetadata(map.xpath("""./Summary/*[node()]"""), str, constants.EPISODE_SUMMARY_PRIORITY)
                 metadata.seasons[season].episodes[episode].originally_available_at = functions.PopulateMetadata(map.xpath("""./Originally_Available_At/*[node()]"""), datetime.date, constants.EPISODE_ORIGINALLYAVAILABLEAT_PRIORITY)
@@ -454,5 +438,3 @@ def MapMedia(root, metadata, anidbId, tvdbId):
                 if map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("audio", "jpn")) > 0 and map.xpath("""count(./Streams/Stream[@type="%s"][@lang="%s"])""" % ("subtitle", "eng")) > 0 and not "English Subbed" in metadata.collections: 
                     metadata.collections.add("English Subbed")
                     streamTag.append("English Subbed")
-                logging.Log_Milestone("MapMedia_Episode_S" + season + "E" + episode)
-    logging.Log_Milestone("MapMedia")

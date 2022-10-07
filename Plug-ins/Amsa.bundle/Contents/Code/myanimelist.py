@@ -5,8 +5,7 @@ from lxml.etree import Element, SubElement, Comment
 
 class MyAnimeList(constants.Series):
     def __init__(self, id):
-        logging.Log_Milestone("MyAnimeList" + "_" + id)
-        data = XMLFromURL(constants.MAL_HTTP_API_URL + id, id + ".xml", os.path.join("MyAnimeList", id), CACHE_1HOUR * 24).xpath("""/anime""")[0]
+        data = XMLFromURL(constants.MAL_HTTP_API_URL + id, id + ".xml", os.path.join("MyAnimeList", id), CACHE_1HOUR * 24 * 2).xpath("""/anime""")[0]
         
         self.ID = id
         
@@ -49,4 +48,3 @@ class MyAnimeList(constants.Series):
         self.Banners = banners 
         
         self.Episodes = []
-        logging.Log_Milestone("MyAnimeList" + "_" + id)

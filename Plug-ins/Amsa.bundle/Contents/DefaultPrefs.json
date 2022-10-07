@@ -42,6 +42,24 @@
 		"default": "false"
 	},
 	{
+		"id": "UseAniDBForAdvancedSearch",
+		"label": "Check aired year with AniDB when searching",
+		"type": "bool",
+		"default": "true"
+	},
+	{
+		"id": "UseTVDBForAdvancedSearch",
+		"label": "Check aired year with TVDB when searching",
+		"type": "bool",
+		"default": "true"
+	},
+	{
+		"id": "AniDbAntiBanDelay",
+		"label": "Delay in seconds between AniDB requests (min 2)",
+		"type": "text",
+		"default": "2"
+	},
+	{
 		"id": "MinimumWeight",
 		"label": "Map categories at or above the minimum weight selected",
 		"type": "text",

@@ -1,5 +1,5 @@
 import sys, re, time, unicodedata, hashlib, types, os, inspect, datetime, string, urllib
-import common, tvdb, anidb, scudlee, logging, functions, constants
+import common, tvdb, anidb, scudlee, functions, constants
 
 from functions import XMLFromURL
 #from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
@@ -36,8 +36,6 @@ class AmsaTVAgent(Agent.TV_Shows):
     
     def search(self, results, media, lang, manual=False):
         Log.Debug("--- Search Begin -------------------------------------------------------------------------------------------")
-        logging.New_Milestones()
-        logging.Log_Milestone("WholeSearch")
         common.RefreshData()
         orig_title = media.show
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
@@ -66,18 +64,30 @@ class AmsaTVAgent(Agent.TV_Shows):
         def searchTitles():
             for anime in common.GetAnimeTitleByName(orig_title):
                 @task
-                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, perfectScore=perfectScore): 
-                    logging.Log_Milestone("Title")
+                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, tvdb=tvdb, scudlee=scudlee, perfectScore=perfectScore, elite=elite, orig_title=orig_title): 
                     anime = Titles(anime, orig_title)
-                    logging.Log_Milestone("Title")
                     isValid = True
                     if (anime.Id in maxi and maxi[anime.Id] <= anime.Score) or (not anime.Id in maxi):
                         maxi[anime.Id] = anime.Score
                     else: 
                         isValid = False
                     if isValid: 
+                        scoreChecked = False
                         startdate = None
-                        if(media.year and anime.Score >= 90):
+                        if(media.year and anime.Score >= 90 and constants.SEARCH_USE_TVDB and not scoreChecked):
+                            mappingData = scudlee.ScudLee(anime.Id)
+                            show = tvdb.TvDB(mappingData.TvdbId) 
+                            if show: 
+                                try: 
+                                    startdate = dateParse(show.Originally_Available_At).year
+                                except: pass
+                                if str(startdate) != str(media.year):
+                                    isValid = False 
+                                Log.Debug("Init - Search() - TVDB - date: '%s', aired: '%s'" % (media.year, startdate)) 
+                            elite.append(isValid)
+                            scoreChecked = True
+                            
+                        if(media.year and anime.Score >= 90 and constants.SEARCH_USE_ANIDB and not scoreChecked):
                             show = anidb.AniDB(anime.Id) 
                             if show: 
                                 try: 
@@ -85,15 +95,18 @@ class AmsaTVAgent(Agent.TV_Shows):
                                 except: pass
                                 if str(startdate) != str(media.year):
                                     isValid = False 
-                                Log.Debug("Init - Search() - date: '%s', aired: '%s'" % (media.year, startdate)) 
+                                Log.Debug("Init - Search() - ANIDB - date: '%s', aired: '%s'" % (media.year, startdate)) 
                             elite.append(isValid)
-                        elif anime.Score >= 90:
+                            scoreChecked = True
+                            
+                        if anime.Score >= 90 and not scoreChecked:
                             elite.append(isValid)
+                            scoreChecked = True
+
                         if isValid:
                             if anime.Score == 100: perfectScore.append(anime.Id)
                             Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
                             results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
-        
         
         if len(list(set(perfectScore))) > 1:
             for result in results:
@@ -104,7 +117,6 @@ class AmsaTVAgent(Agent.TV_Shows):
                          
         if len(elite) > 0 and not True in elite: del results[:]
         results.Sort("score", descending=True)
-        logging.Log_Milestone("WholeSearch")
         return
         
     ### Parse the AniDB anime title XML ##################################################################################################################################
@@ -112,9 +124,6 @@ class AmsaTVAgent(Agent.TV_Shows):
         Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
         if force:
             HTTP.ClearCache()
-        logging.New_Milestones()
-        logging.New_AniDB()
-        logging.Log_Milestone("WholeUpdate")
         common.RefreshData()
         source, id = metadata.id.split("-")     
         Log("Source: %s, ID: %s" % (source, id))
@@ -146,7 +155,3 @@ class AmsaTVAgent(Agent.TV_Shows):
             if constants.ExportBundles:
                 common.ExportMap(map, mappingData.FirstSeries + ".bundle.xml")
             common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
-        logging.Log_Milestone("WholeUpdate")    
-        logging.Log_AniDB(None, True)
-
-    
