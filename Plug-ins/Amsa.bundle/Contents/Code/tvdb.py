@@ -1,4 +1,5 @@
-import constants, functions, lxml
+import constants, functions
+
 from functions import XMLFromURL, GetElementText
 from lxml import etree
 from lxml.builder import E

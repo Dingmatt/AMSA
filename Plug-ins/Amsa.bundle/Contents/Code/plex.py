@@ -1,4 +1,5 @@
-import constants, lxml
+import constants
+
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment

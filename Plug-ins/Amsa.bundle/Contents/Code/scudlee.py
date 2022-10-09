@@ -1,4 +1,5 @@
-import constants, functions, copy
+import constants, functions
+
 from functions import XMLFromURL, GetElementText
  
 global pTitleTree, pMappingTree, pCollectionTree, pCorrectionsTree

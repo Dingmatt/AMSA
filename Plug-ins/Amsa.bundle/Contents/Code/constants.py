@@ -1,4 +1,3 @@
-import string
 from string import maketrans 
 
 #-------------------AMSA-------------------#
@@ -19,6 +18,7 @@ FILTER_SEARCH_WORDS  = ['to', 'wa', 'ga', 'no', 'age', 'da', 'chou', 'super', 'y
                         'le', 'la', 'un', 'les', 'nos', 'vos', 'des', 'ses',                                                                                                                # Fr
                         'i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi']                                                               # Roman digits
 Filter_Regex = r'\b' + r'\b|\b'.join(map(re.escape, FILTER_SEARCH_WORDS)) + r'\b'
+Default_headers = {"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8", "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"}
 
 SERIES_LANGUAGE_PRIORITY                    = [Prefs["SerieLanguage1"].encode("utf-8"), Prefs["SerieLanguage2"].encode("utf-8"), Prefs["SerieLanguage3"].encode("utf-8"), "main"]  
 EPISODE_LANGUAGE_PRIORITY                   = [Prefs["EpisodeLanguage1"].encode("utf-8"), Prefs["EpisodeLanguage2"].encode("utf-8")]                                              
@@ -51,7 +51,7 @@ EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["E
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#
-ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml.gz"   
+ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml"   
 ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
 ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
 ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              

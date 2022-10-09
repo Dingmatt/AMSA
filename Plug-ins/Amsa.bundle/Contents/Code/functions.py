@@ -1,10 +1,9 @@
-import constants, unicodedata, ast, datetime, re, requests, StringIO, gzip, io, shutil, string, lxml, difflib, heapq, plexproxy.plexrequest as plexrequest
+import constants
+
 from lxml import etree
 from unidecode import unidecode
 from time import sleep
 from datetime import timedelta, datetime as dt
-from string import maketrans 
-from plexproxy.plexresponse import plexResponse
 
 global AniDB_WaitUntil
 AniDB_WaitUntil = dt.now() 
@@ -31,8 +30,9 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
                         runOnce = False
                     sleep(0.1)
                 AniDB_WaitUntil = dt.now() + timedelta(seconds=constants.ANIDB_ANTIBAN_WAIT) 
-            result = str(HTTP.Request(url, headers={"Accept-Encoding":"gzip, deflate", "content-type":"charset=utf8", "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"}, cacheTime=cache, timeout=timeout))
-            if url.endswith(".gz"):  result = Decompress(result)
+
+            result = GetFromUrl(url, timeout)
+            
             if str(result).startswith("<error>") or str(result).startswith("<Element error at "):
                 Log.Debug("Functions - XMLFromURL() - Not an XML file, Possibly Ban, result: '%s'" % result)
                 result = None
@@ -63,25 +63,25 @@ def XMLFromURL (url, filename="", directory="", cache=constants.DefaultCache, ti
         return result  
         
     return None
-
-def Decompress(file):
-    times = 0
-    try:
-      while True:
-        file = gzip.GzipFile(fileobj=StringIO.StringIO(file)).read()
-        times += 1
-    except:  pass
-    if times > 0:  Log.Debug("Decompression times: {}".format(times))
-    return file
-
+    
+def GetFromUrl(url, timeout=constants.DefaultTimeout):
+    request = urllib2.Request(url, headers=constants.Default_headers)
+    request.add_header('Accept-encoding', 'gzip')
+    response = urllib2.urlopen(request, context=ssl.SSLContext(ssl.PROTOCOL_SSLv23), timeout=timeout)
+    if response.info().get('Content-Encoding') == 'gzip':
+        buf = StringIO.StringIO(response.read())
+        f = gzip.GzipFile(fileobj=buf)
+        return f.read()
+    else:
+        return response.read()
+        
 def FileFromURL (url, filename="", directory="", cache=constants.DefaultCache, timeout=constants.DefaultTimeout):
     global AniDB_WaitUntil
     result = LoadFile(filename, directory, cache) 
     if not result:
         Log.Debug("Functions - FileFromURL() - url: '%s', filename: '%s'" % (url, filename))
         try: 
-            result = HTTP.Request(url, headers={"Accept-Encoding":"gzip", "content-type":"charset=utf8"}, cacheTime=cache, timeout=timeout)
-            result = result.content
+            result = GetFromUrl(url, timeout)
         except Ex.HTTPError, e:
             result = None 
             Log('Functions - FileFromURL() - HTTPError %s: %s' % (e.code, e.message))
@@ -309,27 +309,13 @@ def safe_unicode(s, encoding='utf-8'):
     else:
         return str(s).decode(encoding)
 
-def downloadfile(name,url):
-    response=requests.get(url,stream=True)
-    absoDirectory = os.path.join(constants.CachePath, name)
-    with io.open(absoDirectory, 'wb') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-    del response
-
-def GetStreamInfo(key, part_id=None):
-    try:
-        item_id = int(key)
-    except ValueError:
-        return
-    
-    plex_item = list(plexrequest.Get(item_id, plexRequestObject))[0]
+def GetStreamInfo(file, part_id=None):  
     d = {"stream": {}}
     data = d["stream"]
 
-    # find current part
     current_part = None
     current_media = None
-    for media in plex_item.media:
+    for media in file.items:
         for part in media.parts:
             if not part_id or str(part.id) == part_id:
                 current_part = part
@@ -341,54 +327,15 @@ def GetStreamInfo(key, part_id=None):
     if not current_part:
         return d
     
-    data["video_codec"] = current_media.video_codec
-    if current_media.audio_codec:
-        data["audio_codec"] = current_media.audio_codec.upper()
-
-        if data["audio_codec"] == "DCA":
-            data["audio_codec"] = "DTS"
-
-    if current_media.audio_channels == 8:
-        data["audio_channels"] = "7.1"
-
-    elif current_media.audio_channels == 6:
-        data["audio_channels"] = "5.1"
-    else:
-        data["audio_channels"] = "%s.0" % str(current_media.audio_channels)
-
-    # iter streams
     audio_language = []
     subtitle_language = []
     for stream in current_part.streams:
-        if stream.stream_type == 1:
-            # video stream
-            data["resolution"] = "%s%s" % (current_media.video_resolution,
-                                           "i" if stream.scan_type != "progressive" else "p")                       
-        if stream.stream_type == 2: 
-            audio_language.append(stream.language_code)
+        if stream.type  == 2: # audio stream
+            audio_language.append(stream.language if hasattr(stream, 'language') else "")
             
-        if stream.stream_type == 3: 
-            subtitle_language.append(stream.language_code)
+        if stream.type  == 3: # subtitle stream
+            subtitle_language.append(stream.language if hasattr(stream, 'language') else "")
             
     data["audio_language"] = audio_language
     data["subtitle_language"] = subtitle_language
     return d
-    
-class plexRequestObject(object):
-    url = None
-    data = None
-    headers = None
-    method = None
-
-    def prepare(self):
-        return self
-
-    def send(self):
-        data = None
-        status_code = 200
-        try:
-            data = HTTP.Request(self.url, headers=self.headers, immediate=True, method=self.method,
-                                timeout=constants.DefaultTimeout)
-        except Ex.HTTPError as e:
-            status_code = e.code
-        return plexResponse(data, status_code, self)

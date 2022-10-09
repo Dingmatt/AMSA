@@ -1,14 +1,7 @@
-import sys, re, time, unicodedata, hashlib, types, os, inspect, datetime, string, urllib
-import common, tvdb, anidb, scudlee, functions, constants
+import sys, os, inspect, time, types, re, lxml, copy, ssl, urllib2, unicodedata, ast, StringIO, gzip, datetime, difflib, string
+import common, functions, constants, tvdb, anidb, scudlee
 
-from functions import XMLFromURL
-#from Common import CommonStart, XMLFromURL, SaveFile, MapSeries, GetElementText
 from dateutil.parser import parse as dateParse
-from lxml import etree
-from lxml.builder import E
-from lxml.etree import Element, SubElement, Comment
-from string import maketrans 
-from common import Titles 
  
 ### Pre-Defined Start function #########################################################################################################################################
 def Start():
@@ -39,7 +32,7 @@ class AmsaTVAgent(Agent.TV_Shows):
         common.RefreshData()
         orig_title = media.show
         if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        Log.Info("Init - Search() - Show: '%s', Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (media.show, orig_title, media.name, urllib.unquote(media.filename) if media.filename else "", str(manual)))
+        Log.Info("Init - Search() - Show: '%s', Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (media.show, orig_title, media.name, urllib2.unquote(media.filename) if media.filename else "", str(manual)))
                
         match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
         if match:
@@ -65,7 +58,7 @@ class AmsaTVAgent(Agent.TV_Shows):
             for anime in common.GetAnimeTitleByName(orig_title):
                 @task
                 def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, tvdb=tvdb, scudlee=scudlee, perfectScore=perfectScore, elite=elite, orig_title=orig_title): 
-                    anime = Titles(anime, orig_title)
+                    anime = common.Titles(anime, orig_title)
                     isValid = True
                     if (anime.Id in maxi and maxi[anime.Id] <= anime.Score) or (not anime.Id in maxi):
                         maxi[anime.Id] = anime.Score
@@ -127,16 +120,6 @@ class AmsaTVAgent(Agent.TV_Shows):
         common.RefreshData()
         source, id = metadata.id.split("-")     
         Log("Source: %s, ID: %s" % (source, id))
-        #filename = ""
-        #for sea_item in media.seasons:
-        #    Log("FileName1: %s" % (sea_item))
-        #    for eps_item in media.seasons[sea_item].episodes:
-        #        Log("FileName2: %s" % (eps_item))
-        #        for media_item in media.seasons[sea_item].episodes[eps_item].items:
-        #            for item_part in media_item.parts:
-        #                filename = item_part.file.lower()
-        #                Log("FileName: %s" % (filename))
-        #functions.downloadfile("test.webm", "https://my.mixtape.moe/sovrtq.webm")
         
         mappingData = None
         if source in  ["anidb", "anidb2"]: 
@@ -151,7 +134,8 @@ class AmsaTVAgent(Agent.TV_Shows):
             #common.MapLocal(media, map, mappingData.AnidbId)
             common.MapLocal(map, media)
             common.MapMeta(map)
-            functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles")
+            functions.SaveFile(lxml.etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles")
             if constants.ExportBundles:
                 common.ExportMap(map, mappingData.FirstSeries + ".bundle.xml")
             common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
+

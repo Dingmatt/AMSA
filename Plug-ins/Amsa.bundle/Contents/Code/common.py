@@ -1,11 +1,11 @@
-import re, time, unicodedata, hashlib, types, os, inspect, datetime, xml, string, scudlee, functions, constants, copy, plex, tvdb, anidb
+import functions, constants
+import plex, tvdb, anidb, scudlee
+
 from lxml import etree
 from lxml.builder import E
 from lxml.etree import Element, SubElement, Comment
 from functions import XMLFromURL
-from string import maketrans 
 from datetime import timedelta  
-
 
 global CleanCache_WaitUntil
 CleanCache_WaitUntil = datetime.datetime.now()
@@ -241,7 +241,6 @@ def MapLocal(root, media):
         if match:
             seasonNo = int(match.group('season'))
             episodeNo = int(match.group('episode'))
-            #Log("Local2: '%s', '%s'" %( seasonNo,episodeNo))
             season = GenerateSeason(root, seasonNo)
             episode = GenerateEpisode(root, season, seasonNo, episodeNo)
             mapped = SubElement(episode, "Mapped") 
@@ -250,12 +249,14 @@ def MapLocal(root, media):
             streams = SubElement(episode, "Streams")
             
             try:
-                plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo].id)
+                plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo])
                 for audio in plex_episode["stream"]["audio_language"]:
                      SubElement(streams, "Stream", type="audio", lang=audio)
                 for subtitle in plex_episode["stream"]["subtitle_language"]:
                      SubElement(streams, "Stream", type="subtitle", lang=subtitle)
-            except: pass 
+            except Exception as e: 
+                Log.Debug("MapLocal - GetStreamInfo() - Exception: '%s'" % (e)) 
+                pass 
             
                
             
