@@ -52,9 +52,10 @@ EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["E
 
 #-------------------ANIDB------------------#
 ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml"   
-ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="          
-ANIDB_PIC_BASE_URL                          = "http://img7.anidb.net/pics/anime/"     
-ANIDB_PIC_THUMB_URL                         = "thumbs/150/%s.jpg-thumb.jpg"                                                              
+ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="            
+ANIDB_IMAGE_DOMAIN                          = "https://cdn.anidb.net/"
+ANIDB_PIC_BASE_URL                          = "images/main/"
+ANIDB_PIC_THUMB_URL                         = "images/150/%s.jpg-thumb.jpg"
 
 ANIDB_RESOURCES_ANN                         = "http://www.animenewsnetwork.com/encyclopedia/anime.php?id=%s"
 ANIDB_RESOURCES_MAL                         = "http://myanimelist.net/anime/%s"

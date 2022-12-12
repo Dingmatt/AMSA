@@ -151,7 +151,7 @@ class AniDB(constants.Series):
                     seiyuu_name  = GetElementText(role, "seiyuu")
                     seiyuu_pic = ""
                     if role.find('seiyuu').get('picture'):
-                        seiyuu_pic  = constants.ANIDB_PIC_BASE_URL + role.find('seiyuu').get('picture') 
+                        seiyuu_pic  = constants.ANIDB_IMAGE_DOMAIN + constants.ANIDB_PIC_BASE_URL + role.find('seiyuu').get('picture') 
                 SubElement(roles, "Role", character_name = character_name, seiyuu_name = seiyuu_name, seiyuu_pic = seiyuu_pic)   
             if not roles is None: self.Roles = roles
             
@@ -160,10 +160,11 @@ class AniDB(constants.Series):
                 season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
                 season = XML.ElementFromString(season)
                 bannerPath = GetElementText(data, "picture")
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.ANIDB_PIC_BASE_URL, os.path.join("AniDB", id, "season"), constants.ANIDB_PIC_THUMB_URL % os.path.splitext(bannerPath)[0])  
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(constants.ANIDB_PIC_BASE_URL + bannerPath, constants.ANIDB_IMAGE_DOMAIN, os.path.join("AniDB", id, "season"), constants.ANIDB_PIC_THUMB_URL % os.path.splitext(bannerPath)[0])  
                 SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, season = "1")
                 self.Season = season
                 self.Posters = copy.deepcopy(season)
+                
             ##--------------------------------Themes-------------------------------##
             self.Themes = []
             
