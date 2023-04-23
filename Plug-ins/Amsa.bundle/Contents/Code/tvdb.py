@@ -98,19 +98,19 @@ class TvDB(constants.Series):
                                 "season"    if bannerType == "season" and bannerType2=="season" else None)  
                 
                     #Log("Images: %s, %s, %s, %s, %s" % (bannerPath, constants.TVDB_IMAGES_URL, id, metatype, bannerThumb))
-                    mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)                  
+                    mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)                  
                     if metatype == "art":
-                        SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                        SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
                         artCount = artCount + 1
                     if metatype == "posters":
-                        SubElement(posters, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                        SubElement(posters, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
                         postersCount = postersCount + 1
                     if metatype == "banners":
-                        SubElement(banners, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)
+                        SubElement(banners, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
                         bannersCount = bannersCount + 1
                     if metatype == "season":
                         seasonCount.append(GetElementText(banner, "Season"))
-                        SubElement(season, "Image", id = str(seasonCount.count(GetElementText(banner, "Season"))), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, season = str(GetElementText(banner, "Season")))
+                        SubElement(season, "Image", id = str(seasonCount.count(GetElementText(banner, "Season"))), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename, season = str(GetElementText(banner, "Season")))
                     
                 self.Art = art
                 self.Posters = posters 
@@ -186,8 +186,8 @@ class TvDB(constants.Series):
                 root = XML.ElementFromString(root)
                 bannerPath = GetElementText(data, "filename")
                 bannerThumb = os.path.splitext(bannerPath)[0] + '_t' + os.path.splitext(bannerPath)[1]
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), bannerThumb)  
-                SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath)                
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), bannerThumb)  
+                SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)                
                 self.Thumbs = root
             
             ##--------------------------------Number-------------------------------##            

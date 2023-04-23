@@ -251,9 +251,9 @@ def MapLocal(root, media):
             try:
                 plex_episode = functions.GetStreamInfo(media.seasons[seasonNo].episodes[episodeNo])
                 for audio in plex_episode["stream"]["audio_language"]:
-                     SubElement(streams, "Stream", type="audio", lang=audio)
+                    SubElement(streams, "Stream", type="audio", lang=audio) 
                 for subtitle in plex_episode["stream"]["subtitle_language"]:
-                     SubElement(streams, "Stream", type="subtitle", lang=subtitle)
+                    SubElement(streams, "Stream", type="subtitle", lang=subtitle) 
             except Exception as e: 
                 Log.Debug("MapLocal - GetStreamInfo() - Exception: '%s'" % (e)) 
                 pass 

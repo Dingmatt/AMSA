@@ -252,14 +252,17 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                             @task
                             def Image_Task(image=image, metaList=metaList):
                                 #Log("Poster 1: %s, %s, %s" % (image.get("id"), image.get("mainLocalPath"), image.getparent().tag.lower()))
-                                if len(image.get("thumbUrl")) > 0:
-                                    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24 * 2)
-                                else:
-                                    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
+                                #if len(image.get("thumbUrl")) > 0:
+                                #    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24 * 2)
+                                #else:
+                                #    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
+                                FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
                                 if image.getparent().getparent().tag == "Season":
-                                    metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    #metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
                                 else:
-                                    metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    #metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    metaList[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
                 elif secondType == "Themes":
                     @parallelize
                     def Theme_Par():
@@ -284,7 +287,7 @@ def ParseImage(imagePath, baseURL, baseFolder, thumbPath = None):
     else:
         thumbUrl = ""
         thumbLocalPath = ""       
-    return mainUrl, thumbUrl, mainLocalPath, thumbLocalPath
+    return mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename
   
 def lev_ratio(s1, s2):
     distance = Util.LevenshteinDistance(safe_unicode(s1), safe_unicode(s2))

@@ -160,8 +160,8 @@ class AniDB(constants.Series):
                 season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
                 season = XML.ElementFromString(season)
                 bannerPath = GetElementText(data, "picture")
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath = functions.ParseImage(constants.ANIDB_PIC_BASE_URL + bannerPath, constants.ANIDB_IMAGE_DOMAIN, os.path.join("AniDB", id, "season"), constants.ANIDB_PIC_THUMB_URL % os.path.splitext(bannerPath)[0])  
-                SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, season = "1")
+                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename = functions.ParseImage(constants.ANIDB_PIC_BASE_URL + bannerPath, constants.ANIDB_IMAGE_DOMAIN, os.path.join("AniDB", id, "season"), constants.ANIDB_PIC_THUMB_URL % os.path.splitext(bannerPath)[0])  
+                SubElement(season, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename, season = "1")
                 self.Season = season
                 self.Posters = copy.deepcopy(season)
                 
