@@ -252,21 +252,21 @@ def PopulateMetadata(map, metaType, priorityList, metaList=None, secondType=None
                             @task
                             def Image_Task(image=image, metaList=metaList):
                                 #Log("Poster 1: %s, %s, %s" % (image.get("id"), image.get("mainLocalPath"), image.getparent().tag.lower()))
-                                #if len(image.get("thumbUrl")) > 0:
-                                #    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24 * 2)
-                                #else:
-                                #    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
-                                FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
-                                if image.getparent().getparent().tag == "Season":
-                                    #metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
-                                    metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                if len(image.get("thumbUrl")) > 0:
+                                    FileFromURL(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")), CACHE_1HOUR * 24 * 2)
                                 else:
-                                    #metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
-                                    metaList[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
+                                #FileFromURL(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")), CACHE_1HOUR * 24 * 2)
+                                if image.getparent().getparent().tag == "Season":
+                                    metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    #metaList[image.get("season")].posters[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                else:
+                                    metaList[image.get("mainUrl")] = Proxy.Preview(Data.Load(image.get("thumbLocalPath")), sort_order=int(image.get("id"))) if len(image.get("thumbLocalPath")) > 0 else Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
+                                    #metaList[image.get("mainUrl")] = Proxy.Media(Data.Load(image.get("mainLocalPath")), sort_order=int(image.get("id")))
                 elif secondType == "Themes":
                     @parallelize
                     def Theme_Par():
-                        for theme in sorted(data, key=lambda x: x.get("id"),  reverse=False):
+                        for theme in sorted(data, key=lambda x: x.get("id"), reverse=False):
                             @task
                             def Theme_Task(theme=theme, metaList=metaList):
                                 FileFromURL(theme.get("url"), os.path.basename(theme.get("localPath")), os.path.dirname(theme.get("localPath")), CACHE_1HOUR * 24 * 2)
