@@ -6,7 +6,7 @@ Amsa is an anime oriented Plex agent which has been designed to gather metadata 
 
 *TVDB standard is advised during the alpha period as the AniDB standard is still in testing*
 
-The Amsa was based on Atomicstrawberry & ZeroQI's Hama (https://github.com/ZeroQI/Hama.bundle) and currently uses a custom version of the Absolute Series Scanner (https://github.com/ZeroQI/Absolute-Series-Scanner).
+Amsa currently uses a custom version of the Absolute Series Scanner (https://github.com/ZeroQI/Absolute-Series-Scanner).
     
     
     
