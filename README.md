@@ -22,11 +22,15 @@ Amsa uses metadata from the following sources:
 Installation
 ============
 1. Get the latest source zip in github release for Amsa https://github.com/Dingmatt/AMSA/releases.
-2. Place the content of the zip (Plug-in Support, Plug-ins, Scanners) into your Plex Media Server directory 
-3. Create a new library 
-4. Set its scanner to "Absolute Series Scanner"
-5. Set its agent to "Anime Multi Source Agent"
-6. Access the Amsa settings from your server library admin tab
+2. Place the content of the zip (Plug-in Support, Plug-ins, Scanners) into your Plex Media Server directory
+   - Windows: `%LOCALAPPDATA%\Plex Media Server\Plug-ins`
+   - macOS: `~/Library/Application Support/Plex Media Server/Plug-ins`
+   - Linux: `$PLEX_HOME/Library/Application Support/Plex Media Server/Plug-ins`
+   - More info: [Plex Documentation](https://support.plex.tv/articles/201106098-how-do-i-find-the-plug-ins-folder/)
+4. Create a new library 
+5. Set its scanner to "Absolute Series Scanner"
+6. Set its agent to "Anime Multi Source Agent"
+7. Access the Amsa settings from your server library admin tab
 
 
 
