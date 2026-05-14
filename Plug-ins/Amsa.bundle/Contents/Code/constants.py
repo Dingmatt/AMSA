@@ -51,7 +51,7 @@ EPISODE_THUMBS_PRIORITY                     = [item.lower() for item in Prefs["E
 #-------------------AMSA-------------------#
 
 #-------------------ANIDB------------------#
-ANIDB_TITLES                                = "http://anidb.net/api/anime-titles.xml"   
+ANIDB_TITLES                                = "https://anidb.net/api/anime-titles.xml"
 ANIDB_HTTP_API_URL                          = "http://api.anidb.net:9001/httpapi?request=anime&client=amsa&clientver=1&protover=1&aid="            
 ANIDB_IMAGE_DOMAIN                          = "https://cdn.anidb.net/"
 ANIDB_PIC_BASE_URL                          = "images/main/"
