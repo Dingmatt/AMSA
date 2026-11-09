@@ -1,141 +1,140 @@
-import sys, os, inspect, time, types, re, lxml, copy, ssl, urllib2, unicodedata, ast, StringIO, gzip, datetime, difflib, string
-import common, functions, constants, tvdb, anidb, scudlee
+"""Anime Multi Source Agent (AMSA) - Plex entry points.
 
-from dateutil.parser import parse as dateParse
- 
-### Pre-Defined Start function #########################################################################################################################################
+Module overview:
+    settings.py          version, paths, URLs, user preferences
+    textutil.py          unicode, title cleaning, dates
+    downloader.py        HTTP + disk cache (uses anidb_limiter for AniDB)
+    anidb_limiter.py     AniDB anti-ban rate limiting
+    anilist.py           AniList source (GraphQL, found via AniDB's MAL id)
+    anidb_retry.py       postponed AniDB downloads (fetched when the limiter allows, then the show is refreshed)
+    models.py            Series/Episode base classes shared by all sources
+    anidb.py / tvdb_v4.py / tvdb.py / plex_themes.py   metadata sources (TVDB: v4, falling back to v1)
+    sources.py           parse-once cache of source records
+    anime_lists.py       AniDB titles dump + Anime-Lists AniDB<->TVDB mapping
+    title_index.py       fast in-memory title search
+    matcher.py           search(): folder name -> AniDB id
+    bundle.py            per-show bundle tree (mapping, local files, source values)
+    metadata_writer.py   bundle -> Plex metadata by source priority
+    updater.py           update(): builds the bundle and writes it
+    refresher.py         early re-download of a source when episodes on disk have no data yet
+    airing.py            daily refresh of airing shows
+    offline_db.py        anime-offline-database: AniList ids, airing status, extra search titles
+    episode_sources.py   MyAnimeList (Jikan), Kitsu and AnimeThemes episode data
+    episode_fill.py      fills gaps in the episodes on disk from those sources
+"""
+import os
+
+import settings
+import textutil
+import anidb_limiter
+import downloader
+import matcher
+import title_index
+import updater
+import airing
+import anidb_retry
+import background_refresh
+import health_report
+import environment
+import prefs_repair
+
+
+# In the settings page's order (DefaultPrefs.json)
+PREF_IDS = ("SeriesTitle", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", "OriginalTitle", "SeriesTitleAlias", "EpisodeTitle",
+            "EpisodeLanguage1", "EpisodeLanguage2", "TitleLanguageFirst", "SeriesSummary", "SeriesOriginally_Available_At", "SeriesRating", "RatingCombine",
+            "SeriesStudio", "SeriesDuration", "SeriesCountries", "SeriesGenres", "SeriesTags", "MinimumWeight", "SeriesCollections",
+            "CollectionsExclude", "SeriesContent_Rating", "ContentRatingRule", "ContentRatingCountry", "SeriesRoles", "CastLanguage",
+            "CastPhotos", "SeriesImages", "localart", "SeasonPosterSets", "ImagesMax", "SeriesThemes", "SeasonTitle", "SeasonNameInSummary", "SeasonText", "SeasonParts",
+            "SummaryRepeat", "EpisodeSummary", "EpisodeOriginally_Available_At", "EpisodeRating", "EpisodeAbsolute_Index",
+            "EpisodeWriters", "EpisodeDirectors", "EpisodeProducers", "EpisodeThumbs", "EpisodeFallback", "CreditTitles",
+            "UseAniDBForAdvancedSearch", "UseTVDBForAdvancedSearch", "OfflineDatabase", "AniDbAntiBanDelay", "AniDbHourlyLimit",
+            "AniDbDailyLimit", "RefreshMode", "RefreshSkipRecent", "RefreshAiring")
+
+
+def log_prefs():
+    """The settings in effect, in one log block (makes logs from different setups easy to compare)."""
+    lines = []
+    for key in PREF_IDS:
+        try:
+            value = Prefs[key]
+            if value is None:
+                lines.append("%s = %s (default)" % (key, settings.page_default(key)))
+            else:
+                lines.append("%s = %s" % (key, value))
+        except Exception:
+            lines.append("%s = (missing from DefaultPrefs.json)" % (key))
+    Log.Info("Settings - " + "; ".join(lines))
+    unset = [key for key in PREF_IDS if key in settings.PAGE["unset"]]
+    if unset:
+        Log.Info("Settings - %s settings have no valid saved value, so their defaults (as the settings page shows them) are used: %s. Save the settings page once to store them"
+                 % (len(unset), ", ".join(unset)))
+    for error in settings.PAGE["errors"]:
+        Log.Warn("Settings - %s" % (error))
+    try:
+        for line in settings.source_plan():   # Which sources an update contacts, in order, and which it skips
+            Log.Info(line)
+    except Exception:
+        Log.Warn("Sources - Describing the sources failed: %s" % (textutil.exception_text()))
+
+
 def Start():
-    Log.Debug("--- AmsaTVAgent Start -------------------------------------------------------------------------------------------")
+    anidb_limiter.load_state()
+    downloader.load_not_found()
+    title_index.start_warm_up()        # Lists + title index load in the background so the first search is fast
+    Log.Info("--- AmsaTVAgent Start - AMSA v%s ------------------------------------------------------------------------------" % (settings.VERSION))
+    environment.report()               # System, user, and whether AMSA can read/write where it needs to (NAS/Linux permission issues)
+    log_prefs()
+    airing.start()                     # Hourly check for airing shows due their daily refresh (setting RefreshAiring)
+    anidb_retry.load_state()           # Queued AniDB downloads from before a restart
+    background_refresh.load_state()    # Shows queued for a background download from before a restart
+    health_report.start()              # Library health report: 5 minutes after start, then daily
+    prefs_repair.start()               # A minute later: settings Plex can't read are stored as the default the page shows
 
 
-### Pre-Defined ValidatePrefs function Values in "DefaultPrefs.json", accessible in Settings>Tab:Plex Media Server>Sidebar:Agents>Tab:Movies/TV Shows>Tab:AmsaTV #######
-def ValidatePrefs(): #     a = sum(getattr(t, name, 0) for name in "xyz")
-    DefaultPrefs = ("GetTvdbFanart", "GetTvdbPosters", "GetTvdbBanners", "GetAnidbPoster", "localart", "adult", 
-                  "GetPlexThemes", "MinimumWeight", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3", 
-                  "AgentPref1", "AgentPref2", "AgentPref3", "EpisodeLanguage1", "EpisodeLanguage2")
-    try: [Prefs[key] for key in DefaultPrefs]
-    except: Log.Error("Init - ValidatePrefs() - DefaultPrefs.json invalid" );  return MessageContainer ("Error", "Value '%s' missing from 'DefaultPrefs.json', update it" % key)
-    else: Log.Info ("Init - ValidatePrefs() - DefaultPrefs.json is valid");  return MessageContainer ("Success", "AMSA - Provided preference values are ok")
-  
-  
-### Agent declaration ###############################################################################################################################################
-class AmsaTVAgent(Agent.TV_Shows):    
+def ValidatePrefs():
+    """Called by Plex when preferences are saved (Settings > Agents > AMSA)."""
+    try:
+        reset = Prefs["ResetSettings"]
+    except Exception:
+        reset = False
+    if reset:
+        try:
+            if os.path.isfile(settings.PREFS_FILE):
+                os.remove(settings.PREFS_FILE)
+            Log.Info("ValidatePrefs - Settings reset to defaults (deleted '%s'); restart Plex Media Server to load them" % (settings.PREFS_FILE))
+            return MessageContainer("Success", "AMSA - Settings reset to defaults. Restart Plex Media Server to finish.")
+        except Exception as e:
+            Log.Error("ValidatePrefs - Could not reset settings ('%s'): %s" % (settings.PREFS_FILE, e))
+            return MessageContainer("Error", "AMSA - Could not reset settings: %s" % (e))
+    missing = []
+    for key in PREF_IDS:
+        try:
+            Prefs[key]
+        except Exception:
+            missing.append(key)
+    if missing:
+        Log.Error("ValidatePrefs - Missing from DefaultPrefs.json: %s" % (", ".join(missing)))
+        return MessageContainer("Error", "Value(s) %s missing from 'DefaultPrefs.json', update it" % (", ".join(missing)))
+    try:
+        settings.load_prefs()                # Apply the saved values now, without a restart
+        Log.Info("ValidatePrefs - Settings saved and applied")
+    except Exception:
+        Log.Error("ValidatePrefs - Applying the settings failed (restart Plex Media Server to load them): %s" % (textutil.exception_text()))
+    log_prefs()
+    return MessageContainer("Success", "AMSA - Provided preference values are ok")
+
+
+class AmsaTVAgent(Agent.TV_Shows):
     name = "Anime Multi Source Agent"
     primary_provider = True
     fallback_agent = False
     contributes_to = None
     languages = [Locale.Language.English, 'fr', 'zh', 'sv', 'no', 'da', 'fi', 'nl', 'de', 'it', 'es', 'pl', 'hu', 'el', 'tr', 'ru', 'he', 'ja', 'pt', 'cs', 'ko', 'sl', 'hr']
-    accepts_from = ["com.plexapp.agents.localmedia"] 
-    
+    accepts_from = ["com.plexapp.agents.localmedia"]
+
     def search(self, results, media, lang, manual=False):
-        Log.Debug("--- Search Begin -------------------------------------------------------------------------------------------")
-        common.RefreshData()
-        orig_title = media.show
-        if orig_title.startswith("clear-cache"):   HTTP.ClearCache()
-        Log.Info("Init - Search() - Show: '%s', Title: '%s', name: '%s', filename: '%s', manual:'%s'" % (media.show, orig_title, media.name, urllib2.unquote(media.filename) if media.filename else "", str(manual)))
-               
-        match = re.search("(?P<show>.*?) ?\[(?P<source>(.*))-(tt)?(?P<id>[0-9]{1,7})\]", orig_title, re.IGNORECASE)
-        if match:
-            title = match.group("show")
-            source = match.group("source").lower() 
-            if source in ["anidb", "anidb2", "tvdb", "tvdb2", "tvdb3", "tvdb4", "tvdb5"]:
-                id = match.group("id")
-                startdate = None
-                if source in ["anidb", "anidb2"]:  
-                    title = functions.GetPreferedTitle(common.GetAnimeTitleByID(id))
-                Log.Debug("Init - Search() - force - id: '%s-%s', title from id: '%s' provided in foldername: '%s'" % (source, id, title, orig_title) )
-                results.Append(MetadataSearchResult(id="%s-%s" % (source, id), name=title, year=startdate, lang=Locale.Language.English, score=100))
-                return
-            else: orig_title = functions.CleanTitle(title)
-       
-       
-        maxi = {}
-        elite = []
-        perfectScore = []
-        orig_title = functions.CleanTitle(orig_title)
-        @parallelize
-        def searchTitles():
-            for anime in common.GetAnimeTitleByName(orig_title):
-                @task
-                def scoreTitle(anime=anime, maxi=maxi, anidb=anidb, tvdb=tvdb, scudlee=scudlee, perfectScore=perfectScore, elite=elite, orig_title=orig_title): 
-                    anime = common.Titles(anime, orig_title)
-                    isValid = True
-                    if (anime.Id in maxi and maxi[anime.Id] <= anime.Score) or (not anime.Id in maxi):
-                        maxi[anime.Id] = anime.Score
-                    else: 
-                        isValid = False
-                    if isValid: 
-                        scoreChecked = False
-                        startdate = None
-                        if(media.year and anime.Score >= 90 and constants.SEARCH_USE_TVDB and not scoreChecked):
-                            mappingData = scudlee.ScudLee(anime.Id)
-                            show = tvdb.TvDB(mappingData.TvdbId) 
-                            if show: 
-                                try: 
-                                    startdate = dateParse(show.Originally_Available_At).year
-                                except: pass
-                                if str(startdate) != str(media.year):
-                                    isValid = False 
-                                Log.Debug("Init - Search() - TVDB - date: '%s', aired: '%s'" % (media.year, startdate)) 
-                            elite.append(isValid)
-                            scoreChecked = True
-                            
-                        if(media.year and anime.Score >= 90 and constants.SEARCH_USE_ANIDB and not scoreChecked):
-                            show = anidb.AniDB(anime.Id) 
-                            if show: 
-                                try: 
-                                    startdate = dateParse(show.Originally_Available_At).year
-                                except: pass
-                                if str(startdate) != str(media.year):
-                                    isValid = False 
-                                Log.Debug("Init - Search() - ANIDB - date: '%s', aired: '%s'" % (media.year, startdate)) 
-                            elite.append(isValid)
-                            scoreChecked = True
-                            
-                        if anime.Score >= 90 and not scoreChecked:
-                            elite.append(isValid)
-                            scoreChecked = True
+        Log.Info("==== Search: '%s' ====================================================================" % (getattr(media, "show", None) or getattr(media, "name", None) or "?"))
+        matcher.search(results, media, manual)
 
-                        if isValid:
-                            if anime.Score == 100: perfectScore.append(anime.Id)
-                            Log.Debug("Init - Search() - find - id: '%s-%s', title: '%s', score: '%s'" % ("anidb", anime.Id, anime.Title, anime.Score))
-                            results.Append(MetadataSearchResult(id="%s-%s" % ("anidb", anime.Id), name="%s [%s-%s]" % (anime.Title, "anidb", anime.Id), year=startdate, lang=Locale.Language.English, score=anime.Score))
-        
-        if len(list(set(perfectScore))) > 1:
-            for result in results:
-                if result.score == 100:    
-                    show = anidb.AniDB(result.id.split("-")[1])
-                    if show.Type != "TV Series": 
-                        result.score = result.score - 1
-                         
-        if len(elite) > 0 and not True in elite: del results[:]
-        results.Sort("score", descending=True)
-        return
-        
-    ### Parse the AniDB anime title XML ##################################################################################################################################
-    def update(self, metadata, media, lang, force=False):       
-        Log.Debug("--- Update Begin -------------------------------------------------------------------------------------------")
-        if force:
-            HTTP.ClearCache()
-        common.RefreshData()
-        source, id = metadata.id.split("-")     
-        Log("Source: %s, ID: %s" % (source, id))
-        
-        mappingData = None
-        if source in  ["anidb", "anidb2"]: 
-            mappingData = scudlee.ScudLee(id)
-        if source in  ["tvdb", "tvdb2", "tvdb3", "tvdb4", "tvdb5"]: 
-            mappingData = scudlee.ScudLee(None, id)
-        Log.Debug("Init - Update() - source: '%s', anidbid: '%s', tvdbid: '%s'" % (source, mappingData.AnidbId, mappingData.TvdbId))
-        
-        if mappingData != None:
-            map = common.MapSeries(mappingData)
-            #functions.SaveFile(etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles")
-            #common.MapLocal(media, map, mappingData.AnidbId)
-            common.MapLocal(map, media)
-            common.MapMeta(map)
-            functions.SaveFile(lxml.etree.tostring(map, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mappingData.FirstSeries + ".bundle.xml", "Bundles")
-            if constants.ExportBundles:
-                common.ExportMap(map, mappingData.FirstSeries + ".bundle.xml")
-            common.MapMedia(map, metadata, mappingData.AnidbId, mappingData.TvdbId)
-
+    def update(self, metadata, media, lang, force=False):
+        updater.update(metadata, media, force, lang)        # Logs "==== Update: 'Name' (anidb-1, TVDB 2, AniList 3) ====" once the ids are known

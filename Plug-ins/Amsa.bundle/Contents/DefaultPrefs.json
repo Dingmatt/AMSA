@@ -1,452 +1,931 @@
 [
 	{
-		"id": "GetTvdbFanart",
-		"label": "Fetch Fanart images from TVDB",
+		"id": "SeriesTitle",
+		"label": "Titles: Show title from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SerieLanguage1",
+		"label": "Titles: Show title language 1",
+		"type": "enum",
+		"values": [
+			"main - AniDB main title",
+			"x-jat - Romaji",
+			"ja - Japanese",
+			"en - English",
+			"ar - Arabic",
+			"bg - Bulgarian",
+			"ca - Catalan",
+			"cs - Czech",
+			"da - Danish",
+			"de - German",
+			"el - Greek",
+			"es - Spanish",
+			"et - Estonian",
+			"fa - Persian",
+			"fi - Finnish",
+			"fr - French",
+			"he - Hebrew",
+			"hr - Croatian",
+			"hu - Hungarian",
+			"it - Italian",
+			"ko - Korean",
+			"x-kot - Korean (romanised)",
+			"lv - Latvian",
+			"mn - Mongolian",
+			"pl - Polish",
+			"pt - Portuguese",
+			"ro - Romanian",
+			"ru - Russian",
+			"sr - Serbian",
+			"sk - Slovak",
+			"sl - Slovenian",
+			"sv - Swedish",
+			"th - Thai",
+			"tr - Turkish",
+			"uk - Ukrainian",
+			"zh - Chinese",
+			"zh-Hans - Chinese (Simplified)",
+			"zh-x-nan - Chinese (Min Nan)"
+		],
+		"default": "main - AniDB main title"
+	},
+	{
+		"id": "SerieLanguage2",
+		"label": "Titles: Show title language 2",
+		"type": "enum",
+		"values": [
+			"main - AniDB main title",
+			"x-jat - Romaji",
+			"ja - Japanese",
+			"en - English",
+			"ar - Arabic",
+			"bg - Bulgarian",
+			"ca - Catalan",
+			"cs - Czech",
+			"da - Danish",
+			"de - German",
+			"el - Greek",
+			"es - Spanish",
+			"et - Estonian",
+			"fa - Persian",
+			"fi - Finnish",
+			"fr - French",
+			"he - Hebrew",
+			"hr - Croatian",
+			"hu - Hungarian",
+			"it - Italian",
+			"ko - Korean",
+			"x-kot - Korean (romanised)",
+			"lv - Latvian",
+			"mn - Mongolian",
+			"pl - Polish",
+			"pt - Portuguese",
+			"ro - Romanian",
+			"ru - Russian",
+			"sr - Serbian",
+			"sk - Slovak",
+			"sl - Slovenian",
+			"sv - Swedish",
+			"th - Thai",
+			"tr - Turkish",
+			"uk - Ukrainian",
+			"zh - Chinese",
+			"zh-Hans - Chinese (Simplified)",
+			"zh-x-nan - Chinese (Min Nan)"
+		],
+		"default": "x-jat - Romaji"
+	},
+	{
+		"id": "SerieLanguage3",
+		"label": "Titles: Show title language 3",
+		"type": "enum",
+		"values": [
+			"main - AniDB main title",
+			"x-jat - Romaji",
+			"ja - Japanese",
+			"en - English",
+			"ar - Arabic",
+			"bg - Bulgarian",
+			"ca - Catalan",
+			"cs - Czech",
+			"da - Danish",
+			"de - German",
+			"el - Greek",
+			"es - Spanish",
+			"et - Estonian",
+			"fa - Persian",
+			"fi - Finnish",
+			"fr - French",
+			"he - Hebrew",
+			"hr - Croatian",
+			"hu - Hungarian",
+			"it - Italian",
+			"ko - Korean",
+			"x-kot - Korean (romanised)",
+			"lv - Latvian",
+			"mn - Mongolian",
+			"pl - Polish",
+			"pt - Portuguese",
+			"ro - Romanian",
+			"ru - Russian",
+			"sr - Serbian",
+			"sk - Slovak",
+			"sl - Slovenian",
+			"sv - Swedish",
+			"th - Thai",
+			"tr - Turkish",
+			"uk - Ukrainian",
+			"zh - Chinese",
+			"zh-Hans - Chinese (Simplified)",
+			"zh-x-nan - Chinese (Min Nan)"
+		],
+		"default": "en - English"
+	},
+	{
+		"id": "OriginalTitle",
+		"label": "Titles: Original title language",
+		"type": "enum",
+		"values": [
+			"ja - Japanese",
+			"x-jat - Romaji",
+			"en - English",
+			"Off"
+		],
+		"default": "ja - Japanese"
+	},
+	{
+		"id": "SeriesTitleAlias",
+		"label": "Titles: Use TVDB's title over its aliases",
+		"type": "enum",
+		"values": [
+			"Shows with several AniDB entries (recommended)",
+			"All shows",
+			"Off"
+		],
+		"default": "Shows with several AniDB entries (recommended)"
+	},
+	{
+		"id": "EpisodeTitle",
+		"label": "Titles: Episode title from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB > fallback",
+			"TVDB > AniDB > fallback",
+			"AniDB only",
+			"TVDB only",
+			"Off"
+		],
+		"default": "AniDB > TVDB > fallback"
+	},
+	{
+		"id": "EpisodeLanguage1",
+		"label": "Titles: Episode title language 1",
+		"type": "enum",
+		"values": [
+			"x-jat - Romaji",
+			"ja - Japanese",
+			"en - English",
+			"ar - Arabic",
+			"bg - Bulgarian",
+			"ca - Catalan",
+			"cs - Czech",
+			"da - Danish",
+			"de - German",
+			"el - Greek",
+			"es - Spanish",
+			"et - Estonian",
+			"fa - Persian",
+			"fi - Finnish",
+			"fr - French",
+			"he - Hebrew",
+			"hr - Croatian",
+			"hu - Hungarian",
+			"it - Italian",
+			"ko - Korean",
+			"x-kot - Korean (romanised)",
+			"lv - Latvian",
+			"mn - Mongolian",
+			"pl - Polish",
+			"pt - Portuguese",
+			"ro - Romanian",
+			"ru - Russian",
+			"sr - Serbian",
+			"sk - Slovak",
+			"sl - Slovenian",
+			"sv - Swedish",
+			"th - Thai",
+			"tr - Turkish",
+			"uk - Ukrainian",
+			"zh - Chinese",
+			"zh-Hans - Chinese (Simplified)",
+			"zh-x-nan - Chinese (Min Nan)"
+		],
+		"default": "en - English"
+	},
+	{
+		"id": "EpisodeLanguage2",
+		"label": "Titles: Episode title language 2",
+		"type": "enum",
+		"values": [
+			"x-jat - Romaji",
+			"ja - Japanese",
+			"en - English",
+			"ar - Arabic",
+			"bg - Bulgarian",
+			"ca - Catalan",
+			"cs - Czech",
+			"da - Danish",
+			"de - German",
+			"el - Greek",
+			"es - Spanish",
+			"et - Estonian",
+			"fa - Persian",
+			"fi - Finnish",
+			"fr - French",
+			"he - Hebrew",
+			"hr - Croatian",
+			"hu - Hungarian",
+			"it - Italian",
+			"ko - Korean",
+			"x-kot - Korean (romanised)",
+			"lv - Latvian",
+			"mn - Mongolian",
+			"pl - Polish",
+			"pt - Portuguese",
+			"ro - Romanian",
+			"ru - Russian",
+			"sr - Serbian",
+			"sk - Slovak",
+			"sl - Slovenian",
+			"sv - Swedish",
+			"th - Thai",
+			"tr - Turkish",
+			"uk - Ukrainian",
+			"zh - Chinese",
+			"zh-Hans - Chinese (Simplified)",
+			"zh-x-nan - Chinese (Min Nan)"
+		],
+		"default": "x-jat - Romaji"
+	},
+	{
+		"id": "TitleLanguageFirst",
+		"label": "Titles: Pick by language first, then source",
 		"type": "bool",
 		"default": "true"
 	},
 	{
-		"id": "GetTvdbPosters",
-		"label": "Fetch Poster images from TVDB",
-		"type": "bool",
-		"default": "true"
+		"id": "SeriesSummary",
+		"label": "Show: Summary from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
 	},
 	{
-		"id": "GetTvdbBanners",
-		"label": "Fetch series Banner images from TVDB",
-		"type": "bool",
-		"default": "false"
+		"id": "SeriesOriginally_Available_At",
+		"label": "Show: Air date from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
 	},
 	{
-		"id": "GetAnidbPoster",
-		"label": "Fetch AniDB's poster",
-		"type": "bool",
-		"default": "false"
+		"id": "SeriesRating",
+		"label": "Show: Rating from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "RatingCombine",
+		"label": "Show: Combine ratings",
+		"type": "enum",
+		"values": [
+			"Weighted by votes (recommended)",
+			"Average of the sources",
+			"First source only"
+		],
+		"default": "Weighted by votes (recommended)"
+	},
+	{
+		"id": "SeriesStudio",
+		"label": "Show: Studio from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SeriesDuration",
+		"label": "Show: Episode length from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SeriesCountries",
+		"label": "Show: Countries from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SeriesGenres",
+		"label": "Show: Genres from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SeriesTags",
+		"label": "Show: Tags from",
+		"type": "enum",
+		"values": [
+			"AniDB",
+			"Off",
+			"AniDB > AniList",
+			"AniList > AniDB",
+			"AniList only"
+		],
+		"default": "AniDB > AniList"
+	},
+	{
+		"id": "MinimumWeight",
+		"label": "Show: Minimum AniDB tag weight",
+		"type": "enum",
+		"values": [
+			"0 - all tags",
+			"100",
+			"200",
+			"300",
+			"400 (recommended)",
+			"500",
+			"600 - only the strongest"
+		],
+		"default": "400 (recommended)"
+	},
+	{
+		"id": "SeriesCollections",
+		"label": "Show: Related anime collections",
+		"type": "enum",
+		"values": [
+			"AniDB",
+			"Off"
+		],
+		"default": "AniDB"
+	},
+	{
+		"id": "CollectionsExclude",
+		"label": "Show: Dubbed / Subbed collections",
+		"type": "enum",
+		"values": [
+			"Include all shows",
+			"Leave out explicit shows (18+)",
+			"Leave out explicit and mature shows (17+)"
+		],
+		"default": "Include all shows"
+	},
+	{
+		"id": "SeriesContent_Rating",
+		"label": "Content rating: From",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "ContentRatingRule",
+		"label": "Content rating: When sources disagree",
+		"type": "enum",
+		"values": [
+			"Official rating first (recommended)",
+			"Strictest of all sources",
+			"Source order (Legacy)"
+		],
+		"default": "Official rating first (recommended)"
+	},
+	{
+		"id": "ContentRatingCountry",
+		"label": "Content rating: Country",
+		"type": "enum",
+		"values": [
+			"United States (TV ratings: TV-14, ...)",
+			"United Kingdom (BBFC: U, PG, 12, 15, 18)",
+			"Germany (FSK: 0, 6, 12, 16, 18)",
+			"France (CSA: U, 10, 12, 16, 18)",
+			"Japan (Eirin: G, PG12, R15+, R18+)",
+			"Canada (TV: G, C8, PG, 14+, 18+)",
+			"Australia (G, PG, M, MA15+, R18+)",
+			"Brazil (ClassInd: L, 10, 12, 14, 16, 18)",
+			"Spain (TP, 7, 12, 16, 18)",
+			"Italy (T, 6+, 14+, 18+)"
+		],
+		"default": "United States (TV ratings: TV-14, ...)"
+	},
+	{
+		"id": "SeriesRoles",
+		"label": "Cast: From",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "CastLanguage",
+		"label": "Cast: Voice actors",
+		"type": "enum",
+		"values": [
+			"Japanese",
+			"English (else Japanese)",
+			"Both (labelled)"
+		],
+		"default": "Japanese"
+	},
+	{
+		"id": "CastPhotos",
+		"label": "Cast: Photos",
+		"type": "enum",
+		"values": [
+			"Voice actor",
+			"Character (else voice actor)"
+		],
+		"default": "Voice actor"
+	},
+	{
+		"id": "SeriesImages",
+		"label": "Images: Posters, backgrounds, banners from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
 	},
 	{
 		"id": "localart",
-		"label": "Prefer artwork based on section language",
+		"label": "Images: Prefer library language, then textless",
 		"type": "bool",
 		"default": "true"
 	},
 	{
-		"id": "adult",
-		"label": "Include adult content",
+		"id": "SeasonPosterSets",
+		"label": "Images: Prefer matching season poster sets",
 		"type": "bool",
 		"default": "false"
 	},
 	{
-		"id": "GetPlexThemes",
-		"label": "Download Themes from PLEX",
+		"id": "ImagesMax",
+		"label": "Images: Most images per type",
+		"type": "enum",
+		"values": [
+			"10",
+			"20 (recommended)",
+			"30",
+			"50",
+			"All"
+		],
+		"default": "20 (recommended)"
+	},
+	{
+		"id": "SeriesThemes",
+		"label": "Images: Theme music from",
+		"type": "enum",
+		"values": [
+			"Plex",
+			"Off"
+		],
+		"default": "Plex"
+	},
+	{
+		"id": "SeasonTitle",
+		"label": "Seasons: Season titles",
+		"type": "enum",
+		"values": [
+			"Season 2: Name of Season",
+			"Name of Season",
+			"Off"
+		],
+		"default": "Season 2: Name of Season"
+	},
+	{
+		"id": "SeasonNameInSummary",
+		"label": "Seasons: Start the summary with the season's name",
 		"type": "bool",
 		"default": "false"
+	},
+	{
+		"id": "SeasonText",
+		"label": "Seasons: Names and summaries from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off",
+			"AniDB > AniList > TVDB",
+			"AniDB > TVDB > AniList",
+			"AniList > AniDB > TVDB",
+			"AniList > TVDB > AniDB",
+			"TVDB > AniDB > AniList",
+			"TVDB > AniList > AniDB",
+			"AniList only",
+			"AniDB > AniList",
+			"AniList > AniDB"
+		],
+		"default": "AniDB > AniList > TVDB"
+	},
+	{
+		"id": "SeasonParts",
+		"label": "Seasons: Seasons made of several AniDB entries",
+		"type": "enum",
+		"values": [
+			"Combine their summaries (recommended)",
+			"First entry's summary only"
+		],
+		"default": "Combine their summaries (recommended)"
+	},
+	{
+		"id": "SummaryRepeat",
+		"label": "Seasons: If a season repeats the show's summary",
+		"type": "enum",
+		"values": [
+			"Show uses TVDB's summary (recommended)",
+			"Season uses TVDB's summary",
+			"Leave both"
+		],
+		"default": "Show uses TVDB's summary (recommended)"
+	},
+	{
+		"id": "EpisodeSummary",
+		"label": "Episodes: Summary from",
+		"type": "enum",
+		"values": [
+			"TVDB > AniDB > fallback",
+			"AniDB > TVDB > fallback",
+			"TVDB only",
+			"AniDB only",
+			"Off"
+		],
+		"default": "TVDB > AniDB > fallback"
+	},
+	{
+		"id": "EpisodeOriginally_Available_At",
+		"label": "Episodes: Air date from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB > fallback",
+			"TVDB > AniDB > fallback",
+			"AniDB only",
+			"TVDB only",
+			"Off"
+		],
+		"default": "AniDB > TVDB > fallback"
+	},
+	{
+		"id": "EpisodeRating",
+		"label": "Episodes: Rating from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off"
+		],
+		"default": "AniDB > TVDB"
+	},
+	{
+		"id": "EpisodeAbsolute_Index",
+		"label": "Episodes: Absolute number from",
+		"type": "enum",
+		"values": [
+			"AniDB > TVDB",
+			"TVDB > AniDB",
+			"AniDB only",
+			"TVDB only",
+			"Off"
+		],
+		"default": "AniDB > TVDB"
+	},
+	{
+		"id": "EpisodeWriters",
+		"label": "Episodes: Writers from",
+		"type": "enum",
+		"values": [
+			"TVDB > AniDB",
+			"AniDB > TVDB",
+			"TVDB only",
+			"AniDB only",
+			"Off"
+		],
+		"default": "TVDB > AniDB"
+	},
+	{
+		"id": "EpisodeDirectors",
+		"label": "Episodes: Directors from",
+		"type": "enum",
+		"values": [
+			"TVDB > AniDB",
+			"AniDB > TVDB",
+			"TVDB only",
+			"AniDB only",
+			"Off"
+		],
+		"default": "TVDB > AniDB"
+	},
+	{
+		"id": "EpisodeProducers",
+		"label": "Episodes: Producers from",
+		"type": "enum",
+		"values": [
+			"AniDB",
+			"Off"
+		],
+		"default": "AniDB"
+	},
+	{
+		"id": "EpisodeThumbs",
+		"label": "Episodes: Thumbnails from",
+		"type": "enum",
+		"values": [
+			"TVDB",
+			"Off"
+		],
+		"default": "TVDB"
+	},
+	{
+		"id": "EpisodeFallback",
+		"label": "Episodes: Fallback for missing titles, summaries, dates",
+		"type": "enum",
+		"values": [
+			"MyAnimeList > Kitsu (recommended)",
+			"Kitsu > MyAnimeList",
+			"MyAnimeList only",
+			"Kitsu only",
+			"Off"
+		],
+		"default": "MyAnimeList > Kitsu (recommended)"
+	},
+	{
+		"id": "CreditTitles",
+		"label": "Episodes: Song names for opening/ending specials",
+		"type": "bool",
+		"default": "true"
 	},
 	{
 		"id": "UseAniDBForAdvancedSearch",
-		"label": "Check aired year with AniDB when searching",
+		"label": "Matching: Check the aired year with AniDB",
 		"type": "bool",
 		"default": "true"
 	},
 	{
 		"id": "UseTVDBForAdvancedSearch",
-		"label": "Check aired year with TVDB when searching",
+		"label": "Matching: Use TVDB (year check, title search)",
+		"type": "bool",
+		"default": "true"
+	},
+	{
+		"id": "OfflineDatabase",
+		"label": "Matching: Use anime-offline-database (60 MB weekly)",
 		"type": "bool",
 		"default": "true"
 	},
 	{
 		"id": "AniDbAntiBanDelay",
-		"label": "Delay in seconds between AniDB requests (min 2)",
-		"type": "text",
-		"default": "2"
-	},
-	{
-		"id": "MinimumWeight",
-		"label": "Map categories at or above the minimum weight selected",
-		"type": "text",
-		"default": "400"
-	},
-	{
-		"id": "SeriesTitle",
-		"label": "Series Title",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesSummary",
-		"label": "Series Summary",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesOriginally_Available_At",
-		"label": "Series Originally AirDate",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesRating",
-		"label": "Series Rating",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesStudio",
-		"label": "Series Studio",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesCountries",
-		"label": "Series Countries",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesDuration",
-		"label": "Series Duration",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesGenres",
-		"label": "Series Genres",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesTags",
-		"label": "Series Tags",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesCollections",
-		"label": "Series Collections",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesContent_Rating",
-		"label": "Series Content Rating",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesWriters",
-		"label": "Series Writers",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesDirectors",
-		"label": "Series Directors",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesProducers",
-		"label": "Series Producers",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesRoles",
-		"label": "Series Roles",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesImages",
-		"label": "Series Images",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "SeriesThemes",
-		"label": "Series Themes",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeTitle",
-		"label": "Episode Title",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeSummary",
-		"label": "Episode Summary",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeOriginally_Available_At",
-		"label": "Episode Originally AirDate",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeRating",
-		"label": "Episode Rating",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeAbsolute_Index",
-		"label": "Episode Absolute_Index",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeWriters",
-		"label": "Episode Writers",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeDirectors",
-		"label": "Episode Directors",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeProducers",
-		"label": "Episode Producers",
-		"type": "text",
-		"default": "AniDB,TVDB,Plex"
-	},
-	{
-		"id": "EpisodeThumbs",
-		"label": "Episode Thumbs",
-		"type": "text",
-		"default": "TVDB"
-	},
-	{
-		"id": "SerieLanguage1",
-		"label": "First Language preference for the Series title",
+		"label": "AniDB: Time between requests",
 		"type": "enum",
 		"values": [
-			"main",
-			"x-jat",
-			"ja",
-			"en",
-			"ar",
-			"bg",
-			"ca",
-			"cs",
-			"da",
-			"de",
-			"el",
-			"es",
-			"et",
-			"fa",
-			"fi",
-			"fr",
-			"he",
-			"hr",
-			"hu",
-			"it",
-			"ko",
-			"x-kot",
-			"lv",
-			"mn",
-			"pl",
-			"pt",
-			"ro",
-			"ru",
-			"sr",
-			"sk",
-			"sl",
-			"sv",
-			"th",
-			"tr",
-			"uk",
-			"zh",
-			"zh-Hans",
-			"zh-x-nan"
+			"3 seconds",
+			"4 seconds (recommended)",
+			"5 seconds",
+			"6 seconds",
+			"8 seconds",
+			"10 seconds"
 		],
-		"default": "main"
+		"default": "4 seconds (recommended)"
 	},
 	{
-		"id": "SerieLanguage2",
-		"label": "Second Language preference for the Series title",
+		"id": "AniDbHourlyLimit",
+		"label": "AniDB: Most requests per hour",
 		"type": "enum",
 		"values": [
-			"main",
-			"x-jat",
-			"ja",
-			"en",
-			"ar",
-			"bg",
-			"ca",
-			"cs",
-			"da",
-			"de",
-			"el",
-			"es",
-			"et",
-			"fa",
-			"fi",
-			"fr",
-			"he",
-			"hr",
-			"hu",
-			"it",
-			"ko",
-			"x-kot",
-			"lv",
-			"mn",
-			"pl",
-			"pt",
-			"ro",
-			"ru",
-			"sr",
-			"sk",
-			"sl",
-			"sv",
-			"th",
-			"tr",
-			"uk",
-			"zh",
-			"zh-Hans",
-			"zh-x-nan"
+			"25",
+			"50",
+			"75",
+			"100 (recommended)",
+			"150",
+			"200"
 		],
-		"default": "x-jat"
+		"default": "100 (recommended)"
 	},
 	{
-		"id": "SerieLanguage3",
-		"label": "Third Language preference for the Series title",
+		"id": "AniDbDailyLimit",
+		"label": "AniDB: Most requests per day",
 		"type": "enum",
 		"values": [
-			"main",
-			"x-jat",
-			"ja",
-			"en",
-			"ar",
-			"bg",
-			"ca",
-			"cs",
-			"da",
-			"de",
-			"el",
-			"es",
-			"et",
-			"fa",
-			"fi",
-			"fr",
-			"he",
-			"hr",
-			"hu",
-			"it",
-			"ko",
-			"x-kot",
-			"lv",
-			"mn",
-			"pl",
-			"pt",
-			"ro",
-			"ru",
-			"sr",
-			"sk",
-			"sl",
-			"sv",
-			"th",
-			"tr",
-			"uk",
-			"zh",
-			"zh-Hans",
-			"zh-x-nan"
+			"200",
+			"300",
+			"500 (recommended)",
+			"750",
+			"1000"
 		],
-		"default": "en"
+		"default": "500 (recommended)"
 	},
 	{
-		"id": "EpisodeLanguage1",
-		"label": "First Language preference for the Episode title",
+		"id": "RefreshMode",
+		"label": "Refreshing: Refresh Metadata mode",
 		"type": "enum",
 		"values": [
-			"x-jat",
-			"ja",
-			"en",
-			"ar",
-			"bg",
-			"ca",
-			"cs",
-			"da",
-			"de",
-			"el",
-			"es",
-			"et",
-			"fa",
-			"fi",
-			"fr",
-			"he",
-			"hr",
-			"hu",
-			"it",
-			"ko",
-			"x-kot",
-			"lv",
-			"mn",
-			"pl",
-			"pt",
-			"ro",
-			"ru",
-			"sr",
-			"sk",
-			"sl",
-			"sv",
-			"th",
-			"tr",
-			"uk",
-			"zh",
-			"zh-Hans",
-			"zh-x-nan"
+			"Cached first, update in background (recommended)",
+			"Wait for fresh data"
 		],
-		"default": "en"
+		"default": "Cached first, update in background (recommended)"
 	},
 	{
-		"id": "EpisodeLanguage2",
-		"label": "Second Language preference for the Episode title",
+		"id": "RefreshSkipRecent",
+		"label": "Refreshing: Skip sources downloaded within",
 		"type": "enum",
 		"values": [
-			"x-jat",
-			"ja",
-			"en",
-			"ar",
-			"bg",
-			"ca",
-			"cs",
-			"da",
-			"de",
-			"el",
-			"es",
-			"et",
-			"fa",
-			"fi",
-			"fr",
-			"he",
-			"hr",
-			"hu",
-			"it",
-			"ko",
-			"x-kot",
-			"lv",
-			"mn",
-			"pl",
-			"pt",
-			"ro",
-			"ru",
-			"sr",
-			"sk",
-			"sl",
-			"sv",
-			"th",
-			"tr",
-			"uk",
-			"zh",
-			"zh-Hans",
-			"zh-x-nan"
+			"10 minutes (testing)",
+			"1 hour",
+			"6 hours",
+			"24 hours (recommended)",
+			"3 days",
+			"7 days"
 		],
-		"default": "x-jat"
+		"default": "24 hours (recommended)"
+	},
+	{
+		"id": "RefreshAiring",
+		"label": "Refreshing: Refresh airing shows daily",
+		"type": "bool",
+		"default": "true"
+	},
+	{
+		"id": "ResetSettings",
+		"label": "Maintenance: Reset all settings on save (then restart Plex)",
+		"type": "bool",
+		"default": "false"
 	}
 ]

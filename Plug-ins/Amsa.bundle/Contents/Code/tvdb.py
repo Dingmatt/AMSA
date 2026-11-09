@@ -1,204 +1,131 @@
-import constants, functions
+"""TVDB source: one series from TheTVDB's v1 XML API (series + banners)."""
+import os
 
-from functions import XMLFromURL, GetElementText
-from lxml import etree
-from lxml.builder import E
-from lxml.etree import Element, SubElement, Comment
+import settings
+import textutil
+import models
+import downloader
+from textutil import element_text
 
-def ParseNoFromSeason(season, episode, default):
-    #if season == 0 and episode == 0:
-    #    return "S" + str(default).zfill(2) + "E00"
-    #else:
-    return "S" + str(season).zfill(2) + "E"  + str(episode).zfill(2)
-        
-class TvDB(constants.Series):
-    def __init__(self, id):
-        self.ID = id
-        
-        self.MetaType = "Tvdb"
-        
-        data = XMLFromURL(constants.TVDB_HTTP_API_URL % id, id + ".xml", os.path.join("TvDB", id), CACHE_1HOUR * 24 * 2).xpath("""/Data""")
-        if data != None:
-            data = data[0]
-            ##--------------------------------Title--------------------------------##
-            if GetElementText(data, "Series/SeriesName"):
-                self.Title = str(GetElementText(data, "Series/SeriesName")).encode('utf-8').strip().translate(constants.ReplaceChars)
-                
-            ##--------------------------------Summary------------------------------##
-            if GetElementText(data, "Series/Overview"): 
-                self.Summary = GetElementText(data, "Series/Overview")
-                
-            ##--------------------------------Originally_Available_At--------------##     
-            if GetElementText(data, "Series/FirstAired"):
-                self.Originally_Available_At = GetElementText(data, "Series/FirstAired")
-                
-            ##--------------------------------Rating-------------------------------##     
-            if GetElementText(data, "Series/Rating"):    
-                self.Rating = GetElementText(data, "Series/Rating")
 
-            ##--------------------------------Studio-------------------------------##    
-            if GetElementText(data, "Series/Network"):
-                self.Studio = GetElementText(data, "Series/Network")
+def episode_number(season, episode):
+    """TVDB-style 'SxxEyy'."""
+    return "S" + str(season).zfill(2) + "E" + str(episode).zfill(2)
 
-            ##--------------------------------Countries----------------------------##
-            
 
-            ##--------------------------------Genres-------------------------------##
-            if GetElementText(data, "Series/Genre"):
-                self.Genres = filter(None, GetElementText(data, "Series/Genre").split("|"))
-            
-            ##--------------------------------Tags---------------------------------##
-        
-            ##--------------------------------Collections--------------------------## 
-        
-            ##--------------------------------Content_Rating-----------------------##
-            if GetElementText(data, "Series/ContentRating"):
-                self.Content_Rating = GetElementText(data, "Series/ContentRating")
+def banner_kind(banner_type, banner_type2):
+    """Which image list a TVDB banner belongs to, or None to ignore it."""
+    if banner_type == "fanart":
+        return "art"
+    if banner_type == "poster":
+        return "posters"
+    if banner_type == "series" or banner_type2 == "seasonwide":
+        return "banners"
+    if banner_type == "season" and banner_type2 in ("680x1000", "season"):
+        return "season"
+    return None
 
-            
-            ##--------------------------------Writers------------------------------##
 
-            ##--------------------------------Directors----------------------------##
+class TvDBSeries(models.Series):
+    def __init__(self, tvdb_id):
+        models.Series.__init__(self, tvdb_id, "Tvdb")
+        tvdb_id = self.id
+        if not textutil.is_digits(tvdb_id):
+            Log.Debug("TvDB - Ignoring invalid TVDB id '%s'" % (tvdb_id))
+            return
+        xml = downloader.xml_from_url(settings.TVDB_SERIES_URL % tvdb_id, tvdb_id + ".xml", os.path.join("TvDB", tvdb_id), settings.DEFAULT_CACHE)
+        found = xml.xpath("/Data") if xml is not None else []
+        if not found:
+            Log.Error("TvDB - No data for TVDB id '%s'" % (tvdb_id))
+            return
+        data = found[0]
+        self.valid = True
 
-            ##--------------------------------Producers----------------------------##
-        
-            ##--------------------------------Roles--------------------------------##
-            self.Roles = []
-        
-            ##--------------------------------Images-------------------------------##
-            banners = []
-            bannersXml = XMLFromURL(constants.TVDB_BANNERS_URL % id, id + "_banners.xml", os.path.join("TvDB", id), CACHE_1HOUR * 24 * 2)
-            if bannersXml:
-                art = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-                art = XML.ElementFromString(art)
-                artCount = 2
-                posters = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-                posters = XML.ElementFromString(posters)
-                postersCount = 2
-                banners = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-                banners = XML.ElementFromString(banners)
-                bannersCount = 2
-                season = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-                season = XML.ElementFromString(season)
-                seasonCount = []
-                
-                for banner in sorted(bannersXml.xpath("./Banner"), key=lambda x: float(GetElementText(x, "Rating", 0)) ,  reverse=True):
-                    
-                    bannerType = GetElementText(banner, "BannerType")
-                    bannerType2 = GetElementText(banner, "BannerType2")
-                    bannerPath = GetElementText(banner, "BannerPath")
-                    bannerThumb = GetElementText(banner, "ThumbnailPath")
-                    if bannerThumb == None or bannerThumb == "":
-                        bannerThumb = os.path.splitext(bannerPath)[0] + '_t' + os.path.splitext(bannerPath)[1]
-                        
-                    metatype = ("art"       if bannerType == "fanart" else \
-                                "posters"   if bannerType == "poster" else \
-                                "banners"   if bannerType == "series" or bannerType2=="seasonwide" else \
-                                "season"    if bannerType == "season" and bannerType2=="680x1000" else \
-                                "season"    if bannerType == "season" and bannerType2=="season" else None)  
-                
-                    #Log("Images: %s, %s, %s, %s, %s" % (bannerPath, constants.TVDB_IMAGES_URL, id, metatype, bannerThumb))
-                    mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, metatype), bannerThumb)                  
-                    if metatype == "art":
-                        SubElement(art, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/fanart") else artCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
-                        artCount = artCount + 1
-                    if metatype == "posters":
-                        SubElement(posters, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/poster") else postersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
-                        postersCount = postersCount + 1
-                    if metatype == "banners":
-                        SubElement(banners, "Image", id = str(1 if bannerPath == GetElementText(data, "Series/banner") else bannersCount), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)
-                        bannersCount = bannersCount + 1
-                    if metatype == "season":
-                        seasonCount.append(GetElementText(banner, "Season"))
-                        SubElement(season, "Image", id = str(seasonCount.count(GetElementText(banner, "Season"))), mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename, season = str(GetElementText(banner, "Season")))
-                    
-                self.Art = art
-                self.Posters = posters 
-                self.Banners = banners 
-                self.Season = season 
-                
+        if element_text(data, "Series/SeriesName"):
+            self.title = textutil.clean_text(element_text(data, "Series/SeriesName"))
+            self.title_lang = "en"
+        if element_text(data, "Series/Overview"):
+            self.summary = element_text(data, "Series/Overview")
+        if element_text(data, "Series/FirstAired"):
+            self.originally_available_at = element_text(data, "Series/FirstAired")
+        if element_text(data, "Series/Rating"):
+            self.rating = element_text(data, "Series/Rating")
+            if (element_text(data, "Series/RatingCount") or "").isdigit():
+                self.rating_votes = int(element_text(data, "Series/RatingCount"))
+        if element_text(data, "Series/Network"):
+            self.studio = element_text(data, "Series/Network")
+        if element_text(data, "Series/Genre"):
+            self.genres = [genre.strip() for genre in element_text(data, "Series/Genre").split("|") if genre.strip()]
+        if element_text(data, "Series/ContentRating"):
+            self.content_rating = element_text(data, "Series/ContentRating")
 
-            ##--------------------------------Themes-------------------------------##
-            self.Themes = []
-             
-            ##--------------------------------EpisodeCount-------------------------##
-            self.EpisodeCount = len(data.xpath("""./Episode/SeasonNumber[text()>0]"""))
-            
-            ##--------------------------------SpecialCount-------------------------##
-            self.SpecialCount = len(data.xpath("""./Episode/SeasonNumber[text()=0]"""))
-            
-            ##--------------------------------Duration-----------------------------##
-            if GetElementText(data, "Series/Runtime"):
-                self.Duration = int(int(self.EpisodeCount) * int(GetElementText(data, "Series/Runtime")))
-            
-            ##--------------------------------OP/ED_List---------------------------##
-            self.OpList = []
-            self.EdList = []
-        
-            ##--------------------------------Episodes-----------------------------## 
-            if len(data.xpath("""./Episode""")) > 0:
-                self.Episodes = []
-                for item in data.xpath("""./Episode"""):
-                    self.Episodes.append(self.Episode(item, id))               
+        self.parse_banners(data)
 
-                 
-            #Log("AniDB - __init__() - Populate  Title: '%s', Network: '%s', Overview: '%s', FirstAired: '%s', Genre: '%s', ContentRating: '%s', Rating: '%s', Episodes: '%s', EpisodeCount: '%s', SpecialCount: '%s', OpedCount: '%s', Posters: '%s'"
-            #% (self.Title, self.Network, self.Overview, self.FirstAired, self.Genre, self.ContentRating, self.Rating, self.Episodes, self.EpisodeCount, self.SpecialCount, self.OpedCount, self.Posters) )
-        
-    class Episode(constants.Episode):
-        def __init__(self, data, id):
-            ##--------------------------------Title--------------------------------##
-            if GetElementText(data, "EpisodeName"):
-                self.Title = str(GetElementText(data, "EpisodeName")).encode('utf-8').strip().translate(constants.ReplaceChars)
-            
-            ##--------------------------------Summary------------------------------##
-            if GetElementText(data, "Overview"):
-                self.Summary = GetElementText(data, "Overview")
-            
-            ##--------------------------------Originally_Available_At--------------##
-            if GetElementText(data, "FirstAired" ):
-                self.Originally_Available_At = GetElementText(data, "FirstAired")
-            
-            ##--------------------------------Rating-------------------------------##
-            if GetElementText(data, "Rating"):
-                self.Rating = GetElementText(data, "Rating")
-            
-            ##--------------------------------Absolute_Index-----------------------## 
-            if GetElementText(data, "absolute_number"):
-                self.Absolute_Index = int(GetElementText(data, "absolute_number"))
+        self.episode_count = len(data.xpath("./Episode/SeasonNumber[text()>0]"))
+        self.special_count = len(data.xpath("./Episode/SeasonNumber[text()=0]"))
+        if element_text(data, "Series/Runtime").isdigit():
+            self.duration = int(element_text(data, "Series/Runtime")) * 60000      # Plex: one episode's length in milliseconds
 
-            ##--------------------------------Writers------------------------------##
-            if GetElementText(data, "Writer"):
-                if self.Writers is None: self.Writers = [] 
-                self.Writers.append(GetElementText(data, "Writer"))
-        
-            ##--------------------------------Directors----------------------------##
-            if GetElementText(data, "Director"):
-                if self.Directors is None: self.Directors = [] 
-                self.Directors.append(GetElementText(data, "Director"))
+        for item in data.xpath("./Episode"):
+            try:
+                self.episodes.append(TvDBEpisode(item, tvdb_id))
+            except Exception as e:
+                Log.Debug("TvDB - Skipping malformed episode in '%s': %s" % (tvdb_id, e))
 
-            ##--------------------------------Producers----------------------------##
-            
-        
-            ##--------------------------------Thumbs-------------------------------##
-            if GetElementText(data, "filename"):
-                root = etree.tostring(E.Images(), pretty_print=True, xml_declaration=True, encoding="UTF-8")
-                root = XML.ElementFromString(root)
-                bannerPath = GetElementText(data, "filename")
-                bannerThumb = os.path.splitext(bannerPath)[0] + '_t' + os.path.splitext(bannerPath)[1]
-                mainUrl, thumbUrl, mainLocalPath, thumbLocalPath, mainFilename = functions.ParseImage(bannerPath, constants.TVDB_IMAGES_URL, os.path.join("TvDB", id, "thumbs"), bannerThumb)  
-                SubElement(root, "Image", id = "1", mainUrl = mainUrl, thumbUrl = thumbUrl, mainLocalPath = mainLocalPath, thumbLocalPath = thumbLocalPath, mainFilename = mainFilename)                
-                self.Thumbs = root
-            
-            ##--------------------------------Number-------------------------------##            
-            if GetElementText(data, "EpisodeNumber"):
-                self.Number = str(GetElementText(data, "EpisodeNumber")).zfill(2)
-            
-            ##--------------------------------Season-------------------------------##
-            if GetElementText(data, "SeasonNumber"):
-                self.Season = str(GetElementText(data, "SeasonNumber")).zfill(2)
-            
-            
-            
-            
-            
+    def parse_banners(self, data):
+        tvdb_id = self.id
+        banners_xml = downloader.xml_from_url(settings.TVDB_BANNERS_URL % tvdb_id, tvdb_id + "_banners.xml", os.path.join("TvDB", tvdb_id), settings.DEFAULT_CACHE)
+        if banners_xml is None or not len(banners_xml):
+            return
+        images = {"art": models.new_images(), "posters": models.new_images(), "banners": models.new_images(), "season": models.new_images()}
+        counters = {"art": 2, "posters": 2, "banners": 2}           # id 1 is reserved for the series' own fanart/poster/banner
+        preferred = {"art": element_text(data, "Series/fanart"), "posters": element_text(data, "Series/poster"), "banners": element_text(data, "Series/banner")}
+        season_seen = []
+        for banner in sorted(banners_xml.xpath("./Banner"), key=lambda x: textutil.safe_float(element_text(x, "Rating", "0")), reverse=True):
+            kind = banner_kind(element_text(banner, "BannerType"), element_text(banner, "BannerType2"))
+            path = element_text(banner, "BannerPath")
+            if kind is None or not path:
+                continue  # Unknown banner type (e.g. clearlogo)
+            thumb = element_text(banner, "ThumbnailPath") or (os.path.splitext(path)[0] + "_t" + os.path.splitext(path)[1])
+            if kind == "season":
+                season_number = element_text(banner, "Season")
+                season_seen.append(season_number)
+                extra = {"id": season_seen.count(season_number), "season": season_number}
+            else:
+                extra = {"id": 1 if path == preferred[kind] else counters[kind]}
+                counters[kind] = counters[kind] + 1
+            extra["lang"] = textutil.short_language(element_text(banner, "Language", ""))
+            models.add_image(images[kind], path, settings.TVDB_IMAGES_URL, os.path.join(settings.TVDB_IMAGES_FOLDER, tvdb_id, kind), thumb, extra)
+        self.art = images["art"]
+        self.posters = images["posters"]
+        self.banners = images["banners"]
+        self.season = images["season"]
+
+
+class TvDBEpisode(models.Episode):
+    def __init__(self, data, tvdb_id):
+        models.Episode.__init__(self)
+        if element_text(data, "EpisodeName"):
+            self.title = textutil.clean_text(element_text(data, "EpisodeName"))
+            self.title_lang = "en"
+        if element_text(data, "Overview"):
+            self.summary = element_text(data, "Overview")
+        if element_text(data, "FirstAired"):
+            self.originally_available_at = element_text(data, "FirstAired")
+        if element_text(data, "Rating"):
+            self.rating = element_text(data, "Rating")
+        if element_text(data, "absolute_number").isdigit():
+            self.absolute_index = int(element_text(data, "absolute_number"))
+        if element_text(data, "Writer"):
+            self.writers = [name.strip() for name in element_text(data, "Writer").split("|") if name.strip()] or None   # TVDB uses "|A|B|"
+        if element_text(data, "Director"):
+            self.directors = [name.strip() for name in element_text(data, "Director").split("|") if name.strip()] or None
+        if element_text(data, "filename"):
+            path = element_text(data, "filename")
+            thumbs = models.new_images()
+            models.add_image(thumbs, path, settings.TVDB_IMAGES_URL, os.path.join(settings.TVDB_IMAGES_FOLDER, tvdb_id, "thumbs"), os.path.splitext(path)[0] + "_t" + os.path.splitext(path)[1], {"id": "1"})
+            self.thumbs = thumbs
+        if element_text(data, "EpisodeNumber"):
+            self.number = str(element_text(data, "EpisodeNumber")).zfill(2)
+        if element_text(data, "SeasonNumber"):
+            self.season = str(element_text(data, "SeasonNumber")).zfill(2)
