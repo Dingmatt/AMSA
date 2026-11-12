@@ -184,6 +184,8 @@ class AniListSeries(models.Series):
 
     def parse(self, media):
         anidb_id = self.id
+        if textutil.is_digits(value(media, "id")):
+            self.site_id = str(value(media, "id"))      # AniList's own id (self.id is the AniDB id it was looked up by)
         titles = value(media, "title", {})
         candidates = [(value(titles, "english"), "en", False), (value(titles, "romaji"), "x-jat", True), (value(titles, "native"), "ja", False)]
         candidates = [c for c in candidates if c[0]]

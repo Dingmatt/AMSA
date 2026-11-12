@@ -20,6 +20,8 @@ import settings
 import textutil
 
 IDENTIFIER = "com.plexapp.agents.amsa"
+# Settings replaced by another: old id -> (new id, {old text: new option}). Converted once, when the new one was never saved.
+RENAMED = {"localart": ("ImageLanguage", {"true": "Library language > Textless > Others", "false": "Keep site order"})}
 DELAY = 60
 STATE = {"done": False}
 SOURCES = {"anidb": "AniDB", "tvdb": "TVDB", "thetvdb": "TVDB", "tvdb3": "TVDB", "tvdb4": "TVDB", "anilist": "AniList", "plex": "Plex"}
@@ -264,6 +266,34 @@ def invalid(entries, values, texts=None):
     return found
 
 
+def convert_renamed(entries, texts):
+    """2.0.0's settings that a newer one replaced: the old choice is stored as the new setting's option, once (only while the
+       new setting has never been saved). Returns the ids stored."""
+    import season_editor
+    done = []
+    for old_key in sorted(RENAMED.keys()):
+        new_key, options = RENAMED[old_key]
+        old = (texts.get(old_key) or "").strip().lower()
+        if old_key not in texts or new_key in texts or old not in options:
+            continue                                       # Nothing to convert
+        entry = [item for item in entries if item.get("id") == new_key]
+        values = (entry[0].get("values") or []) if entry else []
+        label = options[old]
+        if label not in values:
+            continue
+        if label == (entry[0].get("default") if entry else None):
+            Log.Info("Settings - %s ('%s', saved by AMSA 2.0) is now %s: '%s', its default, so nothing to store" % (old_key, old, new_key, label))
+            continue
+        path = "/:/plugins/%s/prefs/set?%s=%s" % (IDENTIFIER, new_key, season_editor.quote(str(values.index(label))))
+        try:
+            season_editor.plex_request(path)
+            Log.Info("Settings - %s ('%s', saved by AMSA 2.0) converted to %s: '%s' (request %s)" % (old_key, old, new_key, label, path))
+            done.append(new_key)
+        except Exception as e:
+            Log.Warn("Settings - Couldn't store %s as '%s' (converted from %s '%s'): %s. Choose it on the settings page and save" % (new_key, label, old_key, old, e))
+    return done
+
+
 def describe(bad, keys):
     return ", ".join(["%s ('%s' -> '%s')" % (key, bad[key][0], bad[key][2]) for key in keys])
 
@@ -288,6 +318,8 @@ def run():
                     Log.Warn("Settings - Couldn't check the saved settings through Plex; these use their default because no valid value is saved: %s. "
                              "To store one, change it on the settings page, save, then change it back and save again" % (", ".join(unset)))
             return
+        if texts:
+            convert_renamed(entries, texts)
         bad = invalid(entries, values, texts)
         if not bad:
             return

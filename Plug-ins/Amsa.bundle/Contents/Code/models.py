@@ -28,6 +28,7 @@ class Series():
         self.title_lang = None              # Language of the title (AniDB code, e.g. "en", "x-jat", "ja"); None = unknown
         self.title_main = False             # AniDB/AniList: the title is the main (romaji) title, which ranks as "main" in the language settings
         self.mal_id = None                  # AniDB only: MyAnimeList id, used to find the AniList entry
+        self.site_id = None                 # The source's own id where it isn't the lookup id (AniList: looked up by AniDB id)
         self.end_date = None                # AniDB only: "YYYY[-MM[-DD]]" end date (cache age)
         self.season_ids = {}                # TVDB v4 only: official season number -> v4 season id
         self.aliases = []                   # TVDB v4 only: the series' other names (aliases, untranslated name)

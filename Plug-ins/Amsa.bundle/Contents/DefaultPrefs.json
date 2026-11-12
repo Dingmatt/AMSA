@@ -601,7 +601,7 @@
 	},
 	{
 		"id": "SeriesImages",
-		"label": "Images: Posters, backgrounds, banners from",
+		"label": "Images: Show and season artwork from",
 		"type": "enum",
 		"values": [
 			"AniDB > TVDB",
@@ -622,20 +622,28 @@
 		"default": "AniDB > AniList > TVDB"
 	},
 	{
-		"id": "localart",
-		"label": "Images: Prefer library language, then textless",
-		"type": "bool",
-		"default": "true"
+		"id": "ImageLanguage",
+		"label": "Images: Language and text",
+		"type": "enum",
+		"values": [
+			"Library language > Textless > Others",
+			"Textless > Library language > Others",
+			"Keep site order",
+			"Library language > Textless only",
+			"Textless > Library language only",
+			"Textless only (fewer images)"
+		],
+		"default": "Library language > Textless > Others"
 	},
 	{
 		"id": "SeasonPosterSets",
-		"label": "Images: Prefer matching season poster sets",
+		"label": "Images: Season posters from matching sets",
 		"type": "bool",
 		"default": "false"
 	},
 	{
 		"id": "ImagesMax",
-		"label": "Images: Most images per type",
+		"label": "Images: Most show posters, backgrounds and banners (each)",
 		"type": "enum",
 		"values": [
 			"10",
@@ -647,8 +655,32 @@
 		"default": "20 (recommended)"
 	},
 	{
+		"id": "SeasonPostersMax",
+		"label": "Images: Most posters per season",
+		"type": "enum",
+		"values": [
+			"5",
+			"10 (recommended)",
+			"20",
+			"30",
+			"50",
+			"All"
+		],
+		"default": "10 (recommended)"
+	},
+	{
+		"id": "ImageDuplicates",
+		"label": "Images: Duplicate artwork (show and season)",
+		"type": "enum",
+		"values": [
+			"Keep all",
+			"Remove duplicates"
+		],
+		"default": "Keep all"
+	},
+	{
 		"id": "SeriesThemes",
-		"label": "Images: Theme music from",
+		"label": "Images: Show theme music from",
 		"type": "enum",
 		"values": [
 			"Plex",
@@ -921,6 +953,18 @@
 		"label": "Refreshing: Refresh airing shows daily",
 		"type": "bool",
 		"default": "true"
+	},
+	{
+		"id": "DebugBundles",
+		"label": "Maintenance: Generate debug bundles",
+		"type": "bool",
+		"default": "false"
+	},
+	{
+		"id": "UnlockAllImages",
+		"label": "Maintenance: Unlock ALL images on save (WARNING: Irreversible)",
+		"type": "bool",
+		"default": "false"
 	},
 	{
 		"id": "ResetSettings",

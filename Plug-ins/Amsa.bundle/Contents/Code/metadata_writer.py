@@ -4,6 +4,7 @@ import re
 import ast
 import datetime
 import time
+import json
 import copy
 
 from lxml import etree
@@ -12,6 +13,9 @@ from lxml.etree import SubElement
 import settings
 import textutil
 import downloader
+import image_choice
+import image_match
+import image_sets
 import bundle
 import sources
 import tvdb_v4
@@ -41,13 +45,25 @@ def is_bad_episode_title(title):
 
 
 def language_rank(image, language):
-    """With 'Prefer artwork based on section language': the library's language first, then images without text, then others."""
-    if not settings.PREFER_LOCAL_ART or not language:
+    """Setting "Images: Language and text" (settings.IMAGE_ORDER):
+       "language": the library's language first, then images without text (or not known to have any), then others:
+                   another language, or text found in an unknown language (image_choice);
+       "textless": images known to be textless first, then the library's language, then unknown ones, then others;
+       "site": no change (source order)."""
+    if not settings.PREFER_LOCAL_ART:
         return 0
     image_language = image.get("lang") or ""
+    if getattr(settings, "IMAGE_ORDER", "language") == "textless":
+        if image_choice.text_state(image) == "0":
+            return 0
+        if language and image_language == language:
+            return 1
+        return 3 if (image_language or image.get("text") == "1") else 2
+    if not language:
+        return 0
     if image_language == language:
         return 0
-    return 2 if image_language else 1
+    return 2 if (image_language or image.get("text") == "1") else 1
 
 
 def by_priority(candidates, priority, kind, episode_title=False, language=None):
@@ -76,11 +92,10 @@ def by_priority(candidates, priority, kind, episode_title=False, language=None):
                 if image.get("set_size"):
                     # Season posters with "prefer matching sets" (mark_poster_sets): the set covering most seasons first,
                     # within the library-language groups when that setting is on
-                    return (language_rank(image, language) if (settings.PREFER_LOCAL_ART and language) else 0, -int(image.get("set_size")),
+                    return (language_rank(image, language), -int(image.get("set_size")),
                             int(image.get("set_order") or 0), provider_rank(priority, image.getparent().tag), image_id)
-                if settings.PREFER_LOCAL_ART and language:
-                    # As the setting says: the library's language first, then images without (known) text, then the rest;
-                    # source order only decides within those.
+                if settings.PREFER_LOCAL_ART and (language or getattr(settings, "IMAGE_ORDER", "language") == "textless"):
+                    # As the setting says (language first, or textless first); source order only decides within those.
                     return (language_rank(image, language), provider_rank(priority, image.getparent().tag), image_id)
                 return (provider_rank(priority, image.getparent().tag), language_rank(image, language), image_id)
             images = sorted(candidates, key=image_key)
@@ -292,8 +307,10 @@ def download_image(image, target, lazy=None):
                 use_thumb = False
                 content = cached_file(image.get("mainUrl"), image.get("mainLocalPath"))
             if not content:
-                lazy["images"].append(image_task(image))
-                return
+                task = image_task(image)
+                if task not in lazy["images"]:
+                    lazy["images"].append(task)
+                return False
         if use_thumb and not content:
             content = downloader.file_from_url(image.get("thumbUrl"), os.path.basename(image.get("thumbLocalPath")), os.path.dirname(image.get("thumbLocalPath")))
             if not content:
@@ -301,15 +318,219 @@ def download_image(image, target, lazy=None):
         if not content:
             content = downloader.file_from_url(image.get("mainUrl"), os.path.basename(image.get("mainLocalPath")), os.path.dirname(image.get("mainLocalPath")))
         if not content:
-            return  # Download failed and nothing cached: skip this image
+            return False  # Download failed and nothing cached: skip this image
         sort_order = int(image.get("id"))
         proxy = Proxy.Preview(content, sort_order=sort_order) if use_thumb else Proxy.Media(content, sort_order=sort_order)
         if image.getparent().getparent().tag == "Season":
             target[image.get("season")].posters[image.get("mainUrl")] = proxy
         else:
             target[image.get("mainUrl")] = proxy
+        return True
     except Exception:
         Log.Debug("MetadataWriter - Image '%s' failed: %s" % (image.get("mainUrl"), textutil.exception_text()))
+        return False
+
+
+ORDER_SHOWN = 6                                          # Images listed in the debug line giving a list's order
+
+
+def order_text(images, label):
+    """Debug: the order a list is sent to Plex in: position, site, language/text group and file name (season posters: per season)."""
+    try:
+        groups = {}
+        order = []
+        for image in images:
+            group = image.get("season") if image.getparent().getparent().tag == "Season" else ""
+            if group not in groups:
+                groups[group] = []
+                order.append(group)
+            groups[group].append(image)
+        def describe(image):
+            return "%s %s %s" % (image.getparent().tag, image_choice.language_class(image, settings_language()), (image.get("mainUrl") or "").split("/")[-1])
+        if order != [""]:                                  # Season posters: each season's first choice, on one line
+            seasons = sorted(order, key=lambda number: int(number) if number.isdigit() else 0)
+            Log.Debug("MetadataWriter - %s, first per season: %s" % (label, "; ".join(["%s: %s (of %s)" % (group, describe(groups[group][0]), len(groups[group]))
+                                                                                    for group in seasons])))
+            return
+        members = groups[""]
+        Log.Debug("MetadataWriter - %s order: %s%s" % (label, "; ".join(["%s %s" % (image.get("id"), describe(image)) for image in members[:ORDER_SHOWN]]),
+                  (" (+%s more)" % (len(members) - ORDER_SHOWN)) if len(members) > ORDER_SHOWN else ""))
+    except Exception:
+        Log.Debug("MetadataWriter - %s order not logged: %s" % (label, textutil.exception_text()))
+
+
+LIBRARY = {"language": ""}                                 # The library's language for this update (order_text)
+
+
+def settings_language():
+    return LIBRARY["language"]
+
+
+def image_hash(url):
+    """SHA-1 of an address or of a file's contents (Plex's own Hash where available)."""
+    try:
+        return Hash.SHA1(url)
+    except Exception:
+        import hashlib
+        try:
+            return hashlib.sha1(url).hexdigest()               # Bytes (and Python 2 text)
+        except TypeError:
+            return hashlib.sha1(url.encode("utf-8")).hexdigest()
+
+
+def held_addresses(container):
+    """Addresses of the images Plex holds from this agent for one list (they may be from earlier updates, under addresses
+       the sites no longer use); [] if Plex can't list them."""
+    try:
+        return [key for key in container.keys() if key]
+    except Exception:
+        Log.Debug("MetadataWriter - Couldn't list the images Plex holds: %s" % (textutil.exception_text()))
+        return []
+
+
+def locked_pick(show_key, kind, images, held=None, label=None, notes=None):
+    """For a locked image: {"same": addresses of AMSA's images that are your pick's picture, "unknown": ones not looked at
+       yet} (see pick_keys), None when the pick isn't one of AMSA's images (nothing of AMSA's can remove it), or False
+       when the pick can't be looked at (then nothing is removed).
+       kind: posters, art, banners, or "season poster" (show_key: the season's key).
+       held: the addresses Plex holds from AMSA for the list (a pick from an earlier update may be under an old address).
+       label: the list's name ("season 9"). notes: {"picks": [...], "others": [...]}, short notes the caller logs."""
+    notes = notes if notes is not None else {"picks": [], "others": []}
+    try:
+        endpoint = "posters" if kind == "season poster" else season_editor.SHOW_IMAGES[kind][0]
+        listed = season_editor.images_of(show_key, endpoint)
+        selected = season_editor.selected_poster(show_key, endpoint, listed)
+    except Exception as e:
+        notes["picks"].append("%s: couldn't be read (%s)" % (label or kind, e))
+        return False
+    others = other_sources(listed, held or [])
+    if others:
+        notes["others"].append("%s: %s" % (label or kind, others))
+    if selected is None:
+        notes["picks"].append("%s: Plex marks none of its images as selected" % (label or kind))
+        return None
+    # Kept for restore_picks: the keys Plex may list the pick under (it lists AMSA's selected image as metadata://...,
+    # the same image by its web address when it isn't selected, and may turn it into upload://... with the same
+    # 40-digit name), and those names (Plex's, and the SHA-1 of each address of the same picture)
+    restore = (show_key, endpoint, [selected.get("ratingKey")] if selected.get("ratingKey") else [], label or kind,
+               re.findall(r"([0-9a-f]{40})", textutil.safe_unicode(selected.get("ratingKey") or "")))
+    notes.setdefault("restore", []).append(restore)
+    text = u" ".join([textutil.safe_unicode(selected.get(name) or "") for name in ("ratingKey", "key", "thumb", "provider")])
+    if "com.plexapp.agents.amsa" not in text or textutil.safe_unicode(selected.get("ratingKey") or "").startswith("upload://"):
+        # An upload (Plex can turn a pick of AMSA's into one) or another agent's: AMSA can't remove it, so its own
+        # images simply follow the settings
+        notes["picks"].append("%s: %s" % (label or kind, "your upload" if "upload://" in text else "not AMSA's"))
+        return None
+    found = re.findall(r"([0-9a-f]{40})", text)
+    for url in [image.get("mainUrl") for image in images] + list(held or []):
+        if url and image_hash(url) in found:
+            notes["picks"].append("%s: %s" % (label or kind, url.split("/")[-1]))
+            restore[2].append(url)
+            restore[4].append(image_hash(url))
+            return {"same": [url], "unknown": []}
+    pick = pick_by_picture(selected, kind, images, held or [], label or kind, notes)
+    if pick:
+        restore[2].extend(pick["same"])
+        restore[4].extend([image_hash(url) for url in pick["same"]])
+    return pick
+
+
+def other_sources(listed, held):
+    """Images Plex holds for the list from other agents or uploads, as "upload: 2" (AMSA can't remove those), or "".
+       Plex lists AMSA's images by their web address (or by AMSA's name for the one shown); held: AMSA's addresses."""
+    others = {}
+    for entry in listed:
+        key = textutil.safe_unicode(entry.get("ratingKey") or "")
+        provider = textutil.safe_unicode(entry.get("provider") or "")
+        if "com.plexapp.agents.amsa" in key or "com.plexapp.agents.amsa" in provider or key in held:
+            continue
+        found = re.search(r"(com\.plexapp\.agents\.[a-z0-9_.]+?)_[0-9a-f]{40}", key)
+        if provider:
+            source = provider
+        elif found:
+            source = found.group(1)
+        elif key.startswith("http"):
+            source = "another agent"
+        else:
+            source = key.split("://")[0] if "://" in key else "other"
+        others[source] = others.get(source, 0) + 1
+    return ", ".join(["%s %s" % (name, others[name]) for name in sorted(others)])
+
+
+def pick_by_picture(selected, kind, images, held, label, notes):
+    """Plex's name for an agent's image matches neither its address nor the file sent, so the pick is looked at: Plex's
+       resizer reads its local copy. Of the images Plex holds from AMSA, only one that is the same
+       picture can be the pick: those are kept, with any not looked at yet (looked at on a later update); the rest are
+       removed as the settings say. Returns {"same": [...], "unknown": [...]}, or False when the pick can't be looked at
+       (then nothing is removed)."""
+    local = selected.get("thumb") or selected.get("key")
+    if not local or not held:
+        notes["picks"].append("%s: couldn't be looked at (%s)" % (label, "no local copy" if not local else "Plex didn't list AMSA's images"))
+        return False
+    value = image_match.cached(local)[0]
+    if value is None:
+        value = image_match.work_out(local)                  # Once: saved under the pick's own (local) address
+    if value is None or value[2] is None:
+        notes["picks"].append("%s: couldn't be looked at through Plex's resizer" % (label))
+        return False
+    print_urls = {}
+    for image in images:
+        print_urls[image.get("mainUrl")] = image.get("thumbUrl") or image.get("mainUrl")
+    same = []
+    unknown = []
+    nearest = []
+    looked_at = 0
+    for url in held:
+        print_url = print_urls.get(url)
+        if print_url is None and re.search(r"thetvdb\.com/banners/.*\.jpg$", url):
+            print_url = url[:-4] + "_t.jpg"                   # TVDB's thumbnail of an address no longer offered
+        other, known = image_match.cached(print_url or url)
+        if other is None and not known and url not in print_urls and looked_at < OLD_LOOKS:
+            other = image_match.work_out(print_url or url)    # An old address nothing else looks at: looked at now
+            looked_at += 1
+        if other is None or other[2] is None:
+            unknown.append(url)
+        elif image_match.same_artwork(value, other) == "duplicate":
+            same.append(url)
+        else:
+            nearest.append((image_match.distance(value[0], other[0]), url, other))
+    if same:
+        note = " = ".join([url.split("/")[-1] for url in same])
+    else:
+        nearest.sort(key=lambda item: item[0])
+        note = "none of AMSA's (nearest %s)" % ("; ".join(["%s: %s bits, edges %.2f, middle %.1f" % (url.split("/")[-1], bits, image_match.edge_gap(value[1], other[1]),
+                                                           image_match.middle_difference(value[2], other[2])) for bits, url, other in nearest[:2]]) or "none")
+    if unknown:
+        note += ", %s not looked at yet (kept until they are)" % (len(unknown))
+    notes["picks"].append("%s: %s" % (label, note))
+    return {"same": same, "unknown": unknown}
+
+
+def log_locked(summary, notes):
+    """One Info line for a locked list (or the locked seasons), one for images from other sources, the picks at Debug."""
+    Log.Info("MetadataWriter - " + summary)
+    if notes["others"]:
+        Log.Info("MetadataWriter - Plex also holds images AMSA can't remove (other agents or uploads): %s" % ("; ".join(notes["others"])))
+    if notes["picks"]:
+        Log.Debug("MetadataWriter - Locked picks: %s" % ("; ".join(notes["picks"])))
+
+
+def pick_keys(pick, offered, label):
+    """The addresses kept for a locked pick (besides the list offered). With "Remove duplicates", of several copies of
+       the pick's picture only one stays: the one the list offers, else the first. It may not be the copy Plex had
+       selected; the same picture is still there to pick again, and the duplicates are gone from then on."""
+    if not pick:
+        return []
+    same = pick.get("same") or []
+    if len(same) > 1 and getattr(settings, "IMAGE_DUPLICATES", "off") == "remove":
+        chosen = [url for url in same if url in offered][:1] or same[:1]
+        Log.Info("MetadataWriter - %s: your locked pick is one of %s copies of the same picture; %s is kept, the others removed (Remove duplicates)"
+                 % (label[0].upper() + label[1:], len(same), chosen[0]))
+        same = chosen
+    return same + (pick.get("unknown") or [])
+
+
+OLD_LOOKS = 10                                            # Old addresses looked at per list and update (the rest next time)
 
 
 def drop_stale(target, keys, label):
@@ -330,14 +551,6 @@ def already_in_plex(image, target):
         return False
 
 
-def season_has(target, image):
-    """True if this season's poster list in Plex already holds the image; never raises."""
-    try:
-        return image.get("mainUrl") in target[image.get("season")].posters
-    except Exception:
-        return False
-
-
 def unique_urls(images):
     """Best-first images without repeats of the same URL (two sources can list one file, e.g. TVDB v4 and v1 thumbnails;
        downloading both at once made Plex's Data.Save fail). Season posters count per season."""
@@ -352,15 +565,23 @@ def unique_urls(images):
     return found
 
 
-def fill_images(candidates, priority, target, language=None, label="images", limit=0, skip_existing=False, keep=None, lazy=None):
+def fill_images(candidates, priority, target, language=None, label="images", limit=0, skip_existing=False, keep=None, lazy=None, prints=None, extra_keys=None):
     """limit: most images kept (per season for season posters), best first; 0 = all. Dropped ones are removed from Plex too.
        skip_existing: images Plex already has aren't downloaded and set again (episode thumbnails: thousands for a long show).
-       keep: True, or the season numbers (season posters), where you picked an image and Plex locked it: only images Plex
-       doesn't have yet are added, and nothing is removed, so your pick is untouched."""
+       keep: True where you picked an image and Plex locked it but it can't be told which: nothing is removed. Season
+       posters: {season: your pick (locked_pick's answer: kept), None (an upload or another agent's: untouched anyway)
+       or False (nothing removed in that season)}.
+       prints: the image checks (image_choice: duplicates, blanks, text, languages): a task list for fingerprints not worked
+       out yet (background), or None to work them out now.
+       extra_keys: a locked pick (locked_pick's answer), or addresses, kept in Plex besides these when the rest are removed."""
     images = by_priority(candidates, priority, proxy_container_type(), False, language) if candidates else None
     if not images:
         return
     images = unique_urls(sorted(images, key=lambda x: int(x.get("id"))))
+    images = image_choice.choose(images, label, prints, limit, language,
+                                 lambda found: by_priority(found, priority, proxy_container_type(), False, language))
+    if not images:
+        return
     keys = None
     if skip_existing:
         keys = [image.get("mainUrl") for image in images if not limit or int(image.get("id")) <= limit]
@@ -372,7 +593,8 @@ def fill_images(candidates, priority, target, language=None, label="images", lim
     if limit:
         kept = [image for image in images if int(image.get("id")) <= limit]
         if len(kept) < len(images) and kept:
-            Log.Debug("MetadataWriter - %s: best %s of %s kept (setting Images: maximum per type)" % (label, len(kept), len(images)))
+            Log.Debug("MetadataWriter - %s: best %s of %s kept (setting Images: %s)" % (label, len(kept), len(images),
+                      "Most posters per season" if label == "season posters" else "Most show posters, backgrounds and banners"))
         images = kept
         if not images:
             # With skip_existing: the best ones are all in Plex already and the rest are over the limit.
@@ -380,10 +602,7 @@ def fill_images(candidates, priority, target, language=None, label="images", lim
             if keep is not True and keys is not None:
                 drop_stale(target, keys, label)
             return
-    if keep and images[0].getparent().getparent().tag == "Season":
-        images = [image for image in images if image.get("season") not in keep or not season_has(target, image)]
-        if not images:
-            return
+    order_text(images, label)
     if images[0].getparent().getparent().tag == "Season":
         for season in sorted(set([image.get("season") for image in images])):
             try:
@@ -391,8 +610,27 @@ def fill_images(candidates, priority, target, language=None, label="images", lim
             except Exception:
                 pass
     if len(images) == 1 or lazy is not None:
+        sent = {}
         for image in images:                     # No thread pool for one image (most episode thumbnails) or the cache
-            download_image(image, target, lazy)
+            if download_image(image, target, lazy):
+                sent[image.get("season") or ""] = True
+        if lazy is not None and label != "thumbs":
+            # Quick first update: images not downloaded yet follow in the background (then the show is refreshed), but
+            # each list (each season) gets its best one now, so it never waits empty; several at once (downloads wait
+            # on the network, so threads help here)
+            first = {}
+            for image in images:
+                first.setdefault(image.get("season") or "", image)
+            missing = [first[group] for group in sorted(first.keys()) if group not in sent]
+            if len(missing) == 1:
+                download_image(missing[0], target)
+            elif missing:
+                @parallelize
+                def download_best():
+                    for image in missing:
+                        @task
+                        def download_first(image=image, target=target):
+                            download_image(image, target)
     else:
         @parallelize
         def download_images():
@@ -406,15 +644,22 @@ def fill_images(candidates, priority, target, language=None, label="images", lim
         for image in images:
             per_season.setdefault(image.get("season"), []).append(image.get("mainUrl"))
         for season in per_season:
+            urls = per_season[season]
             if keep and season in keep:
-                continue                                       # Locked: nothing removed
+                pick = keep[season] if hasattr(keep, "get") else False
+                if pick is False:
+                    continue                                   # Locked, your pick not identified: nothing removed
+                if pick:
+                    urls = urls + [url for url in pick_keys(pick, urls, "season %s posters" % (season)) if url not in urls]   # Locked: your pick stays
             try:
                 container = target[season].posters
             except Exception:
                 continue
-            drop_stale(container, per_season[season], "season %s posters" % (season))
+            drop_stale(container, urls, "season %s posters" % (season))
     elif keep is not True:
-        drop_stale(target, keys if keys is not None else [image.get("mainUrl") for image in images], label)   # Kept ones count too
+        offered = keys if keys is not None else [image.get("mainUrl") for image in images]       # Kept ones count too
+        extra = pick_keys(extra_keys, offered, "show %s" % (label)) if hasattr(extra_keys, "get") else (extra_keys or [])
+        drop_stale(target, offered + [key for key in extra if key and key not in offered], label)
 
 
 def fill_themes(candidates, priority, target):
@@ -804,6 +1049,7 @@ def write_seasons(root, metadata, first_season, plex_seasons, series_title, show
         Log.Debug("MetadataWriter - Season names: %s of %s start with the show's title (%s), so they are %s"
                   % (prefixed, named, " / ".join(titles), "trimmed" if trim else "kept whole"))
     queued = {}
+    written = []                                    # For one log line: "1: Season 1: Name (903)"
     for season in sorted(plex_seasons, key=lambda x: int(x)):
         tvdb_number = 0 if season == "0" else int(season) + first_season - 1
         node = root.find('./Season[@num="%s"]' % (tvdb_number))
@@ -844,7 +1090,9 @@ def write_seasons(root, metadata, first_season, plex_seasons, series_title, show
                 known.append(textutil.safe_unicode(provider_summary))
         queued[season] = (title, summary, known)    # Also without a title: season_editor then resets a title AMSA set earlier
         if title or summary:
-            Log.Debug("MetadataWriter - Season %s: title %r, summary %s" % (season, title, ("%s characters" % len(summary)) if summary else "none"))
+            written.append(u"%s: %s (%s)" % (season, textutil.safe_unicode(title or "no title"), len(summary) if summary else "no summary"))
+    if written:
+        Log.Debug(u"MetadataWriter - Season titles (summary length): %s" % ("; ".join(written)))
     if show_key:
         season_editor.queue(show_key, queued)
 
@@ -962,7 +1210,7 @@ def number_or_zero(value):
         return 0
 
 
-def mark_poster_sets(images):
+def mark_poster_sets(images, lazy=None):
     """Setting SeasonPosterSets: guess which season posters belong to one designed set and mark each with the set's size
        (seasons it covers) and rank, for by_priority. TVDB doesn't say who uploaded an image, so a set is guessed as posters
        with the same language and text flag uploaded in one batch (within SET_TIME_GAP or SET_ID_GAP of the previous one).
@@ -996,12 +1244,124 @@ def mark_poster_sets(images):
         others[name]["members"].append(image)
     for group in groups:
         group["size"] = len(set([i.get("season") for i in group["members"]]))
+    layout_sets(images, groups, lazy)
     ordered = sorted(groups, key=lambda g: (-g["size"], groups.index(g)))
     for rank, group in enumerate(ordered):
         for image in group["members"]:
             image.set("set_size", str(group["size"]))
             image.set("set_order", str(rank))
     return [(g["size"], g["label"]) for g in ordered]
+
+
+LAYOUT_MOST = 120                                         # Posters compared by layout at most (the best-ranked; time grows with the square)
+LAYOUTS_FOLDER = os.path.join("Fingerprints", "Layouts")  # Sets found, per list of posters: worked out once, not on every update
+
+
+PENDING_LAYOUTS = {}                                      # Saved-result name -> [(fingerprint address, image address)], for compute_layouts
+
+
+def compute_layouts(name):
+    """Background ("sets|<name>" task): work out and save the poster sets of one list of season posters, once their
+       fingerprints are in. True if saved (the show is refreshed to use them)."""
+    entries = PENDING_LAYOUTS.get(name)
+    if not entries:
+        return False
+    items = []
+    waiting = 0
+    for print_url, url in entries:
+        value, known = image_match.cached(print_url)
+        if value is not None and value[2] is not None:
+            items.append((url, value))
+        elif not known:
+            waiting += 1                                       # (Plex couldn't resize the others: they're left out)
+    if waiting or len(items) < 2:
+        Log.Debug("MetadataWriter - Season poster layouts: %s of %s posters not looked at yet; compared on a later update" % (len(entries) - len(items), len(entries)))
+        if not waiting:
+            del PENDING_LAYOUTS[name]
+        return False
+    started = time.time()
+    found = image_sets.find_sets(items)
+    downloader.save_file(json.dumps(found), name, LAYOUTS_FOLDER)
+    del PENDING_LAYOUTS[name]
+    Log.Info("MetadataWriter - Season poster layouts: %s posters compared in the background in %.1fs, %s set%s found" % (len(items), time.time() - started,
+             len(found), "" if len(found) == 1 else "s"))
+    return True
+
+
+def layout_sets(images, groups, lazy=None):
+    """Sets found by layout across sites (image_sets), from fingerprints already cached (the rest are worked out in the
+       background by the image checks, and the show refreshed). A poster moves to a layout set when that set covers more
+       seasons than the group it was in. The sets found are saved per list of posters, so later updates only read them."""
+    items = []
+    missing = 0
+    waiting = 0
+    for image in images[:LAYOUT_MOST]:
+        value, known = image_match.cached(image.get("thumbUrl") or image.get("mainUrl"))
+        if value is not None and value[2] is not None:
+            items.append((image, value))
+        else:
+            missing += 1
+            if not known:
+                waiting += 1
+    considered = images[:LAYOUT_MOST]
+    if len(considered) < 2:
+        return
+    name = "%s.json" % (image_match.file_name("|".join(sorted([image.get("mainUrl") for image in considered]))))
+    found = None
+    try:
+        saved = downloader.load_stale(name, LAYOUTS_FOLDER, True)
+        if saved:
+            by_url = {}
+            for image in considered:
+                by_url[image.get("mainUrl")] = image
+            found = [[by_url[url] for url in members if url in by_url] for members in json.loads(saved)]
+            Log.Debug("MetadataWriter - Season poster layouts: %s set%s, read from the saved result for these %s posters"
+                      % (len(found), "" if len(found) == 1 else "s", len(considered)))
+    except Exception:
+        found = None
+    started = time.time()
+    if found is None and lazy is not None and not waiting and len(items) < 2:
+        Log.Debug("MetadataWriter - Season poster layouts: not compared (%s of %s posters couldn't be looked at)" % (missing, len(considered)))
+        return
+    if found is None and lazy is not None:
+        # Background mode: compared after the update (with the season posters' fingerprints), then the show is refreshed
+        PENDING_LAYOUTS[name] = [(image.get("thumbUrl") or image.get("mainUrl"), image.get("mainUrl")) for image in considered]
+        lazy.setdefault("layouts", [])
+        if name not in lazy["layouts"]:
+            lazy["layouts"].append(name)
+        Log.Debug("MetadataWriter - Season poster layouts: compared in the background (%s posters)" % (len(considered)))
+        return
+    if found is None and len(items) < 2:
+        Log.Debug("MetadataWriter - Season poster layouts: not compared yet (%s of %s posters looked at)" % (len(items), len(considered)))
+        return
+    if found is None:
+        found = image_sets.find_sets(items)
+        if not missing:                                      # Only a complete answer is kept
+            try:
+                downloader.save_file(json.dumps([[image.get("mainUrl") for image in members] for members in found]), name, LAYOUTS_FOLDER)
+            except Exception as e:
+                Log.Debug("MetadataWriter - Couldn't save the season poster layouts: %s" % (e))
+        Log.Info("MetadataWriter - Season poster layouts: %s posters compared in %.1fs, %s set%s found%s" % (len(items), time.time() - started,
+                 len(found), "" if len(found) == 1 else "s", (" (%s not looked at yet)" % (missing)) if missing else ""))
+    for members in found:
+        seasons = len(set([image.get("season") for image in members]))
+        if seasons < 2:
+            continue
+        sites = sorted(set([image.getparent().tag for image in members]))
+        layout = {"label": "Layout set of %s posters (%s)" % (len(members), ", ".join(sites)), "members": [], "size": seasons}
+        for image in members:
+            for group in groups:
+                if image in group["members"] and group["size"] < seasons:
+                    group["members"].remove(image)
+            if not [group for group in groups if image in group["members"]]:
+                layout["members"].append(image)
+        if layout["members"]:
+            groups.append(layout)
+    if found and not [group for group in groups if group["label"].startswith("Layout set")]:
+        Log.Debug("MetadataWriter - Season poster layouts: the %s set%s found match TVDB's upload batches or cover no more seasons, so nothing moved"
+                  % (len(found), "" if len(found) == 1 else "s"))
+    for group in groups:
+        group["size"] = len(set([i.get("season") for i in group["members"]]))
 
 
 def season_poster_candidates(root, first_season):
@@ -1056,6 +1416,8 @@ def write(root, metadata, anidb_id, tvdb_id, media=None, lang=None, timings=None
        background (background refresh mode): they're collected there instead of downloaded during the update, and the
        caller queues them (background_refresh.add_files). None: download them now."""
     language = textutil.short_language(lang)
+    LIBRARY["language"] = language or ""
+    prints = lazy["images"] if lazy is not None else None    # Duplicate artwork: fingerprints not cached yet go to the background too
     main = main_season(root, anidb_id, tvdb_id)
     if main is None:
         Log.Error("MetadataWriter - Nothing to write for anidb: '%s', tvdb: '%s'" % (anidb_id, tvdb_id))
@@ -1086,18 +1448,27 @@ def write(root, metadata, anidb_id, tvdb_id, media=None, lang=None, timings=None
     metadata.content_rating = regional_rating(choose_content_rating(series_values(main, "Content_Rating"), priority["Content_Rating"]),
                                               main.get("TvdbId") or tvdb_id, series_values(main, "Content_Rating"))
     fill_roles(series_values(main, "Roles"), priority["Roles"], metadata.roles)
-    Log.Debug("MetadataWriter - Image priority: %s; prefer library language: %s" % (",".join(settings.SERIES_IMAGES_PRIORITY), settings.PREFER_LOCAL_ART))
+    Log.Debug("MetadataWriter - Image priority: %s; language and text: %s order, %s kept" % (",".join(settings.SERIES_IMAGES_PRIORITY),
+              getattr(settings, "IMAGE_ORDER", "language"), getattr(settings, "IMAGE_LANGUAGES", "all")))
     started = time.time()
     show_key = getattr(media, "id", None)
     leave_show = season_editor.chosen_show_images(show_key, ["posters", "art", "banners"]) if show_key else {}
     written = []
+    restore = []                                          # Your locked picks, selected again after the update if Plex moved off them
     for kind, field, target, label in (("posters", "Posters", metadata.posters, "posters"), ("art", "Art", metadata.art, "backgrounds"),
                                        ("banners", "Banners", metadata.banners, "banners")):
         if leave_show.get(kind) == "locked in Plex":
-            # Plex locks an image you pick: new ones are only added (your pick and the rest untouched)
-            Log.Info("MetadataWriter - Show %s: your pick is kept; only new ones added" % (label))
+            # Plex keeps a locked pick selected: the rest are sent again in the current order, and those no longer
+            # offered are removed, except your pick (when it can't be told which image that is, nothing is removed)
+            candidates = main.xpath("./%s//Image" % (field))
+            notes = {"picks": [], "others": []}
+            pick = locked_pick(show_key, kind, candidates, held_addresses(target), "show %s" % (label), notes)
+            log_locked("Show %s: locked in Plex, so the selected one stays selected; the rest follow the current order%s"
+                       % (label, ", but nothing is removed (your pick couldn't be looked at)" if pick is False else ""), notes)
+            restore.extend(notes.get("restore") or [])
             try:
-                fill_images(main.xpath("./%s//Image" % (field)), settings.SERIES_IMAGES_PRIORITY, target, language, label, settings.IMAGES_MAX, True, True)
+                fill_images(candidates, settings.SERIES_IMAGES_PRIORITY, target, language, label, settings.IMAGES_MAX, False,
+                            True if pick is False else None, lazy, prints, pick if pick else None)
             except Exception:
                 Log.Warn("MetadataWriter - Show %s skipped: %s" % (label, textutil.exception_text()))
             continue
@@ -1105,7 +1476,7 @@ def write(root, metadata, anidb_id, tvdb_id, media=None, lang=None, timings=None
             Log.Info("MetadataWriter - Show %s left as they are: %s" % (label, leave_show[kind]))
             continue
         try:
-            fill_images(main.xpath("./%s//Image" % (field)), settings.SERIES_IMAGES_PRIORITY, target, language, label, settings.IMAGES_MAX)
+            fill_images(main.xpath("./%s//Image" % (field)), settings.SERIES_IMAGES_PRIORITY, target, language, label, settings.IMAGES_MAX, False, None, lazy, prints)
             written.append(kind)
         except Exception:
             Log.Warn("MetadataWriter - Show %s skipped: %s" % (label, textutil.exception_text()))
@@ -1113,29 +1484,51 @@ def write(root, metadata, anidb_id, tvdb_id, media=None, lang=None, timings=None
         season_editor.queue_show_images(show_key, written)
     season_images = season_poster_candidates(root, first_season)
     if season_images and settings.PREFER_POSTER_SETS:
-        found = mark_poster_sets(season_images)
+        found = mark_poster_sets(season_images, lazy)
         Log.Info("MetadataWriter - Season poster sets (best first): %s" % ("; ".join(["%s: %s seasons" % (label, size) for size, label in found[:4]]) or "none"))
     if season_images and getattr(media, "id", None):
         numbers = []
         for image in season_images:
             if image.get("season") not in numbers:
                 numbers.append(image.get("season"))
-        leave = season_editor.chosen_posters(getattr(media, "id", None), numbers)
+        season_keys = {}
+        leave = season_editor.chosen_posters(getattr(media, "id", None), numbers, season_keys)
         locked = [x for x in leave if leave[x] == "poster locked in Plex"]
+        picks = {}
+        notes = {"picks": [], "others": []}
+        for season in sorted(locked, key=lambda x: int(x)):
+            # As for the show's images: the rest follow the current order and those no longer offered are removed,
+            # except your pick; when it can't be looked at, nothing is removed in that season
+            pick = False
+            if season_keys.get(season):
+                pick = locked_pick(season_keys[season], "season poster", [x for x in season_images if x.get("season") == season],
+                                   held_addresses(metadata.seasons[season].posters), "season %s" % (season), notes)
+            picks[season] = pick
         if locked:
-            Log.Info("MetadataWriter - Season %s posters: your picks are kept; only new ones added" % (", ".join(sorted(locked, key=lambda x: int(x)))))
+            unsure = sorted([x for x in locked if picks[x] is False], key=lambda x: int(x))
+            log_locked("Season %s posters: locked in Plex, so the selected ones stay selected; the rest follow the current order%s"
+                       % (", ".join(sorted(locked, key=lambda x: int(x))),
+                          (", but nothing is removed in season %s (your pick couldn't be looked at)" % (", ".join(unsure))) if unsure else ""), notes)
+        restore.extend(notes.get("restore") or [])
         for season in sorted([x for x in leave if x not in locked], key=lambda x: int(x)):
             Log.Info("MetadataWriter - Season %s posters left as they are: %s" % (season, leave[season]))
         season_images = [image for image in season_images if image.get("season") not in leave or image.get("season") in locked]
         season_editor.queue_posters(getattr(media, "id", None), [x for x in numbers if x not in leave])
-        keep_seasons = locked
+        keep_seasons = picks
     else:
         keep_seasons = None
+    if show_key and restore:
+        season_editor.queue_picks(show_key, restore)
     # Each image step on its own, so a failure here doesn't lose the whole update (seasons and episodes included)
     try:
-        fill_images(season_images, settings.SERIES_IMAGES_PRIORITY, metadata.seasons, language, "season posters", settings.IMAGES_MAX, False, keep_seasons)
+        fill_images(season_images, settings.SERIES_IMAGES_PRIORITY, metadata.seasons, language, "season posters", settings.SEASON_POSTERS_MAX, False, keep_seasons, lazy, prints)
     except Exception:
         Log.Warn("MetadataWriter - Season posters skipped: %s" % (textutil.exception_text()))
+    if lazy is not None:
+        for name in lazy.get("layouts") or []:
+            sets_task = "sets|%s" % (name)                        # After the season posters' fingerprints, in the same queue
+            if sets_task not in lazy["images"]:
+                lazy["images"].append(sets_task)
     try:
         fill_themes(main.xpath("./Themes//Theme"), settings.SERIES_THEMES_PRIORITY, metadata.themes)
     except Exception:
@@ -1476,4 +1869,5 @@ def write_episode(node, target, metadata, lazy=None):
     fill_people(node.xpath("./Writers/*[node()]"), priority["Writers"], target.writers)
     fill_people(node.xpath("./Directors/*[node()]"), priority["Directors"], target.directors)
     fill_people(node.xpath("./Producers/*[node()]"), priority["Producers"], target.producers)
-    fill_images(node.xpath("./Thumbs//Image"), priority["Thumbs"], target.thumbs, None, "thumbs", 0, True, None, lazy)
+    fill_images(node.xpath("./Thumbs//Image"), priority["Thumbs"], target.thumbs, None, "thumbs", 0, True, None, lazy,
+                lazy["images"] if lazy is not None else None)    # Blank check (image_choice): only when another site has one

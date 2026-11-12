@@ -6,7 +6,7 @@ import os
 import re
 import inspect
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 
 # Preferences ##########################################################################################################################################################
@@ -110,9 +110,7 @@ CACHE_PATH = os.path.join(DATA_ITEMS_PATH, CACHE_DIR)
 # TVDB images are the same files whichever API (v1 or v4) listed them, so both keep them in one place, under TvDB4: when v1 is
 # shut down, the whole TvDB folder (v1's XML only) can be deleted without touching anything v4 uses.
 TVDB_IMAGES_FOLDER = "TvDB4"
-EXPORT_DIR = "Export"
-EXPORT_PATH = os.path.join(DATA_ITEMS_PATH, EXPORT_DIR)
-EXPORT_BUNDLES = False
+DEBUG_BUNDLES = False           # Setting "Generate debug bundles": each update saves its bundle to Cache/Bundles
 
 DEFAULT_TIMEOUT = 30
 DEFAULT_CACHE = CACHE_1HOUR * 24 * 2                 # Source XML / images are re-downloaded after 2 days
@@ -193,11 +191,52 @@ def season_name_mode():
     return "off"
 
 
+def saved_text(key):
+    """A setting's text exactly as Plex's preferences file holds it, or None (not saved, or the file can't be read). For
+       settings no longer on the page, which Plex doesn't give the agent any more."""
+    try:
+        descriptor = os.open(PREFS_FILE, os.O_RDONLY | getattr(os, "O_BINARY", 0))
+        try:
+            content = os.read(descriptor, os.fstat(descriptor).st_size + 1)
+        finally:
+            os.close(descriptor)
+        if not isinstance(content, str):
+            content = content.decode("utf-8", "replace")
+        found = re.search(r"<%s>([^<]*)</%s>" % (key, key), content)
+        return found.group(1).strip() if found else None
+    except Exception:
+        return None
+
+
+def image_language():
+    """Setting "Images: Language and text": (order, what's kept). order: "language" (library language, then textless),
+       "textless" (textless, then library language) or "site" (source order only). kept: "all", "library_textless" (other
+       languages left out) or "textless". Until the setting is saved, 2.0.0's "Prefer library language, then textless"
+       (localart) decides: off is "Keep site order" (prefs_repair stores that as the new setting)."""
+    text = pref_str("ImageLanguage", "").lower()
+    if not text or (text.startswith("library language > textless > others") and saved_text("ImageLanguage") is None):
+        if (saved_text("localart") or "").lower() in ("false", "0", "no"):
+            return "site", "all"
+    if text.startswith("keep"):
+        return "site", "all"
+    if text.startswith("textless only"):
+        return "textless", "textless"
+    kept = "library_textless" if text.endswith("only") else "all"
+    return ("textless" if text.startswith("textless") else "language"), kept
+
+
 def images_max():
-    """Most posters / backgrounds / banners / season posters (per season) offered to Plex; 0 = all."""
+    """Most of each kind of show image offered to Plex (posters, backgrounds and banners, each); 0 = all."""
     if pref_str("ImagesMax", "20").lower().startswith("all"):
         return 0
     return max(1, pref_int("ImagesMax", 20))
+
+
+def season_posters_max():
+    """Most posters offered to Plex per season; 0 = all."""
+    if pref_str("SeasonPostersMax", "10").lower().startswith("all"):
+        return 0
+    return max(1, pref_int("SeasonPostersMax", 10))
 
 
 SEARCH_MAX_RESULTS = 20                              # AniDB results returned to Plex per search (best first); TVDB results: 10
@@ -255,7 +294,7 @@ MAPPING_URL = "https://raw.githubusercontent.com/Anime-Lists/anime-lists/master/
 COLLECTION_URL = "https://raw.githubusercontent.com/Anime-Lists/anime-lists/master/anime-movieset-list.xml"
 MAPPING_CUSTOM_FILE = os.path.join(CACHE_DIR, "anime-list-custom.xml")
 MAPPING_CORRECTIONS_URL = "https://raw.githubusercontent.com/Dingmatt/AMSA/master/Plug-in%20Support/Data/com.plexapp.agents.amsa/DataItems/Cache/anime-list-corrections.xml"
-APPLY_CORRECTIONS = False    # The old remote corrections file predates many upstream fixes; earlier versions never applied it either
+APPLY_CORRECTIONS = False    # The remote corrections file predates many upstream fixes, so it isn't applied
 
 
 # Plex #################################################################################################################################################################
@@ -349,6 +388,21 @@ def source_plan():
     if SEARCH_USE_TVDB:
         matching.append("aired year from TVDB > TVDB title search if there's no exact AniDB match")
     lines.append("Sources - Matching a new show: %s" % (" -> ".join(matching)))
+    checks = []
+    if IMAGE_DUPLICATES != "off":
+        checks.append("duplicate and blank images left out")
+    if IMAGE_LANGUAGES != "all":
+        checks.append({"library_textless": "images in other languages left out", "textless": "only textless images"}[IMAGE_LANGUAGES])
+    if PREFER_POSTER_SETS:
+        checks.append("season poster sets matched by layout across sites")
+    if checks:
+        if IMAGE_TEXT_ORDER == "textless":
+            checks.append("textless versions of the same artwork first")
+        lines.append("Sources - Image checks (each image is looked at once through Plex's own image resizer): %s" % ("; ".join(checks)))
+    lines.append("Sources - Image order: %s" % ({"language": "library language > textless > others", "textless": "textless > library language > others",
+                                                 "site": "source order only"}[IMAGE_ORDER]))
+    if IMAGE_LANGUAGES == "textless":
+        lines.append("Settings - Images: Textless only. Shows will have fewer images; where no textless image is known, the best titled one is kept")
     return lines
 
 
@@ -371,8 +425,10 @@ def load_prefs():
     global CONTENT_RATING_RULE, TITLE_FROM_TVDB_ALIAS, CONTENT_RATING_COUNTRY, CAST_LANGUAGE, CAST_PHOTOS, REFRESH_IN_BACKGROUND, REFRESH_SKIP_RECENT
     global EPISODE_FILL, FALLBACK_ORDER, CREDIT_TITLES, fillers, filler, SERIES_IMAGES_PRIORITY, SERIES_THEMES_PRIORITY, ORIGINAL_TITLE_LANGUAGE
     global SUMMARY_REPEAT, RATING_COMBINE
-    global SEASON_PRIORITY, TITLE_LANGUAGE_FIRST, SEASON_NAME_MODE, SEASON_NAME_IN_SUMMARY, SEASON_PARTS_COMBINED, PREFER_LOCAL_ART, PREFER_POSTER_SETS, IMAGES_MAX, REFRESH_AIRING
-    global OFFLINE_DB_ENABLED, ANIDB_REQUEST_DELAY, ANIDB_HOURLY_LIMIT, ANIDB_DAILY_LIMIT, ANIDB_MINIMUM_WEIGHT, ANILIST_ENABLED, PLEX_THEMES_USED
+    global SEASON_PRIORITY, TITLE_LANGUAGE_FIRST, SEASON_NAME_MODE, SEASON_NAME_IN_SUMMARY, SEASON_PARTS_COMBINED, PREFER_LOCAL_ART, PREFER_POSTER_SETS, IMAGES_MAX, SEASON_POSTERS_MAX, REFRESH_AIRING, DEBUG_BUNDLES
+    global IMAGE_TEXT_ORDER, IMAGE_LANGUAGES, IMAGE_ORDER
+    global OFFLINE_DB_ENABLED, ANIDB_REQUEST_DELAY, ANIDB_HOURLY_LIMIT, ANIDB_DAILY_LIMIT, ANIDB_MINIMUM_WEIGHT, ANILIST_ENABLED, PLEX_THEMES_USED, IMAGE_DUPLICATES
+    PAGE["unset"].clear()                                 # Recomputed below: a setting saved since the last read is no longer unset
     SEARCH_USE_ANIDB = pref_bool("UseAniDBForAdvancedSearch", True)
     SEARCH_USE_TVDB = pref_bool("UseTVDBForAdvancedSearch", True)
     SERIES_LANGUAGE_PRIORITY = [pref_token("SerieLanguage1", "main"), pref_token("SerieLanguage2", "x-jat"), pref_token("SerieLanguage3", "en"), "main"]
@@ -413,10 +469,11 @@ def load_prefs():
     SEASON_NAME_MODE = season_name_mode()
     SEASON_NAME_IN_SUMMARY = pref_bool("SeasonNameInSummary", False)     # Season summary starts with the season's name (independent of the title)
     SEASON_PARTS_COMBINED = not pref_str("SeasonParts", "Combine").lower().startswith("first")   # Several AniDB entries in one season: summaries combined in episode order
-    PREFER_LOCAL_ART = pref_bool("localart", True)        # Images in the library's language first, then images without text, then the rest
     PREFER_POSTER_SETS = pref_bool("SeasonPosterSets", False)   # Season posters: the set covering most seasons first (metadata_writer.mark_poster_sets)
     IMAGES_MAX = images_max()
+    SEASON_POSTERS_MAX = season_posters_max()
     REFRESH_AIRING = pref_bool("RefreshAiring", True)    # Ask Plex once a day to refresh shows that are airing or ended in the last 30 days
+    DEBUG_BUNDLES = pref_bool("DebugBundles", False)    # Save each update's bundle (Cache/Bundles); off: they are deleted (cache_cleaner)
     OFFLINE_DB_ENABLED = pref_bool("OfflineDatabase", True)   # anime-offline-database: AniList ids, airing status, extra search titles
     ANIDB_REQUEST_DELAY = max(3, pref_int("AniDbAntiBanDelay", 4))     # AniDB allows 1 request per 2s; 4s matches their long-term guidance
     ANIDB_HOURLY_LIMIT = max(10, pref_int("AniDbHourlyLimit", 100))    # Requests per rolling hour
@@ -424,6 +481,11 @@ def load_prefs():
     ANIDB_MINIMUM_WEIGHT = str(pref_int("MinimumWeight", 400))
     ANILIST_ENABLED = anilist_enabled()
     PLEX_THEMES_USED = source_used("plex")                # Plex's theme service is only asked when a setting lists it
+    duplicates = pref_str("ImageDuplicates", "Keep all").lower()
+    IMAGE_DUPLICATES = "remove" if duplicates.startswith("remove") else "off"   # image_choice (blanks too)
+    IMAGE_ORDER, IMAGE_LANGUAGES = image_language()
+    IMAGE_TEXT_ORDER = "textless" if IMAGE_ORDER == "textless" else "keep"   # image_choice.by_text: versions of one artwork
+    PREFER_LOCAL_ART = IMAGE_ORDER != "site"                                  # metadata_writer.language_rank
 
 
 load_prefs()

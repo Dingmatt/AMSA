@@ -154,6 +154,9 @@ def build():
         import background_refresh
         lines.append(u"Waiting: %s AniDB downloads in the retry queue, %s shows in the background refresh queue"
                      % (anidb_retry.pending_count(), background_refresh.queue_length()))
+        import library_unlock
+        if library_unlock.pending_count():
+            lines.append(u"Unlock all images: %s shows haven't refreshed since the unlock (refresh the library to finish it)" % (library_unlock.pending_count()))
     except Exception:
         pass
     return lines

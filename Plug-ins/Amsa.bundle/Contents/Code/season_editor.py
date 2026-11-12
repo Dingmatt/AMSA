@@ -9,6 +9,7 @@ A title or summary the user typed is never overwritten: AMSA only replaces a fie
 ("Season 2", "Specials") or exactly what AMSA wrote last time (remembered in Cache/Seasons/).
 """
 import re
+import time
 import urllib2
 
 import settings
@@ -29,8 +30,62 @@ LOCK = new_lock()
 PENDING = {}                     # show rating key -> {plex season number (str): (title or None, summary or None, [source summaries])}
 POSTERS_PENDING = {}             # show rating key -> [plex season numbers AMSA wrote posters for]
 SHOW_IMAGES_PENDING = {}         # show rating key -> ["posters", "art", "banners"] AMSA wrote
+PICKS_PENDING = {}               # show rating key -> [(item key, endpoint, [keys your pick may be listed under], label, [its 40-digit names])]
 SCHEDULED = {}                   # show rating keys with a season_titles run scheduled
+UNLOCK_WORD = "unlock-images"    # In a manual search (Fix Match): unlock the images of the show then matched
+UNLOCK_REQUESTS = {}             # search result id ("anidb-2369") -> time of the search asking for the unlock
+RESETS = {}                      # show rating key -> time its images were unlocked: none of its images count as chosen
+UNLOCK_WAIT = 900                # Seconds a search's unlock request waits for the update of the result picked
+RESET_FOR = 300                  # Seconds an unlocked show's images count as AMSA's (the update right after the unlock)
 DEFAULT_TITLE = re.compile(r"^(season [0-9]+|specials)?$", re.IGNORECASE)
+
+
+def request_unlock(result_id):
+    """A manual search with "unlock-images" returned this result: its next update unlocks the show's images."""
+    LOCK.acquire()
+    try:
+        UNLOCK_REQUESTS[result_id] = time.time()
+    finally:
+        LOCK.release()
+
+
+def unlock_requested(result_id):
+    """True once (used up) if a search asked to unlock this result's images within UNLOCK_WAIT seconds."""
+    LOCK.acquire()
+    try:
+        asked = UNLOCK_REQUESTS.pop(result_id, None)
+    finally:
+        LOCK.release()
+    return asked is not None and time.time() - asked < UNLOCK_WAIT
+
+
+def resetting(show_key):
+    """True during the update right after this show's images were unlocked: no image counts as chosen in Plex."""
+    asked = RESETS.get(str(show_key))
+    return asked is not None and time.time() - asked < RESET_FOR
+
+
+def unlock_images(show_key):
+    """Unlock the show's poster, background and banner and each season's poster and background in Plex (Plex Web can't),
+       so they follow AMSA's settings again. Same edit API as the season titles. Returns the number of items unlocked."""
+    show = (tvdb_v4.parse_json(plex_request("/library/metadata/%s" % (show_key))).get("MediaContainer") or {})
+    section = show.get("librarySectionID") or ((show.get("Metadata") or [{}])[0]).get("librarySectionID")
+    if not section:
+        Log.Warn("Seasons - Couldn't unlock the images: Plex didn't say which library item %s is in" % (show_key))
+        return 0
+    plex_request("/library/sections/%s/all?type=2&id=%s&thumb.locked=0&art.locked=0&banner.locked=0" % (section, show_key), "PUT")
+    unlocked = 1
+    children = (tvdb_v4.parse_json(plex_request("/library/metadata/%s/children" % (show_key))).get("MediaContainer") or {})
+    for item in children.get("Metadata", []) or []:
+        if item.get("type", "season") != "season" or item.get("ratingKey") is None:
+            continue
+        try:
+            plex_request("/library/sections/%s/all?type=3&id=%s&thumb.locked=0&art.locked=0" % (section, item.get("ratingKey")), "PUT")
+            unlocked += 1
+        except Exception as e:
+            Log.Debug("Seasons - Couldn't unlock season %s's images (%s)" % (item.get("index"), e))
+    RESETS[str(show_key)] = time.time()
+    return unlocked
 
 
 def queue(show_key, seasons):
@@ -70,6 +125,68 @@ def queue_posters(show_key, numbers):
     schedule(str(show_key))
 
 
+def queue_picks(show_key, picks):
+    """Your locked picks (show and seasons) as Plex showed them before the update: selected again afterwards if Plex
+       switched to AMSA's first image while the list was rewritten (restore_picks)."""
+    if not show_key or not picks:
+        return
+    LOCK.acquire()
+    try:
+        PICKS_PENDING[str(show_key)] = picks[:]
+    finally:
+        LOCK.release()
+    schedule(str(show_key))
+
+
+SELECT_PATH = {"posters": "poster", "arts": "art", "banners": "banner"}
+
+
+def names_in(entry):
+    """The 40-digit names in an image entry's keys (Plex names an agent's image <agent>_<40 hex digits>)."""
+    text = u" ".join([textutil.safe_unicode(entry.get(name) or "") for name in ("ratingKey", "key", "thumb")])
+    return re.findall(r"([0-9a-f]{40})", text)
+
+
+def is_pick(entry, pick_keys, names):
+    """True if this image entry is your pick: one of its keys, or the same 40-digit name under another prefix."""
+    if entry.get("ratingKey") in pick_keys:
+        return True
+    for name in names_in(entry):
+        if name in names:
+            return True
+    return False
+
+
+def restore_picks(picks):
+    """Select each pick again where Plex now shows another image; one Info line for the ones changed back, and for any
+       pick not found in Plex's list, what Plex shows instead (so it can be checked)."""
+    restored = []
+    gone = []
+    for item_key, endpoint, pick_keys, label, names in picks:
+        if not pick_keys and not names:
+            continue
+        try:
+            listed = images_of(item_key, endpoint)
+            selected = selected_poster(item_key, endpoint, listed)
+            if selected is not None and is_pick(selected, pick_keys, names):
+                continue
+            found = [entry.get("ratingKey") for entry in listed if entry.get("ratingKey") and is_pick(entry, pick_keys, names)]
+            if not found:
+                gone.append(label)
+                Log.Debug("Seasons - %s: your pick (%s) isn't among the %s images Plex lists; Plex shows %s" % (label, ", ".join(pick_keys),
+                          len(listed), selected.get("ratingKey") if selected is not None else "none selected"))
+                continue
+            plex_request("/library/metadata/%s/%s?url=%s" % (item_key, SELECT_PATH.get(endpoint, "poster"), quote(found[0])), "PUT")
+            restored.append(label)
+            Log.Debug("Seasons - %s: Plex showed %s; selected your pick %s again" % (label, selected.get("ratingKey") if selected is not None else "none", found[0]))
+        except Exception as e:
+            Log.Debug("Seasons - Couldn't check your pick for %s (%s)" % (label, e))
+    if restored:
+        Log.Info("Seasons - Plex had switched away from your locked pick; selected again: %s" % (", ".join(restored)))
+    if gone:
+        Log.Info("Seasons - Your locked pick wasn't found in Plex's list (details at Debug): %s" % (", ".join(gone)))
+
+
 def schedule(key):
     """Run season_titles for this show DELAY seconds from now, once."""
     LOCK.acquire()
@@ -85,13 +202,17 @@ def schedule(key):
     title_index.run_later(DELAY, season_titles)
 
 
-def plex_request(path, method=None):
+def plex_request(path, method=None, timeout=None):
+    """A request to the local Plex server; the answer's text (a GET) or the response (with method). timeout: seconds,
+       for a long answer (Plex's own default is 20)."""
     headers = {"Accept": "application/json"}
     token = anidb_retry.plex_token()
     if token:
         headers["X-Plex-Token"] = token
     if method:
         return HTTP.Request(settings.PMS_URL + path, headers=headers, method=method, cacheTime=0, immediate=True)
+    if timeout:
+        return HTTP.Request(settings.PMS_URL + path, headers=headers, cacheTime=0, immediate=True, timeout=timeout).content
     return HTTP.Request(settings.PMS_URL + path, headers=headers, cacheTime=0, immediate=True).content
 
 
@@ -113,9 +234,16 @@ def same_text(one, two):
     return re.sub(r"\s+", " ", textutil.safe_unicode(one or "")).strip() == re.sub(r"\s+", " ", textutil.safe_unicode(two or "")).strip()
 
 
-def selected_poster(season_key, endpoint="posters"):
-    """The image entry Plex shows for an item ({"ratingKey": ..., ...}), or None. endpoint: posters, arts or banners."""
-    posters = tvdb_v4.parse_json(plex_request("/library/metadata/%s/%s" % (season_key, endpoint))).get("MediaContainer", {}).get("Metadata") or []
+def images_of(item_key, endpoint="posters"):
+    """Every image entry Plex holds for an item (from every agent, and uploads). endpoint: posters, arts or banners."""
+    return tvdb_v4.parse_json(plex_request("/library/metadata/%s/%s" % (item_key, endpoint))).get("MediaContainer", {}).get("Metadata") or []
+
+
+def selected_poster(season_key, endpoint="posters", posters=None):
+    """The image entry Plex shows for an item ({"ratingKey": ..., ...}), or None. endpoint: posters, arts or banners.
+       posters: images_of() already read."""
+    if posters is None:
+        posters = images_of(season_key, endpoint)
     for poster in posters:
         if str(poster.get("selected")).lower() in ("1", "true"):
             return poster
@@ -149,6 +277,8 @@ def image_choice(item_key, kind, fields):
 def chosen_show_images(show_key, kinds):
     """{kind: reason} for the show's posters / art / banners AMSA should leave alone. On any doubt, nothing is left alone."""
     leave = {}
+    if resetting(show_key):
+        return leave
     try:
         details = tvdb_v4.parse_json(plex_request("/library/metadata/%s" % (show_key))).get("MediaContainer", {})
         fields = ((details.get("Metadata") or [{}])[0]).get("Field") or []
@@ -185,15 +315,18 @@ def remember_show_images(show_key, kinds):
             Log.Debug("Seasons - Couldn't save item %s's images (%s)" % (show_key, e))
 
 
-def chosen_posters(show_key, numbers):
+def chosen_posters(show_key, numbers, keys=None):
     """Seasons whose poster AMSA should leave alone: {plex season number: reason}. Plex doesn't lock a season poster you pick
        from its list, so besides a locked poster this compares the poster Plex shows with the one it showed right after
        AMSA's last update (remembered by remember_posters):
          * locked, an uploaded poster or another agent's -> yours;
          * a different AMSA poster than last time -> you picked it -> yours;
          * the same one, or nothing remembered yet, or none selected -> AMSA's, so it is updated.
-       numbers: Plex season numbers AMSA has posters for. On any doubt, nothing is left alone."""
+       numbers: Plex season numbers AMSA has posters for. On any doubt, nothing is left alone.
+       keys: a dict that gets {plex season number: Plex's key for the season} of the locked ones (to read the pick)."""
     leave = {}
+    if resetting(show_key):
+        return leave
     try:
         container = tvdb_v4.parse_json(plex_request("/library/metadata/%s/children" % (show_key))).get("MediaContainer", {})
     except Exception as e:
@@ -212,6 +345,8 @@ def chosen_posters(show_key, numbers):
                     locked = True
             if locked:
                 leave[number] = "poster locked in Plex"
+                if keys is not None:
+                    keys[number] = season_key
                 continue
             selected = selected_poster(season_key)
             if selected is None:
@@ -259,9 +394,13 @@ def apply_show(show_key):
         seasons = PENDING.pop(show_key, None)
         posters = POSTERS_PENDING.pop(show_key, None)
         show_images = SHOW_IMAGES_PENDING.pop(show_key, None)
+        picks = PICKS_PENDING.pop(show_key, None)
+        RESETS.pop(show_key, None)
         SCHEDULED.pop(show_key, None)
     finally:
         LOCK.release()
+    if picks:
+        restore_picks(picks)
     if show_images:
         remember_show_images(show_key, show_images)
     if not seasons and not posters:

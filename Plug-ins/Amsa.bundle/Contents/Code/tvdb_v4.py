@@ -359,6 +359,9 @@ class TvDB4Series(models.Series):
                 continue
             thumb = image_url(value(artwork, "thumbnail")) or None
             language = textutil.short_language(value(artwork, "language", ""))
+            # What TVDB says about the image, for the image checks (image_choice): text or not, and size
+            facts = {"text": {True: "1", False: "0"}.get(value(artwork, "includesText"), ""),
+                     "width": value(artwork, "width") or "", "height": value(artwork, "height") or ""}
             if art_type in kinds:
                 kind = kinds[art_type]
                 if kind == "posters" and url == main_poster:
@@ -366,7 +369,9 @@ class TvDB4Series(models.Series):
                 else:
                     image_id = counters[kind]
                     counters[kind] = counters[kind] + 1
-                models.add_image(images[kind], url, "", os.path.join(settings.TVDB_IMAGES_FOLDER, tvdb_id, kind), thumb, {"id": image_id, "lang": language})
+                extra = {"id": image_id, "lang": language}
+                extra.update(facts)
+                models.add_image(images[kind], url, "", os.path.join(settings.TVDB_IMAGES_FOLDER, tvdb_id, kind), thumb, extra)
                 seen.add(url)
             elif art_type == settings.TVDB4_ART_SEASON_POSTER and value(artwork, "seasonId") in season_numbers:
                 number = str(season_numbers[value(artwork, "seasonId")])
@@ -375,7 +380,7 @@ class TvDB4Series(models.Series):
                                  {"id": season_seen.count(number), "season": number, "lang": language,
                                   # Hints for matching sets (metadata_writer.mark_poster_sets): upload order and time, text flag
                                   "artwork_id": value(artwork, "id") or "", "updated": value(artwork, "updatedAt") or "",
-                                  "text": {True: "1", False: "0"}.get(value(artwork, "includesText"), "")})
+                                  "text": facts["text"], "width": facts["width"], "height": facts["height"]})
                 seen.add(url)
         # Season records carry their own poster even when the artwork list doesn't link it to a season
         for season in value(data, "seasons", []):

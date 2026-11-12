@@ -41,7 +41,7 @@ STATE_FILE = "anidb-retry.json"
 def save_state():
     """Write the queue to disk (call with LOCK held)."""
     try:
-        downloader.save_file(tvdb_v4.dump_json({"pending": PENDING, "later": LATER}), STATE_FILE)
+        downloader.save_file(tvdb_v4.dump_json({"pending": PENDING, "later": LATER, "refresh": REFRESH_WAITING}), STATE_FILE)
     except Exception as e:
         Log.Debug("AniDB retry - Saving the queue failed: %s" % (e))
 
@@ -66,6 +66,9 @@ def load_state():
         for key in data.get("later") or []:
             if str(key) not in LATER:
                 LATER.append(str(key))
+        waiting = data.get("refresh") or {}
+        for key in waiting:
+            REFRESH_WAITING[str(key)] = waiting[key]
         start = (len(PENDING) > 0 or len(LATER) > 0) and not SCHEDULED[0]
         if start:
             SCHEDULED[0] = True
@@ -74,6 +77,9 @@ def load_state():
     if start:
         Log.Info("AniDB retry - %s queued AniDB downloads restored from before the restart" % (len(PENDING)))
         schedule()
+    if REFRESH_WAITING:
+        Log.Info("AniDB retry - %s refreshes Plex didn't answer before the restart are asked again in a minute" % (len(REFRESH_WAITING)))
+        schedule_waiting(60)
 
 
 def add(anidb_id, rating_key, force=False):
@@ -242,7 +248,8 @@ def own_refresh(rating_key):
 
 
 def refresh(rating_key, label="AniDB retry"):
-    """Ask the local Plex server to refresh one library item. Returns True if Plex accepted the request."""
+    """Ask the local Plex server to refresh one library item. Returns True if Plex accepted the request. If Plex isn't
+       answering, the request is kept and asked again when it is (refresh_waiting)."""
     url = "%s/library/metadata/%s/refresh?force=0" % (settings.PMS_URL, rating_key)
     OWN_REFRESHES[str(rating_key)] = time.time()
     headers = {"Accept": "application/json"}
@@ -254,5 +261,76 @@ def refresh(rating_key, label="AniDB retry"):
         Log.Info("%s - Asked Plex to refresh item %s" % (label, rating_key))
         return True
     except Exception as e:
-        Log.Warn("%s - Plex refused the refresh of item %s (%s); cached data is used on the show's next refresh" % (label, rating_key, e))
+        if plex_unreachable(e):
+            plex_down()
+            LOCK.acquire()
+            try:
+                REFRESH_WAITING[str(rating_key)] = label
+                save_state()
+            finally:
+                LOCK.release()
+            Log.Warn("%s - Plex isn't answering (%s): the refresh of item %s is asked again when it does" % (label, e, rating_key))
+            schedule_waiting(PLEX_PAUSE)
+        else:
+            Log.Warn("%s - Plex refused the refresh of item %s (%s); cached data is used on the show's next refresh" % (label, rating_key, e))
         return False
+
+
+# Plex not answering ###########################################################################################################
+# A busy or restarting Plex server times out or refuses AMSA's requests (its resizer, refreshes, edits). That says nothing
+# about the image or show asked for, so nothing is recorded as failed: background work that needs Plex waits PLEX_PAUSE and
+# tries again, and refreshes that couldn't be asked are asked again once Plex answers.
+PLEX_PAUSE = 300                 # Seconds background work that needs Plex waits after Plex didn't answer
+PLEX_STATE = {"down_until": 0, "waiting_scheduled": False}
+REFRESH_WAITING = {}             # rating key -> log label: refreshes to ask again once Plex answers (saved with the queue)
+
+
+def plex_unreachable(error):
+    """True if this error means the local Plex server didn't answer at all (timeout, refused, reset), not a refusal."""
+    text = textutil.safe_unicode(error).lower()
+    for word in ("timed out", "timeout", "10061", "10054", "10060", "refused", "connection reset", "errno 111", "errno 104", "errno 110"):
+        if word in text:
+            return True
+    return False
+
+
+def plex_down():
+    PLEX_STATE["down_until"] = time.time() + PLEX_PAUSE
+
+
+def plex_answering():
+    """False for PLEX_PAUSE seconds after Plex last didn't answer."""
+    return time.time() >= PLEX_STATE["down_until"]
+
+
+def plex_wait():
+    """Seconds left before Plex is tried again (0 if it's answering)."""
+    return max(0, int(PLEX_STATE["down_until"] - time.time()) + 1) if not plex_answering() else 0
+
+
+def schedule_waiting(delay):
+    """Ask again for the waiting refreshes after delay seconds (one timer at a time)."""
+    if PLEX_STATE["waiting_scheduled"]:
+        return
+    PLEX_STATE["waiting_scheduled"] = True
+    title_index.run_later(delay, refresh_waiting)
+
+
+def refresh_waiting():
+    """Ask again for the refreshes Plex didn't answer; while it still doesn't, try again after PLEX_PAUSE. Named for
+       Plex's log (a timed thread)."""
+    PLEX_STATE["waiting_scheduled"] = False
+    if not REFRESH_WAITING:
+        return
+    if not plex_answering():
+        schedule_waiting(plex_wait())
+        return
+    LOCK.acquire()
+    try:
+        waiting = list(REFRESH_WAITING.items())
+        REFRESH_WAITING.clear()
+        save_state()
+    finally:
+        LOCK.release()
+    for rating_key, label in waiting:
+        refresh(rating_key, label)                        # Not answering again: refresh() keeps it and schedules the next try

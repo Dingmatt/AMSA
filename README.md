@@ -60,6 +60,9 @@ AMSA works like any regular Plex library. Name your folders and files as you wou
 - **Absolute numbering** ("Show - 105") works for long-running shows, with or without season folders.
 - **Specials** go in a `Specials` folder or season 0. Openings (`OP1`, `NCOP1`), endings (`ED1`, `NCED1`) and trailers (`PV`, `CM`, `Trailer`) are recognised and placed after the specials, and openings and endings are named after their songs.
 - **Forcing a match:** if a show matches the wrong entry, add its id to the folder name, e.g. `Show Name [anidb-1234]` or `Show Name [tvdb-56789]`. An `anidb.id` or `tvdb.id` file in the show's folder works too.
+- **Search words in Fix Match:** add one of these to the search in Plex's Fix Match (anywhere, any case). It's taken out before searching, so the show is found as usual:
+  - `unlock-images`, e.g. `Show Name unlock-images`: when you pick the match, the show's and its seasons' posters, backgrounds and banners are unlocked, so they follow AMSA's image settings again. Plex Web can't unlock a poster itself. A poster you pick afterwards is locked as usual. To unlock every show at once, use the setting *Maintenance: Unlock ALL images on save* (see the [settings guide](SETTINGS.md); it's irreversible).
+  - `clear-cache`, e.g. `Show Name clear-cache`: clears Plex's download cache for AMSA. AMSA keeps its own cache and doesn't rely on Plex's, so this is rarely needed.
 
 Refresh Metadata shows results straight away and finishes updating in the background.
 
@@ -127,7 +130,10 @@ Troubleshooting
 - If episodes are missing or numbered wrongly, check the scanner's log: it has one line per file, saying how it was read.
 - When AMSA starts, its log lists your settings, the sites each update will contact and in what order, and any problem with its folders (such as a folder Plex can't write to on a NAS), with what to fix.
 - If AniDB data seems old, AniDB may be limiting requests. AMSA uses its cached copy and downloads a fresh one later; the log says when.
+- If a show has duplicate or old images AMSA can't remove (the log says "Plex also holds images AMSA can't remove"), they come from another agent or an older match: Unmatch the show, run Settings → Troubleshooting → Clean Bundles in Plex, then Fix Match it again.
+- If old poster picks keep a show or season from following your image settings, unlock them: `unlock-images` in a Fix Match search for one show, or *Maintenance: Unlock ALL images on save* for every show (irreversible: picks are replaced).
 - Each update in the log starts with a line naming the show and its ids, e.g. `==== Update: 'Show Name' (AniDB 1234, TVDB 56789, AniList 101112) ====`, so you can find it quickly.
+- For a show that's mapped or named wrongly, turn on *Maintenance: Generate debug bundles* and refresh it. Its bundle, `[...]/Data/com.plexapp.agents.amsa/DataItems/Cache/Bundles/<AniDB id>.bundle.xml`, shows how each episode was mapped and every site's values, and lists every site's id for the show and the folder in AMSA's cache that holds that site's data (its `<Ids>` section). Turn the setting off when you're done: saved bundles are then deleted.
 
 Please make sure you have the latest version of AMSA before reporting an issue. If the problem persists, include the following logs ([where to find them](https://support.plex.tv/articles/200250417-plex-media-server-log-files/)):
 - `[...]/Plex Media Server/Logs/PMS Plugin Logs/com.plexapp.agents.amsa.log` (the agent)

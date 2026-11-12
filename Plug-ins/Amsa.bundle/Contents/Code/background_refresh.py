@@ -25,6 +25,7 @@ import settings
 import textutil
 import models
 import downloader
+import image_match
 import sources
 import anidb_retry
 import refresher
@@ -45,7 +46,8 @@ LANE_ORDER = ["Tvdb", "Anilist", "Mal", "Kitsu", "Animethemes", "Files", "Anidb"
 # "Files": episode writers/directors and thumbnails an update left out because they weren't cached yet
 # (metadata_writer.write's lazy mode); tasks "crew|<TVDB series>|<TVDB episode>" and "image|<thumb url>|<path>|<url>|<path>"
 FOLDERS = {"Anilist": "AniList", "Mal": "MAL", "Kitsu": "Kitsu", "Animethemes": "AnimeThemes"}
-JOBS = []                         # [{"key", "label", "reason", "pending": {lane: [ids]}, "changed": [], "checked": n, "started": t}]
+JOBS = []                         # [{"key", "label", "reason", "pending": {lane: [ids]}, "changed": [], "checked": n, "started": t, "kept": []}]
+RECENT = {}                       # (lane, id) -> True: left alone as downloaded recently (picked up by task_done)
 LANES = {}                        # lane -> {"queue": [(rating key, id)], "running": bool}
 for lane_name in LANE_ORDER:
     LANES[lane_name] = {"queue": [], "running": False}
@@ -91,7 +93,35 @@ def find_job(rating_key):
     return None
 
 
+SAVE_EVERY = 30                   # Seconds: the queue is saved at most this often (it can hold many thousand tasks)
+SAVING = {"scheduled": False}
+
+
 def save_state():
+    """The queue changed (call with LOCK held): saved within SAVE_EVERY, not on every task (a first run of the image checks
+       can queue many thousand). After a restart, tasks finished in those last seconds are run again (cheap: done ones
+       are found in the cache)."""
+    if SAVING["scheduled"]:
+        return
+    SAVING["scheduled"] = True
+    try:
+        Thread.CreateTimer(SAVE_EVERY, save_queue)
+    except Exception:
+        write_state()                                      # Not in Plex (tests): straight away
+        SAVING["scheduled"] = False
+
+
+def save_queue():
+    """Timer: write the queue to disk (named for Plex's log)."""
+    LOCK.acquire()
+    try:
+        SAVING["scheduled"] = False
+        write_state()
+    finally:
+        LOCK.release()
+
+
+def write_state():
     """Write the queue to disk (call with LOCK held). Lane queues are rebuilt from the jobs' pending ids on load."""
     try:
         downloader.save_file(tvdb_v4.dump_json({"version": 2, "jobs": JOBS}), STATE_FILE)
@@ -100,7 +130,7 @@ def save_state():
 
 
 def load_state():
-    """Called from Start(): restore the queue saved before a restart (the older per-kind format too)."""
+    """Called from Start(): restore the queue saved before a restart."""
     restored = []
     LOCK.acquire()
     try:
@@ -115,11 +145,7 @@ def load_state():
         for saved in data.get("jobs") or []:
             if not saved.get("key"):
                 continue
-            pending = saved.get("pending")
-            if pending is None:                            # Older format: {"anidb", "tvdb", "extra"}
-                pending = {"Anidb": saved.get("anidb") or [], "Tvdb": saved.get("tvdb") or []}
-                for lane in ("Anilist", "Mal", "Kitsu", "Animethemes"):
-                    pending[lane] = saved.get("extra") or []
+            pending = saved.get("pending") or {}
             restored.append((str(saved.get("key")), saved.get("label") or "", saved.get("reason") or "refresh", pending))
     finally:
         LOCK.release()
@@ -152,8 +178,12 @@ def add_files(rating_key, label, lazy):
         return False
     added = queue_tasks(str(rating_key), label, "files left out of the update", {"Files": tasks})
     if added:
-        Log.Info("Background refresh - '%s': %s episode thumbnails and %s episode writer/director lists left to the background; the show is refreshed when they're in"
-                 % (label, len(lazy.get("images") or []), len(lazy.get("crew") or [])))
+        images = lazy.get("images") or []
+        prints = len([x for x in images if x.startswith("print|")])
+        layouts = len([x for x in images if x.startswith("sets|")])
+        Log.Info("Background refresh - '%s': %s images to download, %s episode writer/director lists%s%s left to the background; the show is refreshed when they're in"
+                 % (label, len(images) - prints - layouts, len(lazy.get("crew") or []), (", %s image fingerprints" % (prints)) if prints else "",
+                    " and the season poster layouts" if layouts else ""))
     return added > 0
 
 
@@ -203,7 +233,7 @@ def queue_length():
         LOCK.release()
 
 
-def wake(lane):
+def wake(lane, delay=START_DELAY):
     LOCK.acquire()
     try:
         if LANES[lane]["running"]:
@@ -211,7 +241,7 @@ def wake(lane):
         LANES[lane]["running"] = True
     finally:
         LOCK.release()
-    title_index.run_later(START_DELAY, LANE_WORKERS[lane])
+    title_index.run_later(delay, LANE_WORKERS[lane])
 
 
 # What to download ######################################################################################################################################################
@@ -259,9 +289,15 @@ def forced_sources(mapping):
 
 # Workers ################################################################################################################################################################
 def run_lane(lane):
-    """One lane's worker: its tasks in order until its queue is empty."""
+    """One lane's worker: its tasks in order until its queue is empty. The Files lane (image checks need Plex's resizer)
+       waits while Plex isn't answering, keeping its tasks (refreshes Plex didn't answer: anidb_retry.refresh_waiting)."""
+    delay = START_DELAY
     try:
         while True:
+            if lane == "Files" and not anidb_retry.plex_answering():
+                delay = anidb_retry.plex_wait()
+                pause_note(delay)
+                break
             LOCK.acquire()
             try:
                 task = LANES[lane]["queue"].pop(0) if LANES[lane]["queue"] else None
@@ -275,6 +311,13 @@ def run_lane(lane):
                 result = run_task(lane, source_id, key)
             except Exception:
                 Log.Error("Background refresh - %s '%s' failed: %s" % (lane, source_id, textutil.exception_text()))
+            if result == "wait":
+                LOCK.acquire()
+                try:
+                    LANES[lane]["queue"].insert(0, task)   # Plex didn't answer: tried again after the pause, not done
+                finally:
+                    LOCK.release()
+                continue
             task_done(lane, source_id, key, result)
     finally:
         LOCK.acquire()
@@ -284,7 +327,19 @@ def run_lane(lane):
         finally:
             LOCK.release()
         if again:
-            wake(lane)
+            wake(lane, delay)
+
+
+PAUSED = {"since": 0}
+
+
+def pause_note(delay):
+    """One Info line when the Files lane starts waiting for Plex (not one per try)."""
+    if PAUSED["since"] and time.time() - PAUSED["since"] < 2 * anidb_retry.PLEX_PAUSE:
+        Log.Debug("Background refresh - Plex still isn't answering; image checks wait another %ss" % (delay))
+    else:
+        Log.Info("Background refresh - Plex isn't answering: image checks wait %ss and are tried again (nothing is recorded as failed)" % (delay))
+    PAUSED["since"] = time.time()
 
 
 def run_task(lane, source_id, key):
@@ -300,7 +355,11 @@ def run_task(lane, source_id, key):
     if age is None and lane != "Anilist":
         return False                                       # Gap fillers are only downloaded again if they were used before
     if age is not None and age < settings.REFRESH_SKIP_RECENT:
-        Log.Debug("Background refresh - %s %s kept (%s old)" % (lane, source_id, refresher.age_text(age)))
+        LOCK.acquire()
+        try:
+            RECENT[(lane, source_id)] = True               # Named in the job's "done" line (task_done), not one line each
+        finally:
+            LOCK.release()
         return False                                       # Setting "Refresh Metadata leaves sources downloaded within"
     return refresh_provider(lane, source_id, [directory])
 
@@ -318,6 +377,9 @@ def task_done(lane, source_id, key, result):
         if source_id in waiting:
             waiting.remove(source_id)
         job["checked"] = job["checked"] + 1
+        if (lane, source_id) in RECENT:
+            del RECENT[(lane, source_id)]
+            job.setdefault("kept", []).append("%s %s" % (lane, source_id))
         if result:
             job["changed"].append(change_label(lane, source_id))
         fast_left = pending_count(job, [x for x in LANE_ORDER if x != "Anidb"])
@@ -328,7 +390,7 @@ def task_done(lane, source_id, key, result):
         label = job["label"] or key
         if fast_left == 0 and anidb_left == 0:
             JOBS.remove(job)
-            summary = (job["checked"], time.time() - job["started"])
+            summary = (job["checked"], time.time() - job["started"], job.get("kept") or [])
         save_state()
     finally:
         LOCK.release()
@@ -337,11 +399,18 @@ def task_done(lane, source_id, key, result):
                  % (label, changes_text(refresh), "" if summary else " (AniDB still downloading)"))
         anidb_retry.refresh(key, "Background refresh")
     if summary:
-        Log.Info("Background refresh - '%s': done (%s sources checked in %.1fs)" % (label, summary[0], summary[1]))
+        Log.Info("Background refresh - '%s': done (%s sources checked in %.1fs%s)" % (label, summary[0], summary[1],
+                 (", %s left as downloaded recently" % (len(summary[2]))) if summary[2] else ""))
+        if summary[2]:
+            Log.Debug("Background refresh - '%s': left as downloaded recently: %s" % (label, ", ".join(summary[2])))
 
 
 def change_label(lane, source_id):
     if lane == "Files":
+        if source_id.startswith("print|"):
+            return "image fingerprints"
+        if source_id.startswith("sets|"):
+            return "season poster layouts"
         return "episode thumbnails" if source_id.startswith("image|") else "episode writers/directors"
     return "%s %s" % (lane, source_id)
 
@@ -360,6 +429,11 @@ def changes_text(changes):
 
 def download_file_task(task):
     """One "Files" task. True if something new is now cached (the show is refreshed to write it)."""
+    if task.startswith("print|"):
+        return image_match.background_task(task[6:])      # Image checks: an image's fingerprint
+    if task.startswith("sets|"):
+        import metadata_writer
+        return metadata_writer.compute_layouts(task[5:])   # Season poster sets, after their fingerprints
     parts = task.split("|")
     if parts[0] == "crew" and len(parts) == 3:
         before, fresh = tvdb_v4.cached_crew(parts[1], parts[2])

@@ -1,7 +1,9 @@
 """The bundle: an XML tree holding, per TVDB season/episode, which AniDB/TVDB episode it maps to, the files' stream languages,
 and every source's values side by side (e.g. <Title><Anidb>..</Anidb><Tvdb>..</Tvdb></Title>).
-It is saved to Cache/Bundles/<anidb id>.bundle.xml after each update, which makes it the best file to debug mappings with.
+With the setting "Generate debug bundles" on, it is saved to Cache/Bundles/<anidb id>.bundle.xml after each update, the
+best file to debug mappings with.
 """
+import os
 import re
 import copy
 
@@ -14,8 +16,8 @@ import models
 import anidb
 import tvdb
 import anime_lists
+import offline_db
 import sources
-import downloader
 import tvdb_v4
 
 # [mapping key, providers using it]: AniList entries are keyed by the AniDB id, Plex themes by the TVDB id
@@ -347,7 +349,7 @@ def map_meta(root, offline_ids=None):
                 episode_node = mapped.getparent().getparent()
                 season_node = episode_node.getparent()
                 if not season_node.get(provider + "Id"):
-                    season_node.attrib[provider + "Id"] = series_id
+                    season_node.attrib[provider + "Id"] = record.site_id or series_id      # AniList: its own id, not the AniDB id
 
                 for field in settings.SERIES_FIELDS:
                     value = getattr(record, models.field_attr(field), None)
@@ -386,6 +388,78 @@ def map_meta(root, offline_ids=None):
                                 element = add_value(target, provider, value)
                                 if field == "Title":
                                     mark_language(element, episode)
+    try:
+        map_ids(root, loaded)                          # <Ids>: every site's id and cache folder per AniDB entry
+    except Exception:
+        Log.Warn("Bundle - Listing the sites' ids failed: %s" % (textutil.exception_text()))
+
+
+def map_ids(root, loaded):
+    """<Ids>: every site's id for each AniDB entry of the show, with the folder in AMSA's cache that holds it (relative to
+       Cache; only when it exists), e.g.
+         <Entry anidb="17870"><Anidb id="17870" path="AniDB\\17870"/><Anilist id="161645" path="AniList\\17870"/>
+                              <Mal id="54492" path="MAL\\17870"/><Kitsu id="47347" path="Kitsu\\17870"/>
+                              <Animethemes path="AnimeThemes\\17870"/></Entry>
+         <Tvdb id="431162" path="TvDB4\\431162"/>
+       AniList, MyAnimeList, Kitsu and AnimeThemes folders are named by the AniDB id they were looked up for. AniList's id
+       is its own (from its answer); MyAnimeList and Kitsu ids come from the anime-offline-database (MyAnimeList also
+       from AniDB's own link). A site without an id for an entry is left out; AnimeThemes has no id, only its folder."""
+    old = root.find("./Ids")
+    if old is not None:
+        root.remove(old)
+    ids = etree.Element("Ids")
+    tvdb_ids = []
+    for series in root.xpath("./Mapping/Series"):
+        anidb_id = series.get("anidbid")
+        if not textutil.is_digits(anidb_id):
+            continue
+        entry = SubElement(ids, "Entry", anidb=anidb_id)
+        add_id(entry, "Anidb", anidb_id, ["AniDB"], anidb_id)
+        anidb_record = loaded.get(("Anidb", anidb_id))
+        anilist_record = loaded.get(("Anilist", anidb_id))
+        anilist_id = anilist_record.site_id if anilist_record is not None and anilist_record.valid else None
+        add_id(entry, "Anilist", anilist_id or offline_id(offline_db.anilist_id, anidb_id), ["AniList"], anidb_id)
+        mal_id = offline_id(offline_db.mal_id, anidb_id) or (anidb_record.mal_id if anidb_record is not None and anidb_record.valid else None)
+        add_id(entry, "Mal", mal_id, ["MAL"], anidb_id)
+        add_id(entry, "Kitsu", offline_id(offline_db.kitsu_id, anidb_id), ["Kitsu"], anidb_id)
+        folder = cache_folder(["AnimeThemes"], anidb_id)
+        if folder:
+            SubElement(entry, "Animethemes", path=folder)
+        tvdb_id = series.get("tvdbid")
+        if textutil.is_digits(tvdb_id) and tvdb_id not in tvdb_ids:
+            tvdb_ids.append(tvdb_id)
+    for tvdb_id in tvdb_ids:
+        add_id(ids, "Tvdb", tvdb_id, ["TvDB4", "TvDB"], tvdb_id)
+    mapping = root.find("./Mapping")
+    root.insert(root.index(mapping) + 1 if mapping is not None else 0, ids)
+    return ids
+
+
+def offline_id(lookup, anidb_id):
+    try:
+        return lookup(anidb_id)
+    except Exception:
+        return None
+
+
+def cache_folder(names, folder_id):
+    """The first of the folders <name>/<folder_id> that exists in AMSA's cache, relative to it (this system's separator)."""
+    for name in names:
+        relative = os.path.join(name, str(folder_id))
+        try:
+            if os.path.isdir(os.path.join(settings.CACHE_PATH, relative)):
+                return relative
+        except Exception:
+            pass
+    return None
+
+
+def add_id(parent, site, site_id, folders, folder_id):
+    if site_id and textutil.is_digits(site_id):
+        element = SubElement(parent, site, id=str(site_id))
+        folder = cache_folder(folders, folder_id)
+        if folder:
+            element.set("path", folder)
 
 
 def apply_episode_values(root, provider, series_id, record, nodes=None):
@@ -497,9 +571,3 @@ def map_crew(episode_nodes, lazy=None):
     Log.Debug("Bundle - TVDB v4 crew: %s episodes checked, %s writer/director lists added" % (len(jobs), found))
 
 
-def export(root, filename):
-    """Copy of the bundle without local file details, for sharing (settings.EXPORT_BUNDLES)."""
-    data = copy.deepcopy(root)
-    for item in data.xpath("./Season/Episode/Filename") + data.xpath("./Season/Episode/Streams"):
-        item.getparent().remove(item)
-    downloader.save_file(etree.tostring(data, pretty_print=True, xml_declaration=True, encoding="UTF-8"), filename, "Bundles", True)

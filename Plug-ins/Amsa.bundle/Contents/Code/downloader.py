@@ -105,9 +105,9 @@ def load_stale(filename="", directory="", quiet=False):
     return None
 
 
-def save_file(content, filename="", directory="", export=False):
-    root_path = settings.EXPORT_PATH if export else settings.CACHE_PATH
-    root_dir = settings.EXPORT_DIR if export else settings.CACHE_DIR
+def save_file(content, filename="", directory=""):
+    root_path = settings.CACHE_PATH
+    root_dir = settings.CACHE_DIR
     absolute_dir = os.path.join(root_path, directory)
     if not os.path.exists(absolute_dir):
         try:

@@ -21,6 +21,8 @@ Module overview:
     offline_db.py        anime-offline-database: AniList ids, airing status, extra search titles
     episode_sources.py   MyAnimeList (Jikan), Kitsu and AnimeThemes episode data
     episode_fill.py      fills gaps in the episodes on disk from those sources
+    season_editor.py     season titles/summaries, image choices and unlocks through Plex's own API
+    library_unlock.py    setting "Unlock all images on save": every AMSA library, then a countdown of shows to refresh
 """
 import os
 
@@ -34,6 +36,8 @@ import updater
 import airing
 import anidb_retry
 import background_refresh
+import library_unlock
+import cache_cleaner
 import health_report
 import environment
 import prefs_repair
@@ -44,11 +48,11 @@ PREF_IDS = ("SeriesTitle", "SerieLanguage1", "SerieLanguage2", "SerieLanguage3",
             "EpisodeLanguage1", "EpisodeLanguage2", "TitleLanguageFirst", "SeriesSummary", "SeriesOriginally_Available_At", "SeriesRating", "RatingCombine",
             "SeriesStudio", "SeriesDuration", "SeriesCountries", "SeriesGenres", "SeriesTags", "MinimumWeight", "SeriesCollections",
             "CollectionsExclude", "SeriesContent_Rating", "ContentRatingRule", "ContentRatingCountry", "SeriesRoles", "CastLanguage",
-            "CastPhotos", "SeriesImages", "localart", "SeasonPosterSets", "ImagesMax", "SeriesThemes", "SeasonTitle", "SeasonNameInSummary", "SeasonText", "SeasonParts",
+            "CastPhotos", "SeriesImages", "ImageLanguage", "SeasonPosterSets", "ImagesMax", "SeasonPostersMax", "ImageDuplicates", "SeriesThemes", "SeasonTitle", "SeasonNameInSummary", "SeasonText", "SeasonParts",
             "SummaryRepeat", "EpisodeSummary", "EpisodeOriginally_Available_At", "EpisodeRating", "EpisodeAbsolute_Index",
             "EpisodeWriters", "EpisodeDirectors", "EpisodeProducers", "EpisodeThumbs", "EpisodeFallback", "CreditTitles",
             "UseAniDBForAdvancedSearch", "UseTVDBForAdvancedSearch", "OfflineDatabase", "AniDbAntiBanDelay", "AniDbHourlyLimit",
-            "AniDbDailyLimit", "RefreshMode", "RefreshSkipRecent", "RefreshAiring")
+            "AniDbDailyLimit", "RefreshMode", "RefreshSkipRecent", "RefreshAiring", "DebugBundles")
 
 
 def log_prefs():
@@ -121,6 +125,12 @@ def ValidatePrefs():
     except Exception:
         Log.Error("ValidatePrefs - Applying the settings failed (restart Plex Media Server to load them): %s" % (textutil.exception_text()))
     log_prefs()
+    if not settings.DEBUG_BUNDLES:
+        title_index.run_later(1, cache_cleaner.bundles_clean_up)     # Debug bundles off: the saved ones are deleted
+    if library_unlock.requested():
+        Log.Info("ValidatePrefs - Unlock all images: starting in the background")
+        library_unlock.start()
+        return MessageContainer("Success", "AMSA - Settings saved. Unlocking all images in the background; then refresh your AMSA libraries (the log shows progress)")
     return MessageContainer("Success", "AMSA - Provided preference values are ok")
 
 

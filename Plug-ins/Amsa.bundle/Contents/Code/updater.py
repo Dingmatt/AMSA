@@ -19,6 +19,8 @@ import forced_refresh
 import background_refresh
 import tvdb_v4
 import health_report
+import season_editor
+import library_unlock
 import offline_db
 import title_index
 
@@ -53,6 +55,15 @@ def update(metadata, media, force, lang=None):
     Log.Debug("Update - AniDB: '%s', TVDB: '%s', related AniDB entries: %s" % (mapping.anidb_id, mapping.tvdb_id, ", ".join([x.get("anidbid") for x in mapping.series_list])))
 
     rating_key = getattr(media, "id", None)
+    library_unlocked = library_unlock.begin_update(rating_key)    # Setting "Unlock all images": none of its images count as picked
+    if rating_key and season_editor.unlock_requested(metadata.id):
+        try:
+            unlocked = season_editor.unlock_images(rating_key)
+            if unlocked:
+                Log.Info("Update - Images unlocked in Plex (search '%s'): the show and %s season%s now follow the settings"
+                         % (season_editor.UNLOCK_WORD, unlocked - 1, "" if unlocked == 2 else "s"))
+        except Exception as e:
+            Log.Warn("Update - Couldn't unlock the images in Plex (%s)" % (e))
     own = bool(rating_key) and anidb_retry.own_refresh(rating_key)     # Used up here whether Plex sends it forced or not
     forced = forced_refresh.start(mapping, rating_key, own) if force else None
     # Background mode: an expired TVDB copy (over 2 days) is used as it is and downloaded after the update
@@ -89,11 +100,10 @@ def update(metadata, media, force, lang=None):
         if offline:
             Log.Debug("Update - Related AniDB entries without files, read from the cache: %s" % (", ".join(["%s (%s)" % (x[0], "cached" if x[1] else "not cached") for x in offline])))
         try:
-            downloader.save_file(etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mapping.first_series + ".bundle.xml", "Bundles")
-            if settings.EXPORT_BUNDLES:
-                bundle.export(root, mapping.first_series + ".bundle.xml")
+            if settings.DEBUG_BUNDLES:
+                downloader.save_file(etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8"), mapping.first_series + ".bundle.xml", "Bundles")
         except Exception as e:
-            Log.Warn("Update - Saving bundle failed: %s" % (e))
+            Log.Warn("Update - Saving the debug bundle failed: %s" % (e))
         # Background mode: episode thumbnails and writers/directors that aren't cached yet are downloaded after the update
         # (background_refresh "Files"), not during it, which made e.g. Magi's update take 16s instead of about 3
         lazy = {"crew": [], "images": []} if (settings.REFRESH_IN_BACKGROUND and rating_key) else None
@@ -127,6 +137,8 @@ def update(metadata, media, force, lang=None):
         return
     if force:
         forced_refresh.done(mapping, rating_key)
+    if library_unlocked:
+        library_unlock.finished(rating_key, metadata.title)
     Log.Info("==== Update finished: '%s' (%s) in %.1fs: %s ====" % (metadata.title, metadata.id, time.time() - started, timing_text(timings, time.time() - started)))
 
 
