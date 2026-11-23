@@ -20,7 +20,6 @@ class Series():
     def __init__(self, source_id, meta_type):
         self.id = str(source_id)
         self.meta_type = meta_type          # Tag used in the bundle: "Anidb", "Tvdb" or "Plex"
-        self.api = None                     # TVDB only: "v4" or "v1"
         self.valid = False                  # False when no data could be loaded (callers must not crash on it)
         self.type = None
         self.title = None

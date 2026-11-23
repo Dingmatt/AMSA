@@ -15,7 +15,7 @@ try:
 except ImportError:
     new_lock = lambda: Thread.Lock()
 
-PROVIDERS = {"Anidb": anidb.AniDBSeries, "Tvdb": tvdb_v4.series, "Plex": plex_themes.PlexThemes,      # TVDB: v4 with v1 fallback
+PROVIDERS = {"Anidb": anidb.AniDBSeries, "Tvdb": tvdb_v4.series, "Plex": plex_themes.PlexThemes,
              "Anilist": lambda source_id: anilist.AniListSeries(source_id, get_anidb(source_id, False)),  # AniList: found via the (cached) AniDB entry
              # Gap fillers (episode_fill.py), keyed by AniDB id like AniList:
              "Mal": lambda source_id: episode_sources.MalEpisodes(source_id, get_anidb(source_id, False)),

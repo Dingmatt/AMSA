@@ -6,7 +6,7 @@ resolving links, links themselves are skipped, and only files directly managed b
 
 Kept for good:
   * AniDB data (AniDB/<id>/<id>.xml): small, and the most expensive to get back (AniDB bans clients that over-fetch);
-  * image fingerprints and saved poster sets (Fingerprints): small, and slow to work out again (about 0.3s each);
+  * image fingerprints and saved poster sets (Fingerprints): slow to work out again (about 0.3s each);
   * AMSA's own memory and state: Seasons (season titles AMSA set), OfflineDB, files at the top of the cache
     (queues, limiter state, mapping lists), and any folder AMSA doesn't know.
 Debug bundles (Bundles): kept while the setting "Generate debug bundles" is on, all deleted when it's off (here, and
@@ -165,8 +165,11 @@ def run(delete=True, now=None):
                 continue
             if os.path.isfile(top_path):
                 count = folders.setdefault("(top level)", [0, 0])
-                count[0] = count[0] + 1
-                count[1] = count[1] + os.path.getsize(top_path)
+                try:
+                    count[1] = count[1] + os.path.getsize(top_path)
+                    count[0] = count[0] + 1
+                except OSError:
+                    pass                                # Being replaced right now (a state file)
                 continue
             count = folders.setdefault(top, [0, 0])
             for root, dirs, files in os.walk(top_path, topdown=False):

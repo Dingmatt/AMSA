@@ -552,7 +552,7 @@ def already_in_plex(image, target):
 
 
 def unique_urls(images):
-    """Best-first images without repeats of the same URL (two sources can list one file, e.g. TVDB v4 and v1 thumbnails;
+    """Best-first images without repeats of the same URL (two sources can list one file;
        downloading both at once made Plex's Data.Save fail). Season posters count per season."""
     seen = {}
     found = []
@@ -678,7 +678,7 @@ def fill_themes(candidates, priority, target):
 # Writing ##############################################################################################################################################################
 def local_episode(media, season, episode):
     """Plex's on-disk episode object, or None."""
-    for season_key, episode_key in ((int(season), int(episode)), (str(season), str(episode))):
+    for season_key, episode_key in ((str(season), str(episode)), (int(season), int(episode))):   # Plex's keys are text
         try:
             return media.seasons[season_key].episodes[episode_key]
         except Exception:
@@ -911,7 +911,7 @@ def season_provider_text(provider, season_node, tvdb_number):
         tvdb_ids = sorted(set([x.get("series") for x in season_node.xpath("./Episode/Mapped/tvdb") if textutil.is_digits(x.get("series"))]))
         if tvdb_ids:
             record = sources.get_tvdb(tvdb_ids[0])
-            season_id = record.season_ids.get(str(tvdb_number)) if record.valid and record.api == "v4" else None
+            season_id = record.season_ids.get(str(tvdb_number)) if record.valid else None
             text_values = tvdb_v4.season_text(tvdb_ids[0], season_id) if season_id else None
             if text_values:
                 return text_values.get("name"), text_values.get("overview")

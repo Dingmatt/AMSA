@@ -43,21 +43,39 @@ def clean_description(text):
     return textutil.clean_summary(text)
 
 
-def cache_age(anidb_id):
-    """How long a cached AniDB entry stays fresh, from the end date in the cached copy (idea from HAMA): 2 days while airing
-       or within 30 days of ending, then one day per 5 days since it ended, up to a year for shows that ended 5+ years ago."""
+END_DATES = {}                   # AniDB id -> (cached copy's file time, end date or None): the copy is read once, not per source
+
+
+def end_date(anidb_id):
+    """The end date (seconds) in the cached AniDB copy, or None; read again only when the copy changes."""
+    filename, directory = anidb_id + ".xml", os.path.join("AniDB", anidb_id)
+    saved = downloader.cache_mtime(filename, directory)
+    known = END_DATES.get(anidb_id)
+    if known is not None and saved is not None and known[0] == saved:
+        return known[1]
     try:
-        cached = Data.Load(downloader.cache_path(anidb_id + ".xml", os.path.join("AniDB", anidb_id))) if Data.Exists(downloader.cache_path(anidb_id + ".xml", os.path.join("AniDB", anidb_id))) else None
+        cached = Data.Load(downloader.cache_path(filename, directory)) if Data.Exists(downloader.cache_path(filename, directory)) else None
     except Exception:
         cached = None
     if cached is not None and not isinstance(cached, basestring):
         cached = cached.decode("utf-8", "replace")
     found = re.search(r"<enddate>([0-9]{4})(?:-([0-9]{2}))?(?:-([0-9]{2}))?</enddate>", cached or "")
-    if not found:
-        return settings.DEFAULT_CACHE
-    try:
-        ended = time.mktime((int(found.group(1)), int(found.group(2) or 12), int(found.group(3) or 28), 0, 0, 0, 0, 0, -1))
-    except Exception:
+    ended = None
+    if found:
+        try:
+            ended = time.mktime((int(found.group(1)), int(found.group(2) or 12), int(found.group(3) or 28), 0, 0, 0, 0, 0, -1))
+        except Exception:
+            ended = None
+    if saved is not None:
+        END_DATES[anidb_id] = (saved, ended)
+    return ended
+
+
+def cache_age(anidb_id):
+    """How long a cached AniDB entry stays fresh, from the end date in the cached copy (idea from HAMA): 2 days while airing
+       or within 30 days of ending, then one day per 5 days since it ended, up to a year for shows that ended 5+ years ago."""
+    ended = end_date(anidb_id)
+    if ended is None:
         return settings.DEFAULT_CACHE
     days_ago = (time.time() - ended) / 86400
     if days_ago <= 30:
@@ -285,8 +303,8 @@ class AniDBSeries(models.Series):
                         etree.SubElement(links, "Link", type=link_type, url=template % (identifier.text), value=identifier.text)
                     else:
                         etree.SubElement(links, "Link", type=link_type, url=identifier.text)
-            if resource_type == "3" and len(animenfo) >= 2:
-                etree.SubElement(links, "Link", type="AnimeNfo", url=settings.ANIDB_RESOURCE_ANIMENFO % (u"%s" % animenfo[0], u"%s" % animenfo[1]), value=u"%s" % animenfo)
+        if len(animenfo) >= 2:
+            etree.SubElement(links, "Link", type="AnimeNfo", url=settings.ANIDB_RESOURCE_ANIMENFO % (u"%s" % animenfo[0], u"%s" % animenfo[1]), value=u"%s" % animenfo)
         return links
 
 

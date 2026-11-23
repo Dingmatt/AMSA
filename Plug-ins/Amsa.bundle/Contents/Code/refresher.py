@@ -5,8 +5,8 @@ airing shows). After building the bundle, the updater asks metadata_writer.episo
 be written without data:
   * "unwritten": on disk but not mapped at all (e.g. AniDB's cached copy still lists 6 episodes and you added episode 7);
   * "empty": mapped, but no source has a real title or summary yet (only "Episode 7").
-For those, the sources involved are downloaded again, but only if their cached copy is older than
-settings.REFETCH_ANIDB_AFTER (24h, AniDB bans clients that fetch the same anime more than once a day) or
+For those, the sources involved are downloaded again, but only if their cached copy is older than refetch_after() for
+AniDB (24h while an entry can still gain episodes, 7 days once finished: AniDB bans clients that over-fetch) or
 settings.REFETCH_TVDB_AFTER (6h). Each source is tried at most once per that period, even if the download fails.
 """
 import os
@@ -36,7 +36,7 @@ def anidb_directory(anidb_id):
 
 
 def tvdb_directories(tvdb_id):
-    return [os.path.join("TvDB4", str(tvdb_id)), os.path.join("TvDB", str(tvdb_id))]
+    return [os.path.join("TvDB4", str(tvdb_id))]
 
 
 def anidb_age(anidb_id):
@@ -44,10 +44,7 @@ def anidb_age(anidb_id):
 
 
 def tvdb_age(tvdb_id):
-    ages = [downloader.cache_age_of("episodes-%s.json" % (settings.TVDB4_LANGUAGE), os.path.join("TvDB4", str(tvdb_id))),
-            downloader.cache_age_of("%s.xml" % (tvdb_id), os.path.join("TvDB", str(tvdb_id)))]
-    ages = [age for age in ages if age is not None]
-    return sorted(ages)[0] if ages else None
+    return downloader.cache_age_of("episodes-%s.json" % (settings.TVDB4_EPISODE_LANGUAGE), os.path.join("TvDB4", str(tvdb_id)))
 
 
 def may_try(key, after):
@@ -124,7 +121,8 @@ def wanted_sources(report, mapping):
 def refetch_anidb(anidb_id, rating_key):
     """Download one AniDB entry again (through the limiter). True if a new copy was saved."""
     age = anidb_age(anidb_id)
-    if age is None or age < settings.REFETCH_ANIDB_AFTER or not may_try("anidb-%s" % (anidb_id), settings.REFETCH_ANIDB_AFTER):
+    after = refetch_after(anidb_id)                        # 24h while it can still gain episodes, 7 days once finished
+    if age is None or age < after or not may_try("anidb-%s" % (anidb_id), after):
         return False
     directory = anidb_directory(anidb_id)
     downloader.force_refresh(directory)
@@ -169,7 +167,8 @@ def due_in_background(anidb_ids, tvdb_ids):
     anidb_due = []
     for anidb_id in anidb_ids:
         age = anidb_age(anidb_id)
-        if age is not None and age >= settings.REFETCH_ANIDB_AFTER and may_try("anidb-%s" % (anidb_id), settings.REFETCH_ANIDB_AFTER):
+        after = refetch_after(anidb_id)
+        if age is not None and age >= after and may_try("anidb-%s" % (anidb_id), after):
             anidb_due.append(anidb_id)
     tvdb_due = []
     for tvdb_id in tvdb_ids:

@@ -41,6 +41,8 @@ def update(metadata, media, force, lang=None):
         Log.Error("Update - Unexpected metadata id '%s'" % (metadata.id))
         return
 
+    rating_key = getattr(media, "id", None)
+    own = bool(rating_key) and anidb_retry.own_refresh(rating_key)     # Used up here whether Plex sends it forced or not
     mapping = None
     try:
         if source in ANIDB_SOURCES:
@@ -48,13 +50,12 @@ def update(metadata, media, force, lang=None):
         elif source in TVDB_SOURCES:
             mapping = anime_lists.AnimeListEntry(None, source_id)
     finally:
-        Log.Info("==== Update: %s(%s)%s ====" % (header_name(metadata, media), ", ".join(header_ids(metadata.id, mapping)), " (Refresh Metadata)" if force else ""))
+        Log.Info("==== Update: %s(%s)%s ====" % (header_name(metadata, media), ", ".join(header_ids(metadata.id, mapping)), " (refresh asked by AMSA)" if own else (" (Refresh Metadata)" if force else "")))
     if mapping is None or not mapping.series_list:
         Log.Error("Update - No mapping available for '%s', update skipped" % (metadata.id))
         return
     Log.Debug("Update - AniDB: '%s', TVDB: '%s', related AniDB entries: %s" % (mapping.anidb_id, mapping.tvdb_id, ", ".join([x.get("anidbid") for x in mapping.series_list])))
 
-    rating_key = getattr(media, "id", None)
     library_unlocked = library_unlock.begin_update(rating_key)    # Setting "Unlock all images": none of its images count as picked
     if rating_key and season_editor.unlock_requested(metadata.id):
         try:
@@ -64,7 +65,6 @@ def update(metadata, media, force, lang=None):
                          % (season_editor.UNLOCK_WORD, unlocked - 1, "" if unlocked == 2 else "s"))
         except Exception as e:
             Log.Warn("Update - Couldn't unlock the images in Plex (%s)" % (e))
-    own = bool(rating_key) and anidb_retry.own_refresh(rating_key)     # Used up here whether Plex sends it forced or not
     forced = forced_refresh.start(mapping, rating_key, own) if force else None
     # Background mode: an expired TVDB copy (over 2 days) is used as it is and downloaded after the update
     stale_ids = forced_refresh.tvdb_ids(mapping) if (settings.REFRESH_IN_BACKGROUND and rating_key) else []

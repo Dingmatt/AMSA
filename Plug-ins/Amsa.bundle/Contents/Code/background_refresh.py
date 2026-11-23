@@ -86,14 +86,27 @@ LANE_WORKERS = {"Tvdb": background_tvdb, "Anilist": background_anilist, "Mal": b
                 "Animethemes": background_animethemes, "Files": background_files, "Anidb": background_anidb}
 
 
+JOB_INDEX = {}                    # Rating key -> its job in JOBS (looked up for every finished task)
+
+
 def find_job(rating_key):
-    for job in JOBS:
-        if job["key"] == str(rating_key):
-            return job
-    return None
+    return JOB_INDEX.get(str(rating_key))
+
+
+def add_job(job):
+    JOBS.append(job)
+    JOB_INDEX[job["key"]] = job
+
+
+def remove_job(job):
+    JOBS.remove(job)
+    if JOB_INDEX.get(job["key"]) is job:
+        del JOB_INDEX[job["key"]]
 
 
 SAVE_EVERY = 30                   # Seconds: the queue is saved at most this often (it can hold many thousand tasks)
+SAVE_EVERY_LARGE = 120            # ... and this often when it holds more than LARGE_QUEUE tasks (saving it takes longer)
+LARGE_QUEUE = 5000
 SAVING = {"scheduled": False}
 
 
@@ -104,8 +117,11 @@ def save_state():
     if SAVING["scheduled"]:
         return
     SAVING["scheduled"] = True
+    waiting = 0
+    for lane in LANES:
+        waiting = waiting + len(LANES[lane]["queue"])
     try:
-        Thread.CreateTimer(SAVE_EVERY, save_queue)
+        Thread.CreateTimer(SAVE_EVERY_LARGE if waiting > LARGE_QUEUE else SAVE_EVERY, save_queue)
     except Exception:
         write_state()                                      # Not in Plex (tests): straight away
         SAVING["scheduled"] = False
@@ -196,7 +212,7 @@ def queue_tasks(key, label, reason, pending):
         job = find_job(key)
         if job is None:
             job = {"key": key, "label": label or "", "reason": reason, "pending": {}, "changed": [], "checked": 0, "started": time.time()}
-            JOBS.append(job)
+            add_job(job)
         for lane in LANE_ORDER:
             for source_id in pending.get(lane) or []:
                 source_id = str(source_id)
@@ -209,7 +225,7 @@ def queue_tasks(key, label, reason, pending):
                 if lane not in woken:
                     woken.append(lane)
         if not pending_count(job):
-            JOBS.remove(job)
+            remove_job(job)
         save_state()
     finally:
         LOCK.release()
@@ -389,7 +405,7 @@ def task_done(lane, source_id, key, result):
             job["changed"] = []
         label = job["label"] or key
         if fast_left == 0 and anidb_left == 0:
-            JOBS.remove(job)
+            remove_job(job)
             summary = (job["checked"], time.time() - job["started"], job.get("kept") or [])
         save_state()
     finally:
@@ -488,7 +504,7 @@ def refresh_anidb(anidb_id, rating_key):
 
 
 def refresh_tvdb(tvdb_id):
-    """TVDB series (v4, v1 fallback) and its cached season texts. True if anything AMSA writes changed."""
+    """TVDB series and its cached season texts. True if anything AMSA writes changed."""
     changed = refresh_provider("Tvdb", tvdb_id, refresher.tvdb_directories(tvdb_id), lambda: sources.get_tvdb(tvdb_id))
     sources.forget("Plex", tvdb_id)
     directory = os.path.join("TvDB4", str(tvdb_id), "seasons")
@@ -496,7 +512,7 @@ def refresh_tvdb(tvdb_id):
         names = os.listdir(os.path.join(settings.CACHE_PATH, directory))
     except Exception:
         names = []
-    suffix = "-%s.json" % (settings.TVDB4_LANGUAGE)
+    suffix = "-%s.json" % (settings.TVDB4_LANGUAGE)          # Each season's file in the show language (English is checked with it)
     for name in names:
         if not name.endswith(suffix) or not textutil.is_digits(name[:-len(suffix)]):
             continue

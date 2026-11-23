@@ -72,6 +72,14 @@ def cache_age_of(filename, directory=""):
     return None
 
 
+def cache_mtime(filename, directory=""):
+    """A cached file's modification time, or None if it isn't cached (tells whether it changed since last read)."""
+    try:
+        return os.stat(os.path.abspath(os.path.join(settings.CACHE_PATH, "..", cache_path(filename, directory)))).st_mtime
+    except Exception:
+        return None
+
+
 def load_cached(filename="", directory="", max_age=settings.DEFAULT_CACHE):
     """Cached file contents if younger than max_age seconds, else None."""
     if not filename:

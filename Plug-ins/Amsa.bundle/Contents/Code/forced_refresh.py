@@ -5,7 +5,7 @@ scan come with force=False. For a forced update, the show's cached source files 
   * AniDB entries: only copies older than 24h (AniDB bans clients that fetch the same anime more than once a day), or 7
     days for finished shows (refresher.refetch_after), downloaded through the limiter. One the limiter postpones is downloaded later (anidb_retry)
     and the show refreshed again then.
-  * TVDB (v4 series, episodes and seasons; v1), AniList, MAL, Kitsu and AnimeThemes: unless downloaded within the setting
+  * TVDB (series, episodes and seasons), AniList, MAL, Kitsu and AnimeThemes: unless downloaded within the setting
     "Skip sources downloaded within" (default 24 hours; 10 minutes for testing).
 Images, crew, themes and the shared lists (mapping, titles, dataset) keep their usual cache times.
 With "RefreshMode" set to background (the default), nothing is forced during the update: the show is written from the

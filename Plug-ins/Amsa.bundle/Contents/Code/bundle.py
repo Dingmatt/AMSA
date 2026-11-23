@@ -14,13 +14,17 @@ import settings
 import textutil
 import models
 import anidb
-import tvdb
 import anime_lists
 import offline_db
 import sources
 import tvdb_v4
 
 # [mapping key, providers using it]: AniList entries are keyed by the AniDB id, Plex themes by the TVDB id
+
+def episode_number(season, episode):
+    """TVDB-style 'SxxEyy'."""
+    return "S" + str(season).zfill(2) + "E" + str(episode).zfill(2)
+
 def provider_groups():
     """Read now, not at import, so a settings change (AniList, Plex theme music on/off) applies without a restart."""
     return [["Anidb", "Anilist"] if settings.ANILIST_ENABLED else ["Anidb"], ["Tvdb", "Plex"] if settings.PLEX_THEMES_USED else ["Tvdb"]]
@@ -115,7 +119,7 @@ def map_absolute(entry, record, mapped_anidb, used_tvdb, add):
         if episode.absolute_index and episode.season and episode.number:
             if entry.episode_offset < episode.absolute_index <= record.episode_count + entry.episode_offset:
                 anidb_number = anidb.episode_number(1, episode.absolute_index - entry.episode_offset)
-                tvdb_number = tvdb.episode_number(int(episode.season), int(episode.number))
+                tvdb_number = episode_number(int(episode.season), int(episode.number))
                 if anidb_number not in mapped_anidb and not claimed_elsewhere(used_tvdb, tvdb_number, entry.anidb_id):
                     add(anidb_number, tvdb_number, "")
 
@@ -158,7 +162,7 @@ def map_series(mapping_data, disk_seasons=None, offline=None):
                     if entry.absolute and anidb.episode_number(int(rule.anidb_season), number) in mapped_anidb:
                         continue                                # TVDB's absolute numbers already placed it (map_absolute)
                     status, tvdb_number = "scudlee missing", "S00E00"
-                    key = tvdb.episode_number(int(rule.tvdb_season), number + int(rule.offset))
+                    key = episode_number(int(rule.tvdb_season), number + int(rule.offset))
                     if not claimed_elsewhere(used_tvdb, key, entry.anidb_id, entry.absolute):
                         status, tvdb_number = "", key
                     add(anidb.episode_number(int(rule.anidb_season), number), tvdb_number, status)
@@ -174,7 +178,7 @@ def map_series(mapping_data, disk_seasons=None, offline=None):
                         if not target.strip().isdigit():
                             continue
                         status, tvdb_number = "scudlee missing", "S00E00"
-                        key = tvdb.episode_number(int(rule.tvdb_season), int(target))
+                        key = episode_number(int(rule.tvdb_season), int(target))
                         if key == "S00E00":
                             status = "tvdb missing"
                         elif not claimed_elsewhere(used_tvdb, key, entry.anidb_id, entry.absolute):
@@ -341,6 +345,7 @@ def map_meta(root, offline_ids=None):
         key = providers[0].lower()
         for provider in providers:
             episode_index = {}
+            series_done = {}                     # (season node, series id): its series values already copied
             for mapped in sorted(root.xpath("./Season/Episode/Mapped/%s" % (key)), key=lambda x: int(x.get("series")) if textutil.is_digits(x.get("series")) else 0):
                 series_id = mapped.get("series")
                 record = loaded.get((provider, series_id))
@@ -351,7 +356,7 @@ def map_meta(root, offline_ids=None):
                 if not season_node.get(provider + "Id"):
                     season_node.attrib[provider + "Id"] = record.site_id or series_id      # AniList: its own id, not the AniDB id
 
-                for field in settings.SERIES_FIELDS:
+                for field in ([] if (id(season_node), series_id) in series_done else settings.SERIES_FIELDS):
                     value = getattr(record, models.field_attr(field), None)
                     if has_value(value):
                         if not season_node.xpath("./%s/%s" % (field, provider)):
@@ -368,6 +373,7 @@ def map_meta(root, offline_ids=None):
                                     elif getattr(record, "content_rating_estimate", False):
                                         element.set("estimate", "1")
 
+                series_done[(id(season_node), series_id)] = True
                 if series_id not in episode_index:      # One lookup table per series instead of scanning every episode per mapping
                     index = {}
                     for episode in record.episodes or []:
@@ -429,7 +435,7 @@ def map_ids(root, loaded):
         if textutil.is_digits(tvdb_id) and tvdb_id not in tvdb_ids:
             tvdb_ids.append(tvdb_id)
     for tvdb_id in tvdb_ids:
-        add_id(ids, "Tvdb", tvdb_id, ["TvDB4", "TvDB"], tvdb_id)
+        add_id(ids, "Tvdb", tvdb_id, ["TvDB4"], tvdb_id)
     mapping = root.find("./Mapping")
     root.insert(root.index(mapping) + 1 if mapping is not None else 0, ids)
     return ids
@@ -505,8 +511,6 @@ def map_crew(episode_nodes, lazy=None):
     jobs = []
     indexes = {}
     for node in episode_nodes:
-        if node.xpath("./Writers/Tvdb") or node.xpath("./Directors/Tvdb"):
-            continue                                     # Already provided (TVDB v1)
         for mapped in node.xpath("./Mapped/tvdb"):
             series_id = mapped.get("series")
             if not textutil.is_digits(series_id):
@@ -514,7 +518,7 @@ def map_crew(episode_nodes, lazy=None):
             if series_id not in indexes:
                 record = sources.get_tvdb(series_id)
                 index = {}
-                if record.valid and record.api == "v4":
+                if record.valid:
                     for episode in record.episodes:
                         index["S%sE%s" % (episode.season, episode.number)] = episode.source_id
                 indexes[series_id] = index

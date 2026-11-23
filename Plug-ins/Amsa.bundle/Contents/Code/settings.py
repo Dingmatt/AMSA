@@ -1,12 +1,12 @@
 """AMSA settings: version, paths, source URLs and the user's preferences (DefaultPrefs.json).
 
-Preferences are read once when the agent loads; Plex restarts the agent when they are saved.
+Preferences are read when the agent loads and again whenever the settings are saved (load_prefs).
 """
 import os
 import re
 import inspect
 
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 
 
 # Preferences ##########################################################################################################################################################
@@ -44,7 +44,7 @@ def pref_int(key, default):
 
 
 def pref_seconds(key, default):
-    """A duration setting in seconds ("10 minutes (testing)" -> 600, "24 hours" -> 86400, "3 days" -> 259200)."""
+    """A duration setting in seconds ("10 minutes" -> 600, "24 hours" -> 86400, "3 days" -> 259200)."""
     found = re.search(r"([0-9]+)\s*(minute|hour|day)", pref_str(key, "").lower())
     if not found:
         return default
@@ -107,9 +107,7 @@ CODE_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe(
 DATA_ITEMS_PATH = os.path.abspath(os.path.join(CODE_DIR, "..", "..", "..", "..", "Plug-in Support", "Data", "com.plexapp.agents.amsa", "DataItems"))
 CACHE_DIR = "Cache"                                  # Relative to DataItems (Plex's Data API root)
 CACHE_PATH = os.path.join(DATA_ITEMS_PATH, CACHE_DIR)
-# TVDB images are the same files whichever API (v1 or v4) listed them, so both keep them in one place, under TvDB4: when v1 is
-# shut down, the whole TvDB folder (v1's XML only) can be deleted without touching anything v4 uses.
-TVDB_IMAGES_FOLDER = "TvDB4"
+TVDB_IMAGES_FOLDER = "TvDB4"    # TVDB images, with the rest of TVDB's cache
 DEBUG_BUNDLES = False           # Setting "Generate debug bundles": each update saves its bundle to Cache/Bundles
 
 DEFAULT_TIMEOUT = 30
@@ -268,20 +266,33 @@ ANIDB_RESOURCES = {          # resource type -> (link type, url template or None
 ANIDB_RESOURCE_ANIMENFO = "http://www.animenfo.com/animetitle,%s,%s,a.html"
 
 
-# TVDB (v1 XML API) ####################################################################################################################################################
-TVDB_SERIES_URL = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/all/en.xml"
-TVDB_BANNERS_URL = "http://thetvdb.com/api/DC6295EB0E09E931/series/%s/banners.xml"
-TVDB_IMAGES_URL = "http://thetvdb.com/banners/"
-
-# TVDB v4 (JSON API). v4 is used by default; if it fails for a show, the v1 XML API above is used for that show instead.
+# TVDB (v4 JSON API) ###################################################################################################################################################
 TVDB4_API_URL = "https://api4.thetvdb.com/v4/"
 TVDB4_API_KEY = "72fd062a-c5d8-43ac-a97c-cabda42dd4ab"             # Project key from the original AMSA tvdbv4.py; no subscriber PIN
 TVDB4_TOKEN_TTL = 25 * 24 * 3600                                    # Tokens last one month; renew a little earlier
-TVDB4_LANGUAGE = "eng"
+# The TVDB languages are set by load_prefs() (below) from the title language settings, when the agent loads and whenever the
+# settings are saved; "eng" here is only the starting value until then
+TVDB4_LANGUAGES = ["eng"]                                           # Show and season texts: every TVDB language among the show title languages, in order, then English
+TVDB4_EPISODE_LANGUAGES = ["eng"]                                   # Episode titles and summaries: the same from the episode title languages
+TVDB4_LANGUAGE = "eng"                                              # The first of each (cache file names, search)
+TVDB4_EPISODE_LANGUAGE = "eng"
+TVDB_LABELS = {"eng": "en"}                                         # TVDB code -> the code chosen on the settings page ("zho" -> "zh-Hans"), so
+                                                                    # TVDB's titles rank exactly like AniDB's in the title languages
+TVDB_LANGUAGES = {"en": "eng", "ja": "jpn", "de": "deu", "fr": "fra", "es": "spa", "it": "ita", "pt": "por", "pt-br": "pt", "pl": "pol", "ru": "rus",
+                  "zh": "zho", "zh-hans": "zho", "ko": "kor", "sv": "swe", "da": "dan", "fi": "fin", "cs": "ces", "hu": "hun", "el": "ell",
+                  "tr": "tur", "he": "heb", "ar": "ara", "bg": "bul", "ca": "cat", "et": "est", "fa": "fas", "hr": "hrv", "lv": "lav",
+                  "ro": "ron", "sr": "srp", "sk": "slk", "sl": "slv", "th": "tha", "uk": "ukr"}   # AniDB code -> TVDB's
+                                                                    # (TVDB: "por" is Portugal's Portuguese, "pt" Brazilian Portuguese)
+TVDB_LANGUAGE_NAMES = {"eng": "English", "jpn": "Japanese", "deu": "German", "fra": "French", "spa": "Spanish", "ita": "Italian",
+                       "por": "Portuguese", "pt": "Brazilian Portuguese", "pol": "Polish", "rus": "Russian", "zho": "Chinese", "kor": "Korean", "swe": "Swedish",
+                       "dan": "Danish", "fin": "Finnish", "ces": "Czech", "hun": "Hungarian", "ell": "Greek", "tur": "Turkish",
+                       "heb": "Hebrew", "ara": "Arabic", "bul": "Bulgarian", "cat": "Catalan", "est": "Estonian", "fas": "Persian",
+                       "hrv": "Croatian", "lav": "Latvian", "ron": "Romanian", "srp": "Serbian", "slk": "Slovak", "slv": "Slovenian",
+                       "tha": "Thai", "ukr": "Ukrainian"}
 TVDB4_ART_SERIES_BANNER = 1                                         # /artwork/types ids
 TVDB4_ART_SERIES_POSTER = 2
 TVDB4_ART_SERIES_BACKGROUND = 3
-TVDB4_ART_SEASON_BANNER = 6                                         # Season-wide banners: v1 listed these with the series banners
+TVDB4_ART_SEASON_BANNER = 6                                         # Season-wide banners, listed with the series banners
 TVDB4_ART_SEASON_POSTER = 7
 TVDB4_CREW_CACHE = 14 * 24 * 3600                                   # Episode writers/directors (one request per episode) are re-checked every 2 weeks
 TVDB4_ARTWORK_URL = "https://artworks.thetvdb.com"                # Prefix for v4 image paths given without a host
@@ -311,7 +322,7 @@ OFFLINE_DB_RELOAD = 7 * 24 * CACHE_1HOUR
 
 # Partial refreshes (refresher.py / airing.py)
 REFETCH_FINISHED_ANIDB_AFTER = 7 * 24 * CACHE_1HOUR   # Refresh Metadata re-downloads a finished show's AniDB entry only if older
-REFETCH_ANIDB_AFTER = 24 * CACHE_1HOUR      # An episode on disk without data re-downloads its AniDB entry early, if the copy is this old
+REFETCH_ANIDB_AFTER = 24 * CACHE_1HOUR      # Shortest age before an airing entry's AniDB copy is downloaded again (refresher.refetch_after)
 REFETCH_TVDB_AFTER = 6 * CACHE_1HOUR        # ... and its TVDB series
 AIRING_REFRESH_AFTER = 20 * CACHE_1HOUR     # Airing shows not updated for this long are refreshed by the daily job
 AIRING_KEEP_AFTER_END = 30 * 24 * CACHE_1HOUR   # Shows stay on the airing list for 30 days after their end date
@@ -399,11 +410,27 @@ def source_plan():
         if IMAGE_TEXT_ORDER == "textless":
             checks.append("textless versions of the same artwork first")
         lines.append("Sources - Image checks (each image is looked at once through Plex's own image resizer): %s" % ("; ".join(checks)))
+    names = [[TVDB_LANGUAGE_NAMES.get(code, code) for code in codes] for codes in (TVDB4_LANGUAGES, TVDB4_EPISODE_LANGUAGES)]
+    lines.append("Sources - TVDB text languages (each tried in turn where TVDB has no translation): show and seasons %s; episodes %s"
+                 % (" > ".join(names[0]), " > ".join(names[1])))
     lines.append("Sources - Image order: %s" % ({"language": "library language > textless > others", "textless": "textless > library language > others",
                                                  "site": "source order only"}[IMAGE_ORDER]))
     if IMAGE_LANGUAGES == "textless":
         lines.append("Settings - Images: Textless only. Shows will have fewer images; where no textless image is known, the best titled one is kept")
     return lines
+
+
+def tvdb_languages(priority):
+    """The TVDB languages to ask for, in this title-language order: every listed language TVDB has ("main", Romaji and
+       other romanisations aren't TVDB languages), then English for anything none of them has."""
+    found = []
+    for code in priority:
+        language = TVDB_LANGUAGES.get((code or "").lower())
+        if language and language not in found:
+            found.append(language)
+    if "eng" not in found:
+        found.append("eng")
+    return found
 
 
 def anilist_enabled():
@@ -421,18 +448,28 @@ def anilist_enabled():
 def load_prefs():
     """(Re)compute every setting that comes from Plex's preferences. Run at import, and again from ValidatePrefs when the
        settings page is saved, so a change applies straight away, without restarting Plex Media Server."""
-    global SEARCH_USE_ANIDB, SEARCH_USE_TVDB, SERIES_LANGUAGE_PRIORITY, EPISODE_LANGUAGE_PRIORITY, field_name, COLLECTIONS_EXCLUDE
+    global SEARCH_USE_ANIDB, SEARCH_USE_TVDB, SERIES_LANGUAGE_PRIORITY, EPISODE_LANGUAGE_PRIORITY, COLLECTIONS_EXCLUDE
     global CONTENT_RATING_RULE, TITLE_FROM_TVDB_ALIAS, CONTENT_RATING_COUNTRY, CAST_LANGUAGE, CAST_PHOTOS, REFRESH_IN_BACKGROUND, REFRESH_SKIP_RECENT
-    global EPISODE_FILL, FALLBACK_ORDER, CREDIT_TITLES, fillers, filler, SERIES_IMAGES_PRIORITY, SERIES_THEMES_PRIORITY, ORIGINAL_TITLE_LANGUAGE
+    global EPISODE_FILL, FALLBACK_ORDER, CREDIT_TITLES, SERIES_IMAGES_PRIORITY, SERIES_THEMES_PRIORITY, ORIGINAL_TITLE_LANGUAGE
     global SUMMARY_REPEAT, RATING_COMBINE
     global SEASON_PRIORITY, TITLE_LANGUAGE_FIRST, SEASON_NAME_MODE, SEASON_NAME_IN_SUMMARY, SEASON_PARTS_COMBINED, PREFER_LOCAL_ART, PREFER_POSTER_SETS, IMAGES_MAX, SEASON_POSTERS_MAX, REFRESH_AIRING, DEBUG_BUNDLES
     global IMAGE_TEXT_ORDER, IMAGE_LANGUAGES, IMAGE_ORDER
+    global TVDB4_LANGUAGE, TVDB4_EPISODE_LANGUAGE, TVDB4_LANGUAGES, TVDB4_EPISODE_LANGUAGES, TVDB_LABELS
     global OFFLINE_DB_ENABLED, ANIDB_REQUEST_DELAY, ANIDB_HOURLY_LIMIT, ANIDB_DAILY_LIMIT, ANIDB_MINIMUM_WEIGHT, ANILIST_ENABLED, PLEX_THEMES_USED, IMAGE_DUPLICATES
     PAGE["unset"].clear()                                 # Recomputed below: a setting saved since the last read is no longer unset
     SEARCH_USE_ANIDB = pref_bool("UseAniDBForAdvancedSearch", True)
     SEARCH_USE_TVDB = pref_bool("UseTVDBForAdvancedSearch", True)
     SERIES_LANGUAGE_PRIORITY = [pref_token("SerieLanguage1", "main"), pref_token("SerieLanguage2", "x-jat"), pref_token("SerieLanguage3", "en"), "main"]
     EPISODE_LANGUAGE_PRIORITY = [pref_token("EpisodeLanguage1", "en"), pref_token("EpisodeLanguage2", "x-jat")]
+    TVDB4_LANGUAGES = tvdb_languages(SERIES_LANGUAGE_PRIORITY)
+    TVDB4_EPISODE_LANGUAGES = tvdb_languages(EPISODE_LANGUAGE_PRIORITY)
+    TVDB4_LANGUAGE = TVDB4_LANGUAGES[0]
+    TVDB4_EPISODE_LANGUAGE = TVDB4_EPISODE_LANGUAGES[0]
+    TVDB_LABELS = {"eng": "en"}
+    for code in EPISODE_LANGUAGE_PRIORITY + SERIES_LANGUAGE_PRIORITY:
+        found = TVDB_LANGUAGES.get((code or "").lower())
+        if found and found != "eng" and found not in TVDB_LABELS:
+            TVDB_LABELS[found] = code
     for field_name in SERIES_FIELDS:
         SERIES_PRIORITY[field_name] = pref_list("Series" + field_name)
     for field_name in EPISODE_FIELDS:

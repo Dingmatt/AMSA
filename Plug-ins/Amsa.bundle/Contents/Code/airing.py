@@ -185,6 +185,8 @@ def refresh_next(keys):
     if show is not None:
         if anidb_retry.refresh(key, "Airing"):
             STATE["failures"] = 0
+        elif not anidb_retry.plex_answering():
+            pass                                 # Plex is down, not refusing: anidb_retry asks again when it answers
         else:
             STATE["failures"] = STATE["failures"] + 1
             LOCK.acquire()

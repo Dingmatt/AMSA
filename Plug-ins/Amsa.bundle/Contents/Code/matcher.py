@@ -84,6 +84,9 @@ def search(results, media, manual):
     unlock = season_editor.UNLOCK_WORD in show.lower()
     if unlock:
         show = re.sub(r"(?i)\s*%s\s*" % (season_editor.UNLOCK_WORD), " ", show).strip()
+        unlock = bool(manual)                                # Fix Match only: an automatic match never unlocks
+    unlock_ids = []
+    if unlock:
         Log.Info("Search - '%s': the result you pick has its show and season images unlocked in Plex on its update" % (season_editor.UNLOCK_WORD))
     Log.Info("Search - Show: '%s', name: '%s', filename: '%s', manual: '%s'" % (show, media.name, urllib2.unquote(media.filename) if media.filename else "", manual))
 
@@ -99,7 +102,7 @@ def search(results, media, manual):
             Log.Debug("Search - Forced id '%s-%s' from folder name, title: '%s'" % (source, source_id, title))
             results.Append(MetadataSearchResult(id="%s-%s" % (source, source_id), name=title, year=None, lang=Locale.Language.English, score=100))
             if unlock:
-                season_editor.request_unlock("%s-%s" % (source, source_id))
+                season_editor.request_unlock(["%s-%s" % (source, source_id)])
             return
         search_title = textutil.clean_title(title)
 
@@ -195,23 +198,25 @@ def search(results, media, manual):
         elif listed == 6:
             Log.Debug("Search - ... and %s more AniDB results (not listed here)" % (len(ranked) - 5))
         results.Append(MetadataSearchResult(id="anidb-%s" % (anidb_id), name="%s [anidb-%s]" % (item[1], anidb_id), year=item[2], lang=Locale.Language.English, score=score))
-        if unlock:
-            season_editor.request_unlock("anidb-%s" % (anidb_id))
+        unlock_ids.append("anidb-%s" % (anidb_id))
 
     if elite and True not in elite:
         del results[:]
+        del unlock_ids[:]
 
     # 4. TVDB: when no AniDB title matches exactly (e.g. a franchise name AniDB only has as its individual series), ask TVDB's search
     #    and keep shows that the Anime-Lists mapping links to AniDB. Updating a "tvdb-<id>" result uses all its mapped AniDB entries.
     if not perfect and settings.SEARCH_USE_TVDB:
         try:
-            search_tvdb(results, show, search_title, year, strict_year, unlock)
+            search_tvdb(results, show, search_title, year, strict_year, unlock_ids)
         except Exception:
             Log.Error("Search - TVDB search failed: %s" % (textutil.exception_text()))
+    if unlock:
+        season_editor.request_unlock(unlock_ids)
     results.Sort("score", descending=True)
 
 
-def search_tvdb(results, show, search_title, year, strict_year, unlock=False):
+def search_tvdb(results, show, search_title, year, strict_year, unlock_ids):
     query = FOLDER_YEAR.sub("", FORCED_ID.sub(r"\g<show>", show)).strip()
     found = tvdb_v4.search_series(query)
     kept = 0
@@ -239,6 +244,5 @@ def search_tvdb(results, show, search_title, year, strict_year, unlock=False):
         Log.Debug("Search - Result 'tvdb-%s', title: '%s', score: %s%s" % (item["id"], item["name"], score, note))
         results.Append(MetadataSearchResult(id="tvdb-%s" % (item["id"]), name="%s [tvdb-%s]" % (item["name"], item["id"]),
                                             year=item["year"], lang=Locale.Language.English, score=score))
-        if unlock:
-            season_editor.request_unlock("tvdb-%s" % (item["id"]))
+        unlock_ids.append("tvdb-%s" % (item["id"]))
     Log.Debug("Search - TVDB search '%s': %s results, %s mapped to AniDB" % (query, len(found), kept))

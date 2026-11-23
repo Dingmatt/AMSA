@@ -6,11 +6,11 @@ Source lists ("AniDB > AniList > TVDB"): AMSA takes the value from the first sou
 
 ## Titles
 - **Show title from:** sources for the show's title.
-- **Show title language 1 / 2 / 3:** preferred languages for the show's title, in order. "main" is AniDB's main title, and "x-jat" is romaji.
+- **Show title language 1 / 2 / 3:** preferred languages for the show's title, in order. "main" is AniDB's main title, and "x-jat" is romaji. TVDB's show title, show summary and season names and summaries follow this order too: each language TVDB has is tried in turn, then English, for anything not yet translated. *pt - Portuguese* asks TVDB for Portugal's Portuguese and *pt-BR - Brazilian Portuguese* for Brazil's; TVDB has more anime in Brazilian Portuguese.
 - **Original title language:** language of Plex's "original title" field, taken from AniDB or AniList.
 - **Use TVDB's title over its aliases:** when the title AMSA picked is one of TVDB's alternative names for the series, use TVDB's own series title instead. "Shows with several AniDB entries" applies this to shows whose seasons are separate AniDB entries only, so a single-entry show keeps its AniDB title.
 - **Episode title from:** sources for episode titles.
-- **Episode title language 1 / 2:** preferred languages for episode titles, in order.
+- **Episode title language 1 / 2:** preferred languages for episode titles, in order. TVDB's episode titles and summaries follow this order too: each language TVDB has is tried in turn, then English, for any episode not yet translated.
 - **Pick by language first, then source:** on (the default), a title in a preferred language beats the source order, so TVDB's English episode title wins over AniDB's romaji one. Off, the source order wins and language only decides within a source.
 
 ## Show
@@ -77,7 +77,7 @@ Plex ignores season titles and summaries sent by a legacy agent, so AMSA writes 
 - **Writers / Directors from:** TVDB gives them per episode; AniDB gives the season's staff.
 - **Producers from:** AniDB's series composition credit for the season.
 - **Thumbnails from:** episode images; only TVDB provides these.
-- **Fallback for missing titles, summaries, dates:** a second tier after the episode sources. Where they leave an episode without a title in your language, a summary or an air date, AMSA asks MyAnimeList and Kitsu, in the order chosen here. MyAnimeList has episode titles and air dates; Kitsu also has summaries, so "MyAnimeList only" fills no summaries. *Off* contacts neither.
+- **Fallback for missing titles, summaries, dates:** a second tier after the episode sources. Where they leave an episode without a title in any of your episode title languages, a summary or an air date, AMSA asks MyAnimeList and Kitsu, in the order chosen here. MyAnimeList has episode titles and air dates; Kitsu also has summaries, so "MyAnimeList only" fills no summaries. *Off* contacts neither.
 - **Song names for opening/ending specials:** opening and ending specials are named after their song and artist, from AnimeThemes.
 
 ## Matching

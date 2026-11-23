@@ -9,8 +9,12 @@ THRESHOLD bits AND their edge maps differ by at most EDGE_LIMIT in every region:
 edges, so a textless poster and the same poster with a title are told apart (the hash alone can't see text).
 
 What is done with the images of a list is in image_choice.py (duplicates, blanks, text, languages) and image_sets.py
-(poster sets). Fingerprints are cached in Cache/Fingerprints and kept for good (slow to work out); one that isn't cached yet is worked out in the background
-(or straight away in "Wait for fresh data" mode), and the show refreshed.
+(poster sets). Fingerprints are cached in Cache/Fingerprints and kept for good (slow to work out); one that isn't cached yet
+is worked out in the background (or straight away in "Wait for fresh data" mode), and the show refreshed.
+
+The cache is 4,096 small compressed files (Fingerprints/<3 hex>.fp, picked by the image key), so an update reads and
+saves only the few that hold its images. Files in the older layout (256 large <2 hex>.json files) are moved into it the
+first time one of their keys is looked up, and the rest a few minutes after start.
 Plex is asked for a small PNG, decoded here in plain Python with only the built-ins Plex's sandbox offers (no bytearray,
 bytes or bin); anything else is treated as a failure, as a JPEG would only give a grey, low-detail fingerprint.
 
@@ -33,8 +37,8 @@ THRESHOLD = 10                    # Bits of 64 that may differ (re-encoding and 
 EDGE_LIMIT = 0.8                  # Largest regional edge difference (in average-edge units) for the same artwork. Real copies
                                   # from different sites: 0.1-0.5; a poster with and without its logo: 1.1-2.1 (live logs)
 RETRY_FAILED = 7 * 86400          # An image Plex couldn't resize is tried again after a week
-NO_ANSWER = {}                    # Image -> times Plex didn't answer for it (not recorded as failed: Plex may be busy or restarting)
-NO_ANSWER_MOST = 3                # ... until this many: then it's recorded as failed (Plex answers others, just not this one)
+NO_ANSWER = {}                    # Image -> times Plex's resizer timed out on it while Plex itself answered (a slow image site)
+NO_ANSWER_MOST = 3                # ... until this many: then it's recorded as failed
 SLOW = 1.0                        # A fingerprint taking longer is logged with its details (size, Plex's answer, reading)
 SIZE = 128                        # Plex makes the shorter side this long: enough detail, little work
 GRID_WIDTH, GRID_HEIGHT = 24, 36  # Colour grid kept with each fingerprint (any image is squeezed to this shape)
@@ -46,14 +50,16 @@ TEXT_PEAK, TEXT_RATIO = 30, 1.5   # text_side: the extra-edge peak must be this 
 SAME_ART_MIDDLE = 0.42            # text_side: the middles must match this well (layout score), so posters of one set (same
                                   # frame, different character) aren't compared for text
 PARSED = {}                       # Image key -> parsed cache entry (hex parsed once, while it's in use)
-PARSED_MOST = 4000                # Parsed entries kept in memory (about 20 KB each); emptied when more
-SHARDS_MOST = 32                  # Shared files kept in memory (of 256); clean ones are let go when more are loaded
+PARSED_MOST = 1500                # Parsed entries kept in memory (about 20 KB each); emptied when more
+SHARDS_MOST = 128                 # Shared files kept in memory (of 4,096); clean ones are let go when more are loaded
 BLANK_SPREAD, BLANK_SHARE = 10, 0.97   # is_blank: this share of the picture within this many grey levels of its middle level
 SHARDS = {}                       # Shared file name -> {image key: "<hash>:<edges>:<grid>:2" or "failed <time> 2"} (2: the entry format)
+OLD_CHECKED = {}                  # Older-layout files (2 hex) already moved or found missing this run
 DIRTY = {}                        # Shared files changed since saved (new fingerprints): saved by fingerprints_flush within
                                   # FLUSH_EVERY, so a busy queue doesn't rewrite them each time
 FLUSH = {"scheduled": False}
 FLUSH_EVERY = 60                  # Seconds before changed shared files are saved
+MOVE_DELAY, MOVE_GAP = 300, 2     # Older-layout files left after start: moved from 5 minutes after start, one every 2 seconds
 
 try:
     import struct                 # Bytes to numbers in one step, where Plex's sandbox offers it (else via hex text)
@@ -74,26 +80,152 @@ except ImportError:
 
 # Fingerprints #########################################################################################################
 def file_name(url):
-    """Key for an image address (two CRCs: no hashlib needed); its first two characters pick the shared file."""
+    """Key for an image address (two CRCs: no hashlib needed); its first three characters pick the shared file."""
     text = textutil.safe_unicode(url).encode("utf-8")
     return "%08x%08x" % (zlib.crc32(text) & 0xffffffff, zlib.crc32(text[::-1]) & 0xffffffff)
+
+
+def shard_name(key):
+    return "%s.fp" % (key[:3])
+
+
+def read_shard(name):
+    """A shared file's entries ({} if none): compressed JSON, or plain JSON if it was saved where compressing failed."""
+    text = downloader.load_stale(name, FOLDER, True)
+    if not text:
+        return {}
+    try:
+        text = zlib.decompress(text)
+    except Exception:
+        pass
+    return json.loads(text)
+
+
+def write_shard(name):
+    """Save a shared file (call with LOCK held): compressed JSON (about 45% of the plain size)."""
+    text = json.dumps(SHARDS[name], sort_keys=True, separators=(",", ":"))
+    try:
+        try:
+            data = zlib.compress(text, 6)
+        except TypeError:
+            data = zlib.compress(text.encode("utf-8"), 6)          # Python 3 (tests)
+    except Exception:
+        data = text
+    downloader.save_file(data, name, FOLDER)
 
 
 def shard(key):
     """The shared file holding this key, loaded from the cache when needed (call with LOCK held). At most SHARDS_MOST stay
        in memory: when more are needed, the ones with nothing to save are let go (read again if needed)."""
-    name = "%s.json" % (key[:2])
+    move_old(key[:2])
+    name = shard_name(key)
     if name not in SHARDS:
         if len(SHARDS) >= SHARDS_MOST:
             for other in list(SHARDS.keys()):
                 if other not in DIRTY:
                     del SHARDS[other]
         try:
-            text = downloader.load_stale(name, FOLDER, True)
-            SHARDS[name] = json.loads(text) if text else {}
-        except Exception:
+            SHARDS[name] = read_shard(name)
+        except Exception as e:
+            Log.Debug("Images - Couldn't read %s (%s): starting it again" % (name, e))
             SHARDS[name] = {}
     return name, SHARDS[name]
+
+
+def move_old(prefix):
+    """Move an older-layout file (<2 hex>.json, all keys starting with those two characters) into its 16 new files, then
+       delete it (call with LOCK held). Newer entries already in the new files win. Checked once per prefix per run."""
+    if prefix in OLD_CHECKED:
+        return
+    OLD_CHECKED[prefix] = True
+    old = "%s.json" % (prefix)
+    try:
+        text = downloader.load_stale(old, FOLDER, True)
+    except Exception:
+        text = None
+    if not text:
+        return
+    try:
+        entries = json.loads(text)
+    except Exception as e:
+        Log.Warn("Images - Couldn't read the older fingerprint file %s (%s): left as it is" % (old, e))
+        return
+    names = {}
+    for key in entries:
+        names.setdefault(shard_name(key), []).append(key)
+    try:
+        for name in names:
+            if name not in SHARDS:
+                SHARDS[name] = read_shard(name)
+            for key in names[name]:
+                if key not in SHARDS[name]:
+                    SHARDS[name][key] = entries[key]
+            write_shard(name)
+            if name in DIRTY:
+                del DIRTY[name]
+    except Exception as e:
+        Log.Warn("Images - Couldn't move the fingerprints in %s to the new layout (%s): tried again after a restart" % (old, e))
+        return
+    remove_cached(old)
+    MOVED["files"] = MOVED["files"] + 1
+    MOVED["entries"] = MOVED["entries"] + len(entries)
+
+
+MOVED = {"files": 0, "entries": 0, "scheduled": False}
+
+
+def remove_cached(name):
+    """Delete a file from the Fingerprints folder."""
+    try:
+        Data.Remove(downloader.cache_path(name, FOLDER))
+    except Exception:
+        try:
+            import os
+            import settings
+            os.remove(os.path.join(settings.CACHE_PATH, FOLDER, name))
+        except Exception as e:
+            Log.Debug("Images - Couldn't delete %s: %s" % (name, e))
+
+
+def move_old_later():
+    """From Start: move the older-layout files no lookup has needed yet, MOVE_DELAY after start (one every MOVE_GAP)."""
+    if MOVED["scheduled"]:
+        return
+    MOVED["scheduled"] = True
+    run_later(MOVE_DELAY, fingerprints_move)
+
+
+def fingerprints_move():
+    """Move the next older-layout file, then wait MOVE_GAP; logs once when none are left."""
+    LOCK.acquire()
+    try:
+        prefix = None
+        for number in range(256):
+            candidate = "%02x" % (number)
+            if candidate not in OLD_CHECKED:
+                prefix = candidate
+                break
+        if prefix is not None:
+            before = MOVED["files"]
+            move_old(prefix)
+            moved = MOVED["files"] > before
+    finally:
+        LOCK.release()
+    if prefix is None:
+        if MOVED["files"]:
+            Log.Info("Images - Fingerprints moved to the new cache layout: %s from %s older files" % (MOVED["entries"], MOVED["files"]))
+        return
+    run_later(MOVE_GAP if moved else 0.01, fingerprints_move)
+
+
+def run_later(delay, function):
+    try:
+        Thread.CreateTimer(delay, function)
+    except Exception:
+        import threading
+        timer = threading.Timer(delay, function)
+        timer.daemon = True
+        timer.start()
 
 
 def cached(url):
@@ -128,13 +260,7 @@ def changed(name):
     DIRTY[name] = True
     if not FLUSH["scheduled"]:
         FLUSH["scheduled"] = True
-        try:
-            Thread.CreateTimer(FLUSH_EVERY, fingerprints_flush)
-        except Exception:
-            import threading
-            timer = threading.Timer(FLUSH_EVERY, fingerprints_flush)
-            timer.daemon = True
-            timer.start()
+        run_later(FLUSH_EVERY, fingerprints_flush)
 
 
 def fingerprints_flush():
@@ -144,7 +270,7 @@ def fingerprints_flush():
         FLUSH["scheduled"] = False
         for name in list(DIRTY.keys()):
             try:
-                downloader.save_file(json.dumps(SHARDS[name], sort_keys=True), name, FOLDER)
+                write_shard(name)
             except Exception as e:
                 Log.Debug("Images - Couldn't save %s: %s" % (name, e))
         DIRTY.clear()
@@ -213,10 +339,13 @@ def work_out(url):
     except Exception as e:
         import anidb_retry
         if anidb_retry.plex_unreachable(e):
-            NO_ANSWER[url] = NO_ANSWER.get(url, 0) + 1
+            if not anidb_retry.plex_alive():
+                anidb_retry.plex_down()                    # Plex itself is down or starting: nothing recorded or counted
+                Log.Debug("Images - Plex isn't answering (%s): '%s' is tried again later" % (e, url))
+                return None
+            NO_ANSWER[url] = NO_ANSWER.get(url, 0) + 1     # Plex answers, just not for this image: other images go on
             if NO_ANSWER[url] < NO_ANSWER_MOST:
-                anidb_retry.plex_down()                    # Plex itself didn't answer: nothing recorded, tried again later
-                Log.Debug("Images - Plex didn't answer for '%s' (%s): tried again later" % (url, e))
+                Log.Debug("Images - Plex's resizer didn't answer for '%s' (%s): tried again on a later update" % (url, e))
                 return None
         Log.Debug("Images - Couldn't fingerprint '%s' through Plex's resizer: %s" % (url, e))
     if url in NO_ANSWER:

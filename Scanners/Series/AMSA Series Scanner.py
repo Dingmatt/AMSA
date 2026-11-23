@@ -25,7 +25,7 @@ import inspect
 import logging
 import logging.handlers
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 LOG_NAME = "Plex Media Scanner (AMSA Series Scanner).log"
 
 PY2 = sys.version_info[0] == 2
@@ -122,6 +122,7 @@ TRANSPARENT_FOLDER_RX = rx(r"^(?:saga|(?:story )?ar[ck]|cour|part|disc|disk|dvd|
 # Forced ids. AMSA reads "[anidb-123]" / "[tvdb-456]" from the show name; ASS-style id files are supported too.
 FORCED_ID_RX = rx(r"[\[\{](?P<source>anidb[2-4]?|tvdb[2-6]?|tmdb|tsdb|imdb|mal)-(?P<id>(?:tt)?\d{1,8})(?P<offset>-[^\]\}]*)?[\]\}]")
 OFFSET_RX = rx(r"^-(?:s(?P<season>\d{1,3}))?(?:e(?P<episode>-?\d{1,4}))?$")             # [tvdb-123-s2] / [tvdb-123-e13] / [tvdb-123-s2e13]
+ID_VALUE_RX = re.compile(r"((?:tt)?[0-9]+)\s*$", re.IGNORECASE)   # The id at the end: "5678", "anidb.net/anime/5678", "a5678", "tt0123456"
 ID_FILES = ["anidb.id", "anidb2.id", "anidb3.id", "anidb4.id", "tvdb.id", "tvdb2.id", "tvdb3.id", "tvdb4.id", "tvdb5.id",
             "tmdb.id", "tsdb.id", "imdb.id", "mal.id"]
 
@@ -492,9 +493,12 @@ def forced_id_from_file(root, show_folder):
                             value = to_text(handle.read()).strip()
                         finally:
                             handle.close()
-                        if value:
-                            ID_CACHE[key] = u"[%s-%s]" % (filename[:-3], value)
+                        found = ID_VALUE_RX.search(value)
+                        if found:
+                            ID_CACHE[key] = u"[%s-%s]" % (filename[:-3], found.group(1))
                             break
+                        if value:
+                            Log.info("'%s' holds no id ('%s'): ignored" % (to_text(full), value[:60]))
                 except Exception as e:
                     Log.info("Reading '%s' failed: %s" % (to_text(full), e))
     return ID_CACHE[key]

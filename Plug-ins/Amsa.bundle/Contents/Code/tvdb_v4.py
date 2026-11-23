@@ -1,8 +1,7 @@
 """TVDB source using TheTVDB's v4 JSON API (https://api4.thetvdb.com/v4/).
 
-Produces the same fields as tvdb.TvDBSeries (the v1 XML source) so the rest of AMSA doesn't care which API was used.
-Responses are cached on disk under Cache/TvDB4/<id>/ like every other source; if v4 can't provide a series at all,
-sources.py falls back to the v1 API for that series.
+Responses are cached on disk under Cache/TvDB4/<id>/ like every other source; if TVDB can't be reached, the cached copies
+are used.
 
 Episode writers/directors need one request per episode (episodes/<id>/extended); bundle.map_crew() asks for them only for
 episodes on disk, via episode_crew(), and caches each answer for settings.TVDB4_CREW_CACHE.
@@ -20,7 +19,6 @@ import settings
 import textutil
 import models
 import downloader
-import tvdb
 
 try:
     import json
@@ -43,8 +41,8 @@ except ImportError:
 TOKEN_FILE = "tvdb4-token.txt"
 TOKEN_LOCK = new_lock()
 TOKEN = {"value": None, "expires": 0.0, "login_blocked_until": 0.0, "paused_until": 0.0}
-LOGIN_RETRY = 3600           # After a failed login, use v1 for an hour instead of retrying on every show
-NETWORK_RETRY = 15 * 60      # After a network failure (server down/unreachable), use v1 for 15 minutes instead of waiting on timeouts
+LOGIN_RETRY = 3600           # After a failed login, wait an hour (cached copies are used) instead of retrying on every show
+NETWORK_RETRY = 15 * 60      # After a network failure (server down/unreachable), wait 15 minutes instead of waiting on timeouts
 MAX_EPISODE_PAGES = 20       # 500 episodes per page
 
 
@@ -88,14 +86,14 @@ def token(force_new=False):
             except Exception as e:
                 Log.Debug("TvDB4 - Could not read saved token: %s" % (e))
         if TOKEN["login_blocked_until"] > now:
-            raise TvdbV4Error("login failed recently; using TVDB v1 until %s" % (textutil.when_text(TOKEN["login_blocked_until"])))
+            raise TvdbV4Error("login failed recently; cached copies only until %s" % (textutil.when_text(TOKEN["login_blocked_until"])))
         try:
             body = downloader.get_url(settings.TVDB4_API_URL + "login", settings.DEFAULT_TIMEOUT, {"Content-Type": "application/json", "Accept": "application/json"},
                                       dump_json({"apikey": settings.TVDB4_API_KEY}))
             value = parse_json(body)["data"]["token"]
         except Exception as e:
             TOKEN["login_blocked_until"] = now + LOGIN_RETRY
-            Log.Warn("TvDB4 - Login failed (%s); using TVDB v1 for the next hour" % (e))
+            Log.Warn("TvDB4 - Login failed (%s); using cached TVDB copies for the next hour" % (e))
             raise TvdbV4Error("login failed: %s" % (e))
         TOKEN["value"] = value
         TOKEN["expires"] = now + settings.TVDB4_TOKEN_TTL
@@ -113,7 +111,7 @@ def api_get(path, timeout=settings.DEFAULT_TIMEOUT):
     """Parsed JSON response for an API path (e.g. 'series/123/extended'). Renews the token once on 401. Raises on failure."""
     url = settings.TVDB4_API_URL + path
     if TOKEN["paused_until"] > time.time():
-        raise TvdbV4Error("TVDB v4 unreachable recently; using v1 until %s" % (textutil.when_text(TOKEN["paused_until"])))
+        raise TvdbV4Error("TVDB unreachable recently; cached copies only until %s" % (textutil.when_text(TOKEN["paused_until"])))
     for attempt in (1, 2):
         headers = {"Authorization": "Bearer %s" % (token(attempt == 2)), "Accept": "application/json"}
         try:
@@ -128,7 +126,7 @@ def api_get(path, timeout=settings.DEFAULT_TIMEOUT):
             raise
         except Exception as e:
             TOKEN["paused_until"] = time.time() + NETWORK_RETRY
-            Log.Warn("TvDB4 - Network error (%s); using TVDB v1 for the next %s minutes" % (e, int(NETWORK_RETRY / 60)))
+            Log.Warn("TvDB4 - Network error (%s); using cached TVDB copies for the next %s minutes" % (e, int(NETWORK_RETRY / 60)))
             raise TvdbV4Error("network error: %s" % (e))
         if response.get("status") == "failure" or response.get("data") is None:
             raise TvdbV4Error("no data for %s: %s" % (path, response.get("message")))
@@ -210,10 +208,13 @@ def cached_api(path, filename, directory, fetch=None):
     return None
 
 
-def fetch_episodes(tvdb_id):
-    """All aired-order episodes with English titles where available (paged, 500 per page)."""
-    episodes = []
-    for language_path in ("/" + settings.TVDB4_LANGUAGE, ""):
+def fetch_episodes(tvdb_id, language):
+    """All aired-order episodes in one TVDB language (paged, 500 per page): {"episodes": [...], "language": language}.
+       TVDB has no list in that language (404): an empty list, remembered. English unavailable: the untranslated list,
+       marked "language": "" (its titles are in the show's own language)."""
+    paths = [("/" + language, language)] + ([("", "")] if language == "eng" else [])
+    for language_path, label in paths:
+        episodes = []
         try:
             for page in range(MAX_EPISODE_PAGES):
                 response = api_get("series/%s/episodes/default%s?page=%s" % (tvdb_id, language_path, page))
@@ -221,12 +222,88 @@ def fetch_episodes(tvdb_id):
                 links = response.get("links") or {}
                 if not links.get("next"):
                     break
-            return {"episodes": episodes}
+            return {"episodes": episodes, "language": label}
         except TvdbV4Error as e:
-            if language_path == "":
+            if language_path == "" or (e.code == 404 and language != "eng"):
+                if e.code == 404:
+                    return {"episodes": [], "language": language}
                 raise
-            Log.Debug("TvDB4 - English episode list unavailable for %s (%s), trying original language" % (tvdb_id, e))
-            episodes = []
+            if language != "eng":
+                raise
+            Log.Debug("TvDB4 - English episode list unavailable for %s (%s), trying the untranslated one" % (tvdb_id, e))
+
+
+def fetch_translation(path):
+    """A series translation; {} (remembered) when TVDB has none in that language."""
+    try:
+        return api_get(path)["data"]
+    except TvdbV4Error as e:
+        if e.code == 404:
+            return {}
+        raise
+
+
+def episode_lists(tvdb_id, directory):
+    """[(language, episodes)] in the episode title languages' order (settings.TVDB4_EPISODE_LANGUAGES, English last). The
+       next language's list is only fetched while some episode still has no title or summary."""
+    lists = []
+    for language in settings.TVDB4_EPISODE_LANGUAGES:
+        if lists and complete(merge_episodes(lists)):
+            break
+        data = cached_api("series/%s/episodes" % (tvdb_id), "episodes-%s.json" % (language), directory,
+                          lambda language=language: fetch_episodes(tvdb_id, language)) or {}
+        found = value(data, "language", language)                 # Older copies have no marker: the language asked for
+        lists.append((found, value(data, "episodes", [])))
+    return lists
+
+
+def complete(merged):
+    """True if every episode has a title and a summary."""
+    if not merged:
+        return False
+    for entry in merged:
+        if not entry["name"] or not entry["overview"]:
+            return False
+    return True
+
+
+def language_label(language):
+    """The title-language code a TVDB language counts as: the one chosen on the settings page, else the plain code
+       ("deu" -> "de"); None for untranslated text ("")."""
+    if not language:
+        return None
+    return settings.TVDB_LABELS.get(language) or textutil.anidb_language(language)
+
+
+def translated(item, key, language):
+    """False if TVDB says this episode has no text in that language (its "nameTranslations" / "overviewTranslations" list),
+       so a list that fell back to another language's text isn't taken for a translation. True when TVDB doesn't say."""
+    languages = value(item, key)
+    if not language or not isinstance(languages, list) or not languages:
+        return True
+    return language in languages
+
+
+def merge_episodes(lists):
+    """One entry per episode: the first list's fields, with the name and overview taken from the first list (in language
+       order) that has them, and the language they came from ("" = untranslated)."""
+    merged = []
+    by_id = {}
+    for language, episodes in lists:
+        for item in episodes or []:
+            key = value(item, "id")
+            if key is None:
+                key = "%s-%s" % (value(item, "seasonNumber"), value(item, "number"))
+            entry = by_id.get(key)
+            if entry is None:
+                entry = {"item": item, "name": None, "name_lang": None, "overview": None}
+                by_id[key] = entry
+                merged.append(entry)
+            if not entry["name"] and value(item, "name") and translated(item, "nameTranslations", language):
+                entry["name"], entry["name_lang"] = value(item, "name"), language
+            if not entry["overview"] and value(item, "overview") and translated(item, "overviewTranslations", language):
+                entry["overview"] = value(item, "overview")
+    return merged
 
 
 # Series ##############################################################################################################################################################
@@ -241,7 +318,6 @@ def value(record, key, default=None):
 class TvDB4Series(models.Series):
     def __init__(self, tvdb_id):
         models.Series.__init__(self, tvdb_id, "Tvdb")
-        self.api = "v4"
         self.log_parts = []                             # Logged as one line by series()
         tvdb_id = self.id
         if not textutil.is_digits(tvdb_id):
@@ -249,14 +325,21 @@ class TvDB4Series(models.Series):
         directory = os.path.join("TvDB4", tvdb_id)
         data = cached_api("series/%s/extended" % (tvdb_id), "series.json", directory)
         if not data or not value(data, "name"):
-            Log.Info("TvDB4 - No v4 data for TVDB id '%s'" % (tvdb_id))
+            Log.Info("TvDB4 - No TVDB data for TVDB id '%s'" % (tvdb_id))
             return
         self.valid = True
-        translation = cached_api("series/%s/translations/%s" % (tvdb_id, settings.TVDB4_LANGUAGE), "translation-%s.json" % (settings.TVDB4_LANGUAGE), directory) or {}
-
-        self.title = textutil.clean_text(value(translation, "name") or value(data, "name"))
-        self.title_lang = textutil.anidb_language(settings.TVDB4_LANGUAGE) if value(translation, "name") else None   # Untranslated names are in an unknown language
-        self.summary = value(translation, "overview") or value(data, "overview")
+        name, name_language, overview = None, None, None
+        for language in settings.TVDB4_LANGUAGES:                  # The show title languages in order, English last
+            if name and overview:
+                break
+            path = "series/%s/translations/%s" % (tvdb_id, language)
+            translation = cached_api(path, "translation-%s.json" % (language), directory, lambda path=path: fetch_translation(path)) or {}
+            if not name and value(translation, "name"):
+                name, name_language = value(translation, "name"), language
+            overview = overview or value(translation, "overview")
+        self.title = textutil.clean_text(name or value(data, "name"))
+        self.title_lang = language_label(name_language) if name else None   # Untranslated names are in an unknown language
+        self.summary = overview or value(data, "overview")
         self.aliases = self.parse_aliases(data)
         self.originally_available_at = value(data, "firstAired")
         self.studio = self.pick_studio(data)
@@ -276,10 +359,9 @@ class TvDB4Series(models.Series):
             if value(value(season, "type"), "type", "official") == "official" and value(season, "number") is not None and value(season, "id") is not None:
                 self.season_ids[str(value(season, "number"))] = str(value(season, "id"))
 
-        episodes = value(cached_api("series/%s/episodes" % (tvdb_id), "episodes-%s.json" % (settings.TVDB4_LANGUAGE), directory, lambda: fetch_episodes(tvdb_id)), "episodes", [])
-        for item in episodes:
+        for entry in merge_episodes(episode_lists(tvdb_id, directory)):
             try:
-                episode = TvDB4Episode(item, tvdb_id)
+                episode = TvDB4Episode(entry["item"], tvdb_id, entry)
                 if episode.season is not None and episode.number is not None:
                     self.episodes.append(episode)
             except Exception as e:
@@ -314,7 +396,7 @@ class TvDB4Series(models.Series):
         return studios[0] if studios else network
 
     def pick_content_rating(self, ratings):
-        """US rating if there is one (v1 gave US TV ratings such as TV-14), else the first."""
+        """US rating if there is one (such as TV-14), else the first."""
         names = [(value(r, "country", ""), value(r, "name")) for r in ratings if value(r, "name")]
         for country, name in names:
             if country.lower() == "usa":
@@ -402,15 +484,18 @@ class TvDB4Series(models.Series):
 
 
 class TvDB4Episode(models.Episode):
-    def __init__(self, data, tvdb_id):
+    def __init__(self, data, tvdb_id, texts=None):
+        """texts: merge_episodes' name, name_lang and overview for this episode (else the item's own, in the episode language)."""
         models.Episode.__init__(self)
+        if texts is None:
+            texts = {"name": value(data, "name"), "name_lang": settings.TVDB4_EPISODE_LANGUAGE, "overview": value(data, "overview")}
         if value(data, "id") is not None:
             self.source_id = str(value(data, "id"))
-        if value(data, "name"):
-            self.title = textutil.clean_text(value(data, "name"))
-            self.title_lang = textutil.anidb_language(settings.TVDB4_LANGUAGE)      # Episodes are requested in the agent language
-        if value(data, "overview"):
-            self.summary = value(data, "overview")
+        if texts.get("name"):
+            self.title = textutil.clean_text(texts["name"])
+            self.title_lang = language_label(texts.get("name_lang"))
+        if texts.get("overview"):
+            self.summary = texts["overview"]
         if value(data, "aired"):
             self.originally_available_at = value(data, "aired")
         absolute = value(data, "absoluteNumber")
@@ -449,9 +534,29 @@ def crew_names(characters, name, type_id):
 
 
 def season_text(series_id, season_id):
-    """{"name": .., "overview": ..} for one v4 season in the agent's language, cached on disk; None if unavailable right now."""
+    """{"name": .., "overview": ..} for one v4 season, each field in the first show title language TVDB has it in (English
+       last); None if unavailable right now."""
+    text = None
+    for language in settings.TVDB4_LANGUAGES:
+        found = season_text_in(series_id, season_id, language)
+        if found is None:
+            if text is None:
+                return None
+            continue
+        if text is None:
+            text = {"name": found.get("name") or "", "overview": found.get("overview") or ""}
+        else:
+            text["name"] = text["name"] or found.get("name") or ""
+            text["overview"] = text["overview"] or found.get("overview") or ""
+        if text["name"] and text["overview"]:
+            break
+    return text
+
+
+def season_text_in(series_id, season_id, language):
+    """One language's season text, cached on disk ("" fields remembered when TVDB has none); None if unavailable now."""
     directory = os.path.join("TvDB4", str(series_id), "seasons")
-    filename = "%s-%s.json" % (season_id, settings.TVDB4_LANGUAGE)
+    filename = "%s-%s.json" % (season_id, language)
     cached = load_cached_or_stale(filename, directory, settings.DEFAULT_CACHE)
     if cached:
         try:
@@ -459,7 +564,7 @@ def season_text(series_id, season_id):
         except Exception:
             pass
     try:
-        data = api_get("seasons/%s/translations/%s" % (season_id, settings.TVDB4_LANGUAGE))["data"]
+        data = api_get("seasons/%s/translations/%s" % (season_id, language))["data"]
         text = {"name": textutil.clean_text(value(data, "name") or ""), "overview": value(data, "overview") or ""}
     except TvdbV4Error as e:
         if e.code != 404:
@@ -471,7 +576,7 @@ def season_text(series_id, season_id):
                 except Exception:
                     pass
             return None
-        text = {"name": "", "overview": ""}             # No English text for this season: remember that
+        text = {"name": "", "overview": ""}             # No text in this language for this season: remember that
     try:
         downloader.save_file(dump_json(text), filename, directory)
     except Exception as e:
@@ -552,31 +657,32 @@ def search_series(query):
         titles = [value(item, "name")]
         translations = value(item, "translations", {})
         if hasattr(translations, "get"):
-            titles.append(translations.get(settings.TVDB4_LANGUAGE))
+            for language in settings.TVDB4_LANGUAGES:
+                titles.append(translations.get(language))
             for language in translations:
                 titles.append(translations[language])
         titles.extend(value(item, "aliases", []))
-        unique = []
+        titles_found = []
         for title in titles:
-            if title and hasattr(title, "strip") and title not in unique:
-                unique.append(title)
-        name = value(translations, settings.TVDB4_LANGUAGE) or value(item, "name")
+            if title and hasattr(title, "strip") and title not in titles_found:
+                titles_found.append(title)
+        name = None
+        for language in settings.TVDB4_LANGUAGES:
+            name = name or value(translations, language)
+        name = name or value(item, "name")
         year = value(item, "year") or (value(item, "first_air_time") or "")[:4]
-        found.append({"id": tvdb_id, "name": textutil.clean_text(name or tvdb_id), "year": str(year) if textutil.is_digits(year) else None, "titles": unique})
+        found.append({"id": tvdb_id, "name": textutil.clean_text(name or tvdb_id), "year": str(year) if textutil.is_digits(year) else None, "titles": titles_found})
     return found
 
 
 # Choosing the API ####################################################################################################################################################
 def series(tvdb_id):
-    """TVDB record from v4, falling back to v1 for this series if v4 can't provide it (login failed, server down, no data)."""
+    """TVDB record (v4 API); not valid if TVDB can't provide it and nothing is cached (login failed, server down, no data)."""
     try:
         record = TvDB4Series(tvdb_id)
         if record.valid:
             Log.Debug("TvDB4 - %s: %s" % (tvdb_id, "; ".join(getattr(record, "log_parts", None) or ["loaded"])))
-            return record
+        return record
     except Exception:
-        Log.Warn("TvDB4 - v4 failed for %s: %s" % (tvdb_id, textutil.exception_text()))
-    Log.Info("TvDB4 - Falling back to TVDB v1 for %s" % (tvdb_id))
-    record = tvdb.TvDBSeries(tvdb_id)
-    record.api = "v1"
-    return record
+        Log.Warn("TvDB4 - Failed for %s: %s" % (tvdb_id, textutil.exception_text()))
+    return models.Series(tvdb_id, "Tvdb")

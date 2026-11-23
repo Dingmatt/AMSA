@@ -30,14 +30,16 @@ def real_titles(node):
 
 
 def title_gap(node):
-    """No real title in the first episode language."""
-    first = settings.EPISODE_LANGUAGE_PRIORITY[0] if settings.EPISODE_LANGUAGE_PRIORITY else None
-    titles = real_titles(node)
-    return not (len([t for t in titles if t.get("lang") == first]) > 0 if first else len(titles) > 0)
+    """No real title in any of the episode title languages (or none at all if no language is set)."""
+    languages = settings.EPISODE_LANGUAGE_PRIORITY or []
+    for title in real_titles(node):
+        if not languages or textutil.title_rank(title.get("lang"), False, languages) < len(languages):
+            return False
+    return True
 
 
 def regular_gap(node):
-    """No real title in the first episode language, or no summary."""
+    """No real title in any of the episode title languages, or no summary."""
     return title_gap(node) or len(node.xpath("./Summary/*[node()]")) == 0
 
 

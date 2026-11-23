@@ -167,6 +167,7 @@ def run():
                 LOCK.release()
             if prefetch and len(anidb_limiter.recent_requests()) >= settings.ANIDB_HOURLY_LIMIT // 2:
                 continue                                   # Prefetches only use the first half of the hourly budget; updates come first
+            before = record_digest(sources.get_anidb(anidb_id, False))   # The copy the show was written from (None if none)
             sources.forget("Anidb", anidb_id)
             directory = os.path.join("AniDB", anidb_id)
             if force:
@@ -189,8 +190,12 @@ def run():
             finally:
                 LOCK.release()
             if record is not None and record.valid:
-                Log.Info("AniDB retry - AniDB '%s' downloaded" % (anidb_id))
-                for rating_key in entry["keys"]:
+                changed = before is None or record_digest(record) != before
+                if changed or not entry["keys"]:
+                    Log.Info("AniDB retry - AniDB '%s' downloaded" % (anidb_id))
+                else:
+                    Log.Info("AniDB retry - AniDB '%s' downloaded: nothing AMSA writes changed, so the show isn't refreshed" % (anidb_id))
+                for rating_key in (entry["keys"] if changed else []):
                     if rating_key not in ready:
                         ready.append(rating_key)
             elif done:
@@ -228,6 +233,15 @@ def run():
         schedule()
 
 
+def record_digest(record):
+    """What AMSA writes from an AniDB record (background_refresh.digest), to tell whether a new copy changes anything."""
+    try:
+        import background_refresh
+        return background_refresh.digest(record)
+    except Exception:
+        return None
+
+
 def plex_token():
     try:
         return os.environ.get("PLEXTOKEN") or ""
@@ -261,6 +275,7 @@ def refresh(rating_key, label="AniDB retry"):
         Log.Info("%s - Asked Plex to refresh item %s" % (label, rating_key))
         return True
     except Exception as e:
+        OWN_REFRESHES.pop(str(rating_key), None)            # Not asked: a Refresh Metadata of yours isn't taken for AMSA's
         if plex_unreachable(e):
             plex_down()
             LOCK.acquire()
@@ -286,9 +301,11 @@ REFRESH_WAITING = {}             # rating key -> log label: refreshes to ask aga
 
 
 def plex_unreachable(error):
-    """True if this error means the local Plex server didn't answer at all (timeout, refused, reset), not a refusal."""
+    """True if this error means the local Plex server didn't answer (timeout, refused, reset) or is starting up or
+       overloaded (HTTP 502/503/504), not a refusal of this request."""
     text = textutil.safe_unicode(error).lower()
-    for word in ("timed out", "timeout", "10061", "10054", "10060", "refused", "connection reset", "errno 111", "errno 104", "errno 110"):
+    for word in ("timed out", "timeout", "10061", "10054", "10060", "refused", "connection reset", "errno 111", "errno 104", "errno 110",
+                 "error 502", "error 503", "error 504", "service unavailable", "bad gateway"):
         if word in text:
             return True
     return False
@@ -296,6 +313,16 @@ def plex_unreachable(error):
 
 def plex_down():
     PLEX_STATE["down_until"] = time.time() + PLEX_PAUSE
+
+
+def plex_alive():
+    """Ask Plex who it is (its lightest request): True if it answers. Tells "Plex is down" from "Plex couldn't do that one
+       thing" after a request timed out."""
+    try:
+        HTTP.Request("%s/identity" % (settings.PMS_URL), cacheTime=0, immediate=True, timeout=5)
+        return True
+    except Exception:
+        return False
 
 
 def plex_answering():

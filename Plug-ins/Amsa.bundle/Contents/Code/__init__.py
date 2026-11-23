@@ -8,7 +8,7 @@ Module overview:
     anilist.py           AniList source (GraphQL, found via AniDB's MAL id)
     anidb_retry.py       postponed AniDB downloads (fetched when the limiter allows, then the show is refreshed)
     models.py            Series/Episode base classes shared by all sources
-    anidb.py / tvdb_v4.py / tvdb.py / plex_themes.py   metadata sources (TVDB: v4, falling back to v1)
+    anidb.py / tvdb_v4.py / plex_themes.py   metadata sources (TVDB: its v4 API)
     sources.py           parse-once cache of source records
     anime_lists.py       AniDB titles dump + Anime-Lists AniDB<->TVDB mapping
     title_index.py       fast in-memory title search
@@ -41,6 +41,7 @@ import cache_cleaner
 import health_report
 import environment
 import prefs_repair
+import image_match
 
 
 # In the settings page's order (DefaultPrefs.json)
@@ -93,6 +94,7 @@ def Start():
     background_refresh.load_state()    # Shows queued for a background download from before a restart
     health_report.start()              # Library health report: 5 minutes after start, then daily
     prefs_repair.start()               # A minute later: settings Plex can't read are stored as the default the page shows
+    image_match.move_old_later()       # Fingerprints still in the older cache layout: moved 5 minutes after start
 
 
 def ValidatePrefs():

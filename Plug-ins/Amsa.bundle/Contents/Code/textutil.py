@@ -88,11 +88,26 @@ def parse_date(value):
     return None
 
 
+def base_language(code):
+    """"pt-BR" -> "pt", "zh-Hans" -> "zh"; None for AniDB's own codes ("main", "x-jat", "zh-x-nan")."""
+    parts = (code or "").lower().split("-")
+    if not parts[0] or "x" in parts or parts[0] == "main":
+        return None
+    return parts[0]
+
+
 def title_rank(lang, is_main, languages):
-    """Position of a title's language in a language priority list; AniDB's main title also counts as "main". Unlisted = last."""
+    """Position of a title's language in a language priority list; AniDB's main title also counts as "main". A title in
+       a variant of a listed language (AniDB's "pt" when "pt-BR" is listed) counts just after that language's exact
+       matches. Unlisted = last."""
     ranks = []
     if lang in languages:
         ranks.append(languages.index(lang))
+    elif base_language(lang):
+        for index in range(len(languages)):
+            if base_language(languages[index]) == base_language(lang):
+                ranks.append(index + 0.5)
+                break
     if is_main and "main" in languages:
         ranks.append(languages.index("main"))
     return sorted(ranks)[0] if ranks else len(languages)
@@ -173,10 +188,12 @@ def similarity(first, second):
     return float(1 - (Util.LevenshteinDistance(first, second) / longest))
 
 
-# ISO 639-2 (TVDB v4, e.g. "eng") -> ISO 639-1 (Plex and TVDB v1, e.g. "en") for the languages Plex offers this agent
+# ISO 639-2 (TVDB, e.g. "eng") -> ISO 639-1 (Plex and AniDB, e.g. "en") for the languages Plex offers this agent
 LANGUAGE_CODES = {"eng": "en", "jpn": "ja", "fra": "fr", "fre": "fr", "zho": "zh", "chi": "zh", "swe": "sv", "nor": "no", "dan": "da", "fin": "fi",
                   "nld": "nl", "dut": "nl", "deu": "de", "ger": "de", "ita": "it", "spa": "es", "pol": "pl", "hun": "hu", "ell": "el", "gre": "el",
-                  "tur": "tr", "rus": "ru", "heb": "he", "por": "pt", "ces": "cs", "cze": "cs", "kor": "ko", "slv": "sl", "hrv": "hr"}
+                  "tur": "tr", "rus": "ru", "heb": "he", "por": "pt", "ces": "cs", "cze": "cs", "kor": "ko", "slv": "sl", "hrv": "hr",
+                  "ara": "ar", "bul": "bg", "cat": "ca", "est": "et", "fas": "fa", "per": "fa", "lav": "lv", "ron": "ro", "rum": "ro",
+                  "srp": "sr", "slk": "sk", "slo": "sk", "tha": "th", "ukr": "uk"}
 
 
 def short_language(code):

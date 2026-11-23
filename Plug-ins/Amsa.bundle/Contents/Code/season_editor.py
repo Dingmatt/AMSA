@@ -33,27 +33,33 @@ SHOW_IMAGES_PENDING = {}         # show rating key -> ["posters", "art", "banner
 PICKS_PENDING = {}               # show rating key -> [(item key, endpoint, [keys your pick may be listed under], label, [its 40-digit names])]
 SCHEDULED = {}                   # show rating keys with a season_titles run scheduled
 UNLOCK_WORD = "unlock-images"    # In a manual search (Fix Match): unlock the images of the show then matched
-UNLOCK_REQUESTS = {}             # search result id ("anidb-2369") -> time of the search asking for the unlock
+UNLOCK_REQUESTS = {}             # search result id ("anidb-2369") -> time of the search asking for the unlock (one search at a time)
 RESETS = {}                      # show rating key -> time its images were unlocked: none of its images count as chosen
-UNLOCK_WAIT = 900                # Seconds a search's unlock request waits for the update of the result picked
+UNLOCK_WAIT = 300                # Seconds a search's unlock request waits for the update of the result picked
 RESET_FOR = 300                  # Seconds an unlocked show's images count as AMSA's (the update right after the unlock)
 DEFAULT_TITLE = re.compile(r"^(season [0-9]+|specials)?$", re.IGNORECASE)
 
 
-def request_unlock(result_id):
-    """A manual search with "unlock-images" returned this result: its next update unlocks the show's images."""
+def request_unlock(result_ids):
+    """A manual search with "unlock-images" returned these results: the update of the one picked unlocks its show's
+       images. An earlier search's request is dropped."""
     LOCK.acquire()
     try:
-        UNLOCK_REQUESTS[result_id] = time.time()
+        UNLOCK_REQUESTS.clear()
+        for result_id in result_ids:
+            UNLOCK_REQUESTS[result_id] = time.time()
     finally:
         LOCK.release()
 
 
 def unlock_requested(result_id):
-    """True once (used up) if a search asked to unlock this result's images within UNLOCK_WAIT seconds."""
+    """True once if a search asked to unlock this result's images within UNLOCK_WAIT seconds. The search's other results
+       are then dropped, so only the show picked is unlocked."""
     LOCK.acquire()
     try:
-        asked = UNLOCK_REQUESTS.pop(result_id, None)
+        asked = UNLOCK_REQUESTS.get(result_id)
+        if asked is not None or [key for key in UNLOCK_REQUESTS if time.time() - UNLOCK_REQUESTS[key] >= UNLOCK_WAIT]:
+            UNLOCK_REQUESTS.clear()
     finally:
         LOCK.release()
     return asked is not None and time.time() - asked < UNLOCK_WAIT
@@ -381,8 +387,6 @@ def remember_posters(container, numbers):
             memory = remembered(season_key)
             if memory.get("poster_key") != selected.get("ratingKey"):
                 memory["poster_key"] = selected.get("ratingKey")
-                if "poster" in memory:
-                    del memory["poster"]                   # Older URL-based memory
                 downloader.save_file(tvdb_v4.dump_json(memory), "%s.json" % (season_key), "Seasons")
         except Exception as e:
             Log.Debug("Seasons - Couldn't remember season %s's poster (%s)" % (number, e))

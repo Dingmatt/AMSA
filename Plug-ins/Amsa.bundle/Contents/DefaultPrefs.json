@@ -63,7 +63,8 @@
 			"uk - Ukrainian",
 			"zh - Chinese",
 			"zh-Hans - Chinese (Simplified)",
-			"zh-x-nan - Chinese (Min Nan)"
+			"zh-x-nan - Chinese (Min Nan)",
+			"pt-BR - Brazilian Portuguese"
 		],
 		"default": "main - AniDB main title"
 	},
@@ -109,7 +110,8 @@
 			"uk - Ukrainian",
 			"zh - Chinese",
 			"zh-Hans - Chinese (Simplified)",
-			"zh-x-nan - Chinese (Min Nan)"
+			"zh-x-nan - Chinese (Min Nan)",
+			"pt-BR - Brazilian Portuguese"
 		],
 		"default": "x-jat - Romaji"
 	},
@@ -155,7 +157,8 @@
 			"uk - Ukrainian",
 			"zh - Chinese",
 			"zh-Hans - Chinese (Simplified)",
-			"zh-x-nan - Chinese (Min Nan)"
+			"zh-x-nan - Chinese (Min Nan)",
+			"pt-BR - Brazilian Portuguese"
 		],
 		"default": "en - English"
 	},
@@ -236,7 +239,8 @@
 			"uk - Ukrainian",
 			"zh - Chinese",
 			"zh-Hans - Chinese (Simplified)",
-			"zh-x-nan - Chinese (Min Nan)"
+			"zh-x-nan - Chinese (Min Nan)",
+			"pt-BR - Brazilian Portuguese"
 		],
 		"default": "en - English"
 	},
@@ -281,7 +285,8 @@
 			"uk - Ukrainian",
 			"zh - Chinese",
 			"zh-Hans - Chinese (Simplified)",
-			"zh-x-nan - Chinese (Min Nan)"
+			"zh-x-nan - Chinese (Min Nan)",
+			"pt-BR - Brazilian Portuguese"
 		],
 		"default": "x-jat - Romaji"
 	},
@@ -939,7 +944,7 @@
 		"label": "Refreshing: Skip sources downloaded within",
 		"type": "enum",
 		"values": [
-			"10 minutes (testing)",
+			"10 minutes",
 			"1 hour",
 			"6 hours",
 			"24 hours (recommended)",

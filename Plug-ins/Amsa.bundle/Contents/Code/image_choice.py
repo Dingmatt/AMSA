@@ -290,7 +290,7 @@ def zip_lists(one, two):
 
 def by_text(images, label, alike, summary=None):
     """Setting "Language and text", textless first: within each artwork found in several versions, the one with less text
-       moves up; other images keep their places. ("titled" is still understood: more text first.)"""
+       moves up; other images keep their places."""
     rule = getattr(settings, "IMAGE_TEXT_ORDER", "keep")
     if rule == "keep" or not alike:
         return images
@@ -321,13 +321,13 @@ def by_text(images, label, alike, summary=None):
         if len(members) < 2 or len(set([group_of(image) for image in members])) > 1:
             continue
         places = sorted([result.index(image) for image in members])
-        ranked = sorted(members, key=lambda image: (score[id(image)] if rule == "textless" else -score[id(image)], result.index(image)))
+        ranked = sorted(members, key=lambda image: (score[id(image)], result.index(image)))
         if ranked != [result[place] for place in places]:
             moved.append(ranked[0])
         for place, image in zip_lists(places, ranked):
             result[place] = image
     if moved:
-        note = "%s %s version%s moved first" % (len(moved), "textless" if rule == "textless" else "titled", "" if len(moved) == 1 else "s")
+        note = "%s textless version%s moved first" % (len(moved), "" if len(moved) == 1 else "s")
         if summary is not None:
             summary.append(note)
         else:

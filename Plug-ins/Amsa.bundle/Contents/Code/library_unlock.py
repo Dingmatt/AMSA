@@ -17,6 +17,7 @@ import downloader
 import tvdb_v4
 import season_editor
 import title_index
+import anidb_retry
 
 try:
     import threading
@@ -29,6 +30,7 @@ SETTING = "UnlockAllImages"
 STATE_FILE = "unlock-pending.json"
 START_DELAY = 5                  # Seconds after the save: Plex stores the page's values first, then AMSA switches this one off
 LIST_TIMEOUT = 60                # Seconds for a library listing (a whole library's seasons in one answer)
+NO_ANSWER_MOST = 3               # Requests in a row Plex doesn't answer before the unlock stops (each waits up to 20 seconds)
 LOCK = new_lock()
 STATE = {"loaded": False, "shows": {}, "total": 0}    # shows: Plex rating key -> show title, still to refresh
 RUNNING = {"now": False}
@@ -58,29 +60,36 @@ def unlock_library():
         shows = {}
         seasons = 0
         failed = 0
+        silent = 0                                         # Requests in a row Plex didn't answer
         sections = amsa_sections()
         if not sections:
             Log.Warn("Unlock - No library uses AMSA (or Plex didn't list them); nothing unlocked")
             return
+        stopped = False
         for section in sections:
             key = section.get("key")
-            for item in listing(key, 2):
-                try:
-                    season_editor.plex_request("/library/sections/%s/all?type=2&id=%s&thumb.locked=0&art.locked=0&banner.locked=0"
-                                               % (key, item.get("ratingKey")), "PUT")
-                    shows[str(item.get("ratingKey"))] = textutil.safe_unicode(item.get("title") or "")
-                except Exception as e:
-                    failed += 1
-                    Log.Debug("Unlock - Show '%s' (%s): %s" % (item.get("title"), item.get("ratingKey"), e))
-            for item in listing(key, 3):
-                try:
-                    season_editor.plex_request("/library/sections/%s/all?type=3&id=%s&thumb.locked=0&art.locked=0"
-                                               % (key, item.get("ratingKey")), "PUT")
-                    seasons += 1
-                except Exception as e:
-                    failed += 1
-                    Log.Debug("Unlock - Season %s of '%s' (%s): %s" % (item.get("index"), item.get("parentTitle"), item.get("ratingKey"), e))
+            for kind, fields in ((2, "thumb.locked=0&art.locked=0&banner.locked=0"), (3, "thumb.locked=0&art.locked=0")):
+                for item in ([] if stopped else listing(key, kind)):
+                    try:
+                        season_editor.plex_request("/library/sections/%s/all?type=%s&id=%s&%s" % (key, kind, item.get("ratingKey"), fields), "PUT")
+                        silent = 0
+                        if kind == 2:
+                            shows[str(item.get("ratingKey"))] = textutil.safe_unicode(item.get("title") or "")
+                        else:
+                            seasons += 1
+                    except Exception as e:
+                        failed += 1
+                        silent = silent + 1 if anidb_retry.plex_unreachable(e) else 0
+                        Log.Debug("Unlock - %s '%s' (%s): %s" % ("Show" if kind == 2 else "Season %s of" % (item.get("index")),
+                                                                 item.get("title") if kind == 2 else item.get("parentTitle"), item.get("ratingKey"), e))
+                        if silent >= NO_ANSWER_MOST:
+                            stopped = True
+                            break
         add(shows)
+        if stopped:
+            Log.Warn("Unlock - Stopped: Plex didn't answer %s requests in a row. %s shows and %s seasons were unlocked before that; "
+                     "save the settings with the box ticked again once Plex is answering" % (NO_ANSWER_MOST, len(shows), seasons))
+            return
         Log.Info("Unlock - %s shows and %s seasons unlocked in %s librar%s (%s) in %.0fs%s. Refresh the librar%s (Refresh all metadata): "
                  "each show's next update ignores earlier picks, and the log counts down the shows left"
                  % (len(shows), seasons, len(sections), "y" if len(sections) == 1 else "ies", ", ".join([textutil.safe_unicode(s.get("title") or "?") for s in sections]),
